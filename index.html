@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<link rel="apple-touch-icon" sizes="180x180" href="./icone_viagens.png">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="./icone_viagens.png">
+<link rel="icon" type="image/png" sizes="180x180" href="./icone.png?v=2">
+<meta name="apple-mobile-web-app-title" content="Controle de Viagens">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Controle de Viagens</title>
+<style>
+:root{
+  --bg:#0E1712;--panel:#15251C;--panel2:#1B3226;--line:#294A38;
+  --text:#E7EDF3;--muted:#8FA3B3;--accent:#2E9E6B;--danger:#D9534F;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:760px;margin:auto;padding:18px 14px 90px}
+header h1{margin:0;font-size:25px}
+header p{margin:5px 0 18px;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:14px}
+.card h2{font-size:18px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
+input,textarea,select{width:100%;background:#0F1C15;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:12px;outline:none}
+textarea{min-height:75px;resize:vertical}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+.btn{border:0;border-radius:11px;padding:12px 14px;color:white;background:var(--accent);font-weight:700}
+.btn.secondary{background:var(--panel2);border:1px solid var(--line)}
+.btn.danger{background:#5a2523}
+.btn.full{width:100%}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.searchrow{display:flex;gap:8px}
+.searchrow input{flex:1}
+.searchrow button{width:48px;padding:0;font-size:21px}
+.chips{display:flex;gap:7px;overflow:auto;padding:4px 0 8px}
+.chip{white-space:nowrap;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:20px;padding:8px 11px}
+.results{display:grid;gap:8px}
+.place{background:#102017;border:1px solid var(--line);border-radius:12px;padding:11px}
+.place strong{display:block}
+.place small{color:var(--muted);display:block;margin:3px 0 8px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stat{background:var(--panel2);border-radius:12px;padding:11px}
+.stat b{font-size:18px;display:block}
+.stat span{font-size:12px;color:var(--muted)}
+.trip{background:#102017;border:1px solid var(--line);border-radius:14px;padding:13px;margin-top:10px}
+.trip.paga{opacity:.62}
+.triptop{display:flex;justify-content:space-between;gap:10px}
+.trip h3{margin:0 0 3px}
+.trip .sub{color:var(--muted);font-size:13px}
+.badge{font-size:12px;padding:6px 9px;border-radius:20px;background:var(--panel2);height:max-content}
+.info{font-size:13px;line-height:1.55;color:#cbd5dc;margin:9px 0}
+.obs{color:var(--muted);font-size:13px}
+.fab{position:fixed;right:18px;bottom:20px;width:58px;height:58px;border:0;border-radius:50%;background:var(--accent);color:white;font-size:30px;box-shadow:0 5px 20px #0008}
+.modal{position:fixed;inset:0;background:#000b;display:none;align-items:flex-end;z-index:10}
+.modal.open{display:flex}
+.sheet{width:100%;max-height:92vh;overflow:auto;background:var(--panel);border-radius:20px 20px 0 0;padding:18px}
+.sheet h2{margin-top:0}
+.close{float:right;background:none;border:0;color:var(--muted);font-size:25px}
+.photoBox{display:flex;gap:8px;align-items:center}
+.preview{width:64px;height:64px;border-radius:10px;object-fit:cover;border:1px solid var(--line)}
+.savedPlace{display:flex;gap:10px;background:#102017;border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px}
+.savedPlace img{width:72px;height:72px;object-fit:cover;border-radius:9px}
+.savedPlace .grow{flex:1}
+.empty{color:var(--muted);font-size:13px}
+.notice{font-size:12px;color:var(--muted);margin-top:7px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.wrap{padding-top:12px}}
+
+.iconActions{display:flex;gap:7px;margin-top:8px}
+.iconBtn{width:44px;height:44px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:21px;display:grid;place-items:center}
+.iconBtn:hover{border-color:var(--accent)}
+.placeHead{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.placeHead .grow{min-width:0}
+.savedIcon{color:var(--accent)}
+
+.bookmarkIcon{font-size:0;position:relative}
+.bookmarkIcon:before{content:"";width:13px;height:18px;border:2px solid currentColor;border-radius:2px 2px 1px 1px;display:block;clip-path:polygon(0 0,100% 0,100% 100%,50% 72%,0 100%)}
+.clipIcon{font-size:0}
+.clipIcon:before{content:"";width:10px;height:19px;border:2px solid currentColor;border-radius:7px;display:block;transform:rotate(35deg)}
+.clipIcon:after{content:"";position:absolute;width:6px;height:13px;border:2px solid currentColor;border-left:0;border-radius:0 6px 6px 0;transform:translate(1px,-17px) rotate(35deg)}
+.searchIcon{font-size:21px}
+
+.trashBtn{background:#5a2523;border-color:#6e302d;font-size:20px}
+.trashBtn:hover{border-color:#D9534F;transform:scale(1.03)}
+
+.tripActions .iconBtn{width:44px;height:44px;padding:0}
+.dangerIcon{background:#5a2523;border-color:#7b3531}
+</style>
+
+<style id="controleViagensSplashCSS">
+  #appSplash{
+    position:fixed; inset:0; z-index:99999;
+    background:#07110c;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    opacity:1; visibility:visible;
+    transition:opacity .45s ease, visibility .45s ease;
+  }
+  #appSplash.hide{opacity:0;visibility:hidden;pointer-events:none}
+  #appSplash img{
+    width:100%; height:100%; object-fit:cover; object-position:center;
+    display:block;
+  }
+  #appSplash::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:0; height:22%;
+    background:linear-gradient(transparent,rgba(0,0,0,.42));
+    pointer-events:none;
+  }
+  #appSplashBar{
+    position:absolute; left:18%; right:18%; bottom:28px;
+    height:5px; border-radius:999px; overflow:hidden;
+    background:rgba(255,255,255,.20);
+    z-index:2;
+  }
+  #appSplashBar::before{
+    content:""; display:block; height:100%; width:0;
+    background:#20e070; border-radius:999px;
+    animation:splashLoad 1.8s ease-out forwards;
+  }
+  @keyframes splashLoad{to{width:100%}}
+  @media (prefers-reduced-motion:reduce){
+    #appSplash{transition:none}
+    #appSplashBar::before{animation:none;width:100%}
+  }
+</style>
+</head>
+<body>
+<div id="appSplash" aria-label="Controle de Viagens">
+  <img src="capa_github_controle_de_viagens.png" alt="Controle de Viagens">
+  <div id="appSplashBar"></div>
+</div>
+
+<div class="wrap">
+<header>
+  <h1>Controle de Viagens</h1>
+  <p>Planeje viagens, salve lugares e organize suas visitas.</p>
+</header>
+
+<section class="card">
+  <h2>🧳 Planejar viagem</h2>
+  <div class="field">
+    <label>Pesquisar ponto de interesse</label>
+    <div class="searchrow">
+      <input id="busca" placeholder="Hotel, restaurante, atração...">
+      <button class="btn" id="btnBusca" title="Pesquisar">🔎</button>
+    </div>
+  </div>
+  <div class="field">
+    <label>Cidade</label>
+    <input id="cidadeBusca" list="listaCidades" placeholder="Digite a cidade">
+    <datalist id="listaCidades"></datalist>
+  </div>
+  <div class="chips">
+    <button class="chip" data-cat="restaurante">🍽️ Restaurantes</button>
+    <button class="chip" data-cat="hotel">🏨 Hotéis</button>
+    <button class="chip" data-cat="turismo">📸 Pontos turísticos</button>
+    <button class="chip" data-cat="cafe">☕ Cafés</button>
+    <button class="chip" data-cat="compras">🛍️ Compras</button>
+    <button class="chip" data-cat="atracao">🎡 Atrações</button>
+  </div>
+  <div id="resultados" class="results">
+    <div class="empty">Digite o que procura e a cidade para pesquisar.</div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>⭐ Meus lugares salvos</h2>
+  <div id="lugaresSalvos"></div>
+</section>
+
+<section class="card">
+  <h2>📊 Resumo</h2>
+  <div class="stats">
+    <div class="stat"><b id="qtdViagens">0</b><span>Viagens cadastradas</span></div>
+    <div class="stat"><b id="totalGeral">R$ 0,00</b><span>Valor total geral</span></div>
+    <div class="stat"><b id="faltanteGeral">R$ 0,00</b><span>Falta pagar</span></div>
+    <div class="stat"><b id="proxima">—</b><span>Próxima viagem</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>🧳 Suas viagens</h2>
+  <div id="listaViagens"></div>
+</section>
+</div>
+
+<button class="fab" id="btnNova" aria-label="Nova viagem">＋</button>
+
+<div class="modal" id="modal">
+<div class="sheet">
+  <button class="close" id="fechar">×</button>
+  <h2 id="modalTitulo">Nova viagem</h2>
+  <form id="formViagem">
+    <div class="field"><label>Nome da viagem *</label><input id="fNome" required></div>
+    <div class="grid">
+      <div class="field"><label>Cidade</label><input id="fCidade" list="listaCidades"></div>
+      <div class="field"><label>Hotel</label><input id="fHotel"></div>
+    </div>
+    <div class="grid">
+      <div class="field"><label>Data de ida *</label><input id="fData" type="date" required></div>
+      <div class="field"><label>Data de volta</label><input id="fDataVolta" type="date"></div>
+    </div>
+    <div class="grid">
+      <div class="field"><label>Horário de saída</label><input id="fHoraSaida" type="time"></div>
+      <div class="field"><label>Local de saída</label><input id="fLocalSaida" placeholder="Ex.: Tatuí, SP"></div>
+    </div>
+    <div class="grid">
+      <div class="field"><label>Começou a pagar em</label><input id="fInicio" type="date"></div>
+      <div class="field"><label>Vencimento</label><input id="fVenc" type="date"></div>
+    </div>
+    <div class="grid">
+      <div class="field"><label>Valor total</label><input id="fTotal" type="number" min="0" step="0.01"></div>
+      <div class="field"><label>Valor já pago</label><input id="fPago" type="number" min="0" step="0.01"></div>
+    </div>
+    <div class="field"><label>Falta pagar</label><input id="fFaltante" disabled></div>
+    <div class="field">
+      <label>🔔 Lembretes</label>
+      <select id="fLembretes" multiple style="min-height:105px">
+        <option value="7">7 dias antes</option>
+        <option value="1">1 dia antes</option>
+        <option value="0">No dia da viagem</option>
+        <option value="hora">1 hora antes da saída</option>
+      </select>
+      <div class="notice">No iPhone, o botão de calendário abaixo cria um evento com esses avisos.</div>
+    </div>
+    <div class="field"><label>Observações</label><textarea id="fObs"></textarea></div>
+    <div class="actions">
+      <button class="btn secondary" type="button" id="cancelar">Cancelar</button>
+      <button class="btn" type="submit">Salvar viagem</button>
+    </div>
+  </form>
+</div>
+</div>
+
+<div class="modal" id="modalLugar">
+<div class="sheet">
+  <button class="close" id="fecharLugar">×</button>
+  <h2>⭐ Salvar lugar</h2>
+  <form id="formLugar">
+    <div class="field"><label>Nome do local *</label><input id="pNome" required></div>
+    <div class="field"><label>Tipo</label><input id="pTipo"></div>
+    <div class="field"><label>Cidade</label><input id="pCidade"></div>
+    <div class="grid">
+      <div class="field"><label>Data da visita</label><input id="pData" type="date"></div>
+      <div class="field"><label>Horário</label><input id="pHora" type="time"></div>
+    </div>
+    <div class="field"><label>Lembrete</label>
+      <select id="pLembrete">
+        <option value="">Sem lembrete</option>
+        <option value="60">1 hora antes</option>
+        <option value="1440">1 dia antes</option>
+        <option value="10080">7 dias antes</option>
+      </select>
+    </div>
+    <div class="field"><label>Foto do hotel/restaurante/local</label>
+      <div class="photoBox">
+        <input id="pFoto" type="file" accept="image/*">
+        <img id="previewFoto" class="preview" style="display:none" alt="Prévia da foto">
+      </div>
+    </div>
+    <div class="field"><label>Observação</label><textarea id="pObs"></textarea></div>
+    <div class="actions">
+      <button class="btn secondary" type="button" id="cancelarLugar">Cancelar</button>
+      <button class="btn" type="submit">Salvar lugar</button>
+    </div>
+  </form>
+</div>
+</div>
+
+<script>
+const STORAGE_KEY="controle_viagens_dados";
+const PLACES_KEY="controle_viagens_lugares";
+const CIDADES=["Tatuí, SP","São Paulo, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
+let viagens=[],lugares=[],editId=null,placeTemp=null;
+
+const $=id=>document.getElementById(id);
+const money=v=>(Number(v)||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const dateBR=s=>s?new Date(s+"T12:00:00").toLocaleDateString("pt-BR"):"—";
+function localDate(){
+ const d=new Date(),p=n=>String(n).padStart(2,"0");
+ return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(viagens))}
+function savePlaces(){localStorage.setItem(PLACES_KEY,JSON.stringify(lugares))}
+function load(){
+ try{viagens=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]")}catch{viagens=[]}
+ try{lugares=JSON.parse(localStorage.getItem(PLACES_KEY)||"[]")}catch{lugares=[]}
+ render();renderPlaces();
+}
+function cidades(){
+ const extras=JSON.parse(localStorage.getItem("cidades_extra")||"[]");
+ return [...new Set([...CIDADES,...extras])].sort();
+}
+function popularCidades(){
+ $("listaCidades").innerHTML=cidades().map(c=>`<option value="${esc(c)}">`).join("");
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function calcFaltante(){ $("fFaltante").value=money(Math.max((Number($("fTotal").value)||0)-(Number($("fPago").value)||0),0));}
+$("fTotal").addEventListener("input",calcFaltante);$("fPago").addEventListener("input",calcFaltante);
+
+function openModal(id=null){
+ editId=id;
+ $("modalTitulo").textContent=id?"Editar viagem":"Nova viagem";
+ const t=id?viagens.find(x=>x.id===id):{};
+ $("fNome").value=t.nome||"";$("fCidade").value=t.cidade||"";$("fHotel").value=t.hotel||"";
+ $("fData").value=t.data||localDate();$("fDataVolta").value=t.dataVolta||"";
+ $("fHoraSaida").value=t.horaSaida||"";$("fLocalSaida").value=t.localSaida||"";
+ $("fInicio").value=t.dataInicioPagamento||"";$("fVenc").value=t.venc||"";
+ $("fTotal").value=t.valorTotal??"";$("fPago").value=t.valorPago??"";
+ $("fObs").value=t.obs||"";calcFaltante();
+ [...$("fLembretes").options].forEach(o=>o.selected=(t.lembretes||["7","1","0","hora"]).includes(o.value));
+ $("modal").classList.add("open");
+}
+function closeModal(){$("modal").classList.remove("open");editId=null}
+$("btnNova").onclick=()=>openModal();$("fechar").onclick=closeModal;$("cancelar").onclick=closeModal;
+
+$("formViagem").onsubmit=e=>{
+ e.preventDefault();
+ const total=Math.max(Number($("fTotal").value)||0,0),pago=Math.max(Number($("fPago").value)||0,0);
+ const obj={id:editId||Date.now(),nome:$("fNome").value.trim(),cidade:$("fCidade").value.trim(),hotel:$("fHotel").value.trim(),
+ data:$("fData").value,dataVolta:$("fDataVolta").value,horaSaida:$("fHoraSaida").value,localSaida:$("fLocalSaida").value.trim(),
+ dataInicioPagamento:$("fInicio").value,venc:$("fVenc").value,valorTotal:total,valorPago:pago,obs:$("fObs").value.trim(),
+ lembretes:[...$("fLembretes").selectedOptions].map(o=>o.value),status:pago>=total&&total>0?"paga":"pagar"};
+ if(obj.dataVolta&&obj.dataVolta<obj.data){alert("A data de volta não pode ser anterior à ida.");return}
+ if(editId) viagens=viagens.map(x=>x.id===editId?obj:x);else viagens.push(obj);
+ save();closeModal();render();
+};
+
+function render(){
+ const arr=[...viagens].sort((a,b)=>(a.data||"").localeCompare(b.data||""));
+ $("qtdViagens").textContent=arr.length;
+ $("totalGeral").textContent=money(arr.reduce((s,t)=>s+(Number(t.valorTotal)||0),0));
+ $("faltanteGeral").textContent=money(arr.reduce((s,t)=>s+Math.max((Number(t.valorTotal)||0)-(Number(t.valorPago)||0),0),0));
+ const future=arr.find(t=>t.data>=localDate());
+ $("proxima").textContent=future?dateBR(future.data):"—";
+ $("listaViagens").innerHTML=arr.length?arr.map(card).join(""):`<div class="empty">Nenhuma viagem cadastrada.</div>`;
+}
+function card(t){
+ const falta=Math.max((Number(t.valorTotal)||0)-(Number(t.valorPago)||0),0);
+ const atrasada=t.venc&&t.venc<localDate()&&falta>0;
+ const badge=t.status==="paga"?"Paga":atrasada?"Atrasada":"A pagar";
+ return `<div class="trip ${t.status==="paga"?"paga":""}">
+  <div class="triptop"><div><h3>${esc(t.nome)}</h3><div class="sub">${esc(t.hotel||"")} ${t.hotel&&t.cidade?"• ":""}${esc(t.cidade||"")}</div></div><span class="badge">${badge}</span></div>
+  <div class="info">📅 ${dateBR(t.data)}${t.dataVolta?" → "+dateBR(t.dataVolta):""}<br>
+  ${t.horaSaida?"🚗 Saída: "+esc(t.horaSaida)+(t.localSaida?" • "+esc(t.localSaida):"")+"<br>":""}
+  ${t.dataInicioPagamento?"💳 Começou a pagar: "+dateBR(t.dataInicioPagamento)+"<br>":""}
+  ${t.venc?"📆 Vencimento: "+dateBR(t.venc)+"<br>":""}
+  💰 Total: ${money(t.valorTotal)} • Pago: ${money(t.valorPago)} • Falta: ${money(falta)}</div>
+  ${t.obs?`<div class="obs">📝 ${esc(t.obs)}</div>`:""}
+  <div class="actions" style="margin-top:10px">
+   <button class="btn secondary" data-action="edit" data-id="${t.id}">Editar</button>
+   <button class="btn secondary" data-action="toggle" data-id="${t.id}">${t.status==="paga"?"Reabrir":"Marcar paga"}</button>
+   <button class="btn secondary" data-action="calendar" data-id="${t.id}">📅 Calendário</button>
+   <button class="iconBtn trashBtn" title="Excluir viagem" aria-label="Excluir viagem" data-action="delete" data-id="${t.id}">🗑️</button>
+  </div>
+ </div>`;
+}
+function togglePago(id){const t=viagens.find(x=>x.id===id);if(!t)return;if(t.status==="paga"){t.status="pagar"}else{t.status="paga";t.valorPago=t.valorTotal}save();render()}
+function deleteTrip(id){if(confirm("Excluir esta viagem?")){viagens=viagens.filter(x=>x.id!==id);save();render()}}
+function gerarCalendario(id){
+ const t=viagens.find(x=>x.id===id);if(!t)return;
+ const start=t.data+(t.horaSaida?`T${t.horaSaida}:00`:"T09:00:00");
+ const end=t.dataVolta?t.dataVolta+"T18:00:00":t.data+(t.horaSaida?`T${t.horaSaida}:00`:"T10:00:00");
+ const fmt=s=>s.replace(/[-:]/g,"").replace(".000","");
+ let alarms="";
+ (t.lembretes||["7","1","0"]).forEach(v=>{let tr=v==="hora"?"PT1H":`P${v}D`;alarms+=`BEGIN:VALARM\nTRIGGER:-${tr}\nACTION:DISPLAY\nDESCRIPTION:Lembrete da viagem\nEND:VALARM\n`});
+ const ics=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Controle de Viagens//PT-BR\nBEGIN:VEVENT\nUID:${t.id}@controleviagens\nDTSTART:${fmt(start)}\nDTEND:${fmt(end)}\nSUMMARY:🧳 ${t.nome}${t.cidade?" - "+t.cidade:""}\nDESCRIPTION:Saída: ${t.horaSaida||"não informada"}${t.localSaida?"\\nLocal: "+t.localSaida:""}\\nTotal: ${money(t.valorTotal)}\\nFalta pagar: ${money(Math.max(t.valorTotal-t.valorPago,0))}\n${alarms}END:VEVENT\nEND:VCALENDAR`;
+ const blob=new Blob([ics],{type:"text/calendar;charset=utf-8"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");a.href=url;a.download="lembrete-viagem.ics";document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
+
+function abrirLugar(data){
+ placeTemp=data;
+ $("pNome").value=data.name||"";$("pTipo").value=data.type||"";$("pCidade").value=data.city||"";
+ $("pData").value="";$("pHora").value="";$("pLembrete").value="";$("pObs").value="";$("pFoto").value="";$("previewFoto").style.display="none";
+ $("modalLugar").classList.add("open");
+}
+$("fecharLugar").onclick=()=>$("modalLugar").classList.remove("open");
+$("cancelarLugar").onclick=()=>$("modalLugar").classList.remove("open");
+$("pFoto").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$("previewFoto").src=r.result;$("previewFoto").style.display="block"};r.readAsDataURL(f)};
+$("formLugar").onsubmit=e=>{
+ e.preventDefault();
+ const f=$("pFoto").files[0];
+ const finish=photo=>{
+  lugares.unshift({id:Date.now(),nome:$("pNome").value.trim(),tipo:$("pTipo").value.trim(),cidade:$("pCidade").value.trim(),endereco:placeTemp?.address||"",lat:placeTemp?.lat||"",lon:placeTemp?.lon||"",data:$("pData").value,hora:$("pHora").value,lembrete:$("pLembrete").value,foto:photo||"",obs:$("pObs").value.trim()});
+  savePlaces();$("modalLugar").classList.remove("open");renderPlaces();
+ };
+ if(f){const r=new FileReader();r.onload=()=>finish(r.result);r.readAsDataURL(f)}else finish("");
+};
+function renderPlaces(){
+ $("lugaresSalvos").innerHTML=lugares.length?lugares.map(p=>`<div class="savedPlace">
+ ${p.foto?`<img src="${p.foto}" alt="Foto de ${esc(p.nome)}">`:`<div class="preview" style="display:grid;place-items:center">📍</div>`}
+ <div class="grow"><strong>${esc(p.nome)}</strong><div class="sub">${esc(p.tipo||"Local")} ${p.cidade?"• "+esc(p.cidade):""}</div>
+ ${p.data?`<div class="info" style="margin:4px 0">📅 ${dateBR(p.data)}${p.hora?" às "+esc(p.hora):""}</div>`:""}
+ ${p.obs?`<div class="obs">${esc(p.obs)}</div>`:""}
+ <div class="actions" style="margin-top:6px">
+   <button class="iconBtn" title="Lembrete no calendário" data-place-action="calendar" data-id="${p.id}">📅</button>
+   <button class="iconBtn clipIcon" title="Compartilhar localização" data-place-action="share" data-id="${p.id}"></button>
+   <button class="iconBtn trashBtn" title="Excluir local" aria-label="Excluir local" data-place-action="delete" data-id="${p.id}">🗑️</button>
+ </div></div></div>`).join(""):`<div class="empty">Nenhum lugar salvo ainda.</div>`;
+}
+function delLugar(id){if(confirm("Excluir este lugar salvo?")){lugares=lugares.filter(x=>x.id!==id);savePlaces();renderPlaces()}}
+function calLugar(id){
+ const p=lugares.find(x=>x.id===id);if(!p||!p.data){alert("Cadastre a data da visita primeiro.");return}
+ const st=p.data+(p.hora?`T${p.hora}:00`:"T12:00:00"),fmt=s=>s.replace(/[-:]/g,"");
+ let alarm=p.lembrete?`BEGIN:VALARM\nTRIGGER:-PT${p.lembrete}M\nACTION:DISPLAY\nDESCRIPTION:Lembrete da visita\nEND:VALARM\n`:"";
+ const ics=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Controle de Viagens//PT-BR\nBEGIN:VEVENT\nUID:${p.id}@controleviagens\nDTSTART:${fmt(st)}\nDTEND:${fmt(st)}\nSUMMARY:${p.nome}${p.cidade?" - "+p.cidade:""}\nDESCRIPTION:${p.obs||"Visita programada"}\n${alarm}END:VEVENT\nEND:VCALENDAR`;
+ const blob=new Blob([ics],{type:"text/calendar;charset=utf-8"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");a.href=url;a.download="lembrete-visita.ics";document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
+
+async function pesquisar(cat=""){
+ const termo=$("busca").value.trim(),cidade=$("cidadeBusca").value.trim();
+ if(!termo&&!cat){$("resultados").innerHTML=`<div class="empty">Digite o que procura ou escolha uma categoria.</div>`;return}
+ const q=[termo,cat,cidade].filter(Boolean).join(" ");
+ $("resultados").innerHTML=`<div class="empty">🔎 Pesquisando pontos em ${esc(cidade||"sua cidade")}...</div>`;
+ try{
+  const url="https://nominatim.openstreetmap.org/search?format=json&limit=8&addressdetails=1&q="+encodeURIComponent(q);
+  const res=await fetch(url,{headers:{"Accept":"application/json","Accept-Language":"pt-BR"}});
+  const data=await res.json();
+  if(!data.length){$("resultados").innerHTML=`<div class="empty">Nenhum local encontrado. Tente outro termo ou cidade.</div>`;return}
+  $("resultados").innerHTML=data.map((x,i)=>{
+ const place={name:x.display_name.split(",")[0],type:cat||"Ponto de interesse",city:cidade,address:x.display_name,lat:x.lat,lon:x.lon};
+ return `<div class="place">
+   <div class="placeHead"><div class="grow"><strong>${esc(place.name)}</strong><small>${esc(place.address)}</small></div></div>
+   <div class="iconActions">
+     <button class="iconBtn bookmarkIcon" title="Salvar local" aria-label="Salvar local" data-save-place='${encodeURIComponent(JSON.stringify(place))}'></button>
+     <button class="iconBtn clipIcon" title="Compartilhar localização" aria-label="Compartilhar localização" data-share-place='${encodeURIComponent(JSON.stringify(place))}'></button>
+   </div>
+ </div>`;
+}).join("");
+ }catch(err){$("resultados").innerHTML=`<div class="empty">Não foi possível pesquisar agora. Verifique a internet e tente novamente.</div>`}
+}
+$("btnBusca").onclick=()=>pesquisar();
+$("busca").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();pesquisar()}});
+document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{if(!$("busca").value.trim())$("busca").value=b.textContent.replace(/^\\S+\\s/,"");pesquisar(b.dataset.cat)});
+
+
+async function compartilharLugar(p){
+ const text=`📍 ${p.name}\n${p.city?p.city+"\n":""}${p.address||""}`;
+ const map=p.lat&&p.lon?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.lat+","+p.lon)}`:"";
+ if(navigator.share){
+   try{await navigator.share({title:p.name,text:text,url:map||undefined});return}catch(e){}
+ }
+ if(map){window.open(map,"_blank");}
+}
+function compartilharSalvo(id){
+ const p=lugares.find(x=>x.id===id); if(!p)return;
+ compartilharLugar({name:p.nome,city:p.cidade,address:p.endereco||p.cidade,lat:p.lat,lon:p.lon});
+}
+
+
+document.addEventListener("click",e=>{
+ const tripBtn=e.target.closest("[data-action]");
+ if(tripBtn){
+   const id=Number(tripBtn.dataset.id);
+   const action=tripBtn.dataset.action;
+   if(action==="edit") openModal(id);
+   else if(action==="toggle") togglePago(id);
+   else if(action==="calendar") gerarCalendario(id);
+   else if(action==="delete") deleteTrip(id);
+   return;
+ }
+ const placeBtn=e.target.closest("[data-place-action]");
+ if(placeBtn){
+   const id=Number(placeBtn.dataset.id);
+   const action=placeBtn.dataset.placeAction;
+   if(action==="calendar") calLugar(id);
+   else if(action==="share") compartilharSalvo(id);
+   else if(action==="delete") delLugar(id);
+   return;
+ }
+ const saveBtn=e.target.closest("[data-save-place]");
+ if(saveBtn){
+   try{abrirLugar(JSON.parse(decodeURIComponent(saveBtn.dataset.savePlace)))}catch(err){console.error(err)}
+   return;
+ }
+ const shareBtn=e.target.closest("[data-share-place]");
+ if(shareBtn){
+   try{compartilharLugar(JSON.parse(decodeURIComponent(shareBtn.dataset.sharePlace)))}catch(err){console.error(err)}
+ }
+});
+
+popularCidades();load();
+</script>
+
+<script id="controleViagensSplashJS">
+(function(){
+  function fecharCapa(){
+    var splash=document.getElementById('appSplash');
+    if(!splash) return;
+    splash.classList.add('hide');
+    setTimeout(function(){ if(splash) splash.remove(); }, 600);
+  }
+  window.addEventListener('load', function(){
+    setTimeout(fecharCapa, 1800);
+  });
+})();
+</script>
+</body>
+</html>
