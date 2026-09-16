@@ -658,11 +658,40 @@ async function pesquisar(cat=""){
     const body={textQuery:q,languageCode:"pt-BR",regionCode:"BR",maxResultCount:10}; if(coords) body.locationBias={circle:{center:{latitude:coords.lat,longitude:coords.lon},radius:15000}};
     const r=await fetch("https://places.googleapis.com/v1/places:searchText",{method:"POST",headers:{"Content-Type":"application/json","X-Goog-Api-Key":apiKey,"X-Goog-FieldMask":"places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.googleMapsUri"},body:JSON.stringify(body)});
     if(!r.ok) throw new Error("Google Places indisponível");
-    const j=await r.json(); data=(j.places||[]).map(x=>({name:x.displayName?.text||"Lugar",address:x.formattedAddress||"",lat:x.location?.latitude||"",lon:x.location?.longitude||"",rating:x.rating||"",ratingCount:x.userRatingCount||0,open24:x.regularOpeningHours?.periods?.length===1&&!x.regularOpeningHours?.periods?.[0]?.close, maps:x.googleMapsUri||"",city:cidade,type:nomes[categoria]||categoria||"Ponto de interesse"})); source="Google Places";
+    const j=await r.json(); data=(j.places||[]).map(x=>({name:x.displayName?.text||"Lugar",address:x.formattedAddress||"",lat:x.location?.latitude||"",lon:x.location?.longitude||"",rating:x.rating||"",ratingCount:x.userRatingCount||0,open24:x.regularOpeningHours?.periods?.length===1&&!x.regularOpeningHours?.periods?.[0]?.close, maps:x.googleMapsUri||"",city:cidade,type:nomes[categoria]||categoria||"Ponto de interesse"}));
+    // O Google usa locationBias (preferência), não um limite rígido. Por isso
+    // também calculamos a distância e eliminamos qualquer resultado fora de 15 km.
+    if(coords){
+      const rad=v=>v*Math.PI/180, R=6371;
+      data=data.map(x=>{const la=Number(x.lat),lo=Number(x.lon); if(!Number.isFinite(la)||!Number.isFinite(lo)) return {...x,distance:Infinity}; const dLat=rad(la-coords.lat),dLon=rad(lo-coords.lon); const a=Math.sin(dLat/2)**2+Math.cos(rad(coords.lat))*Math.cos(rad(la))*Math.sin(dLon/2)**2; return {...x,distance:R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))};}).filter(x=>x.distance<=15).sort((a,b)=>a.distance-b.distance);
+    }
+    source="Google Places";
    }catch(e){ data=[]; }
   }
   if(!data.length){
-   const nq=[q,vinteQuatro?"24 horas":""].filter(Boolean).join(" "); const url="https://nominatim.openstreetmap.org/search?format=json&limit=12&addressdetails=1&accept-language=pt-BR"+(coords?`&viewbox=${coords.lon+0.2},${coords.lat+0.2},${coords.lon-0.2},${coords.lat-0.2}`:"")+"&q="+encodeURIComponent(nq); const res=await fetch(url,{headers:{"Accept":"application/json","Accept-Language":"pt-BR"}}); const raw=await res.json(); data=raw.map(x=>({name:x.display_name.split(",")[0],type:nomes[categoria]||"Ponto de interesse",city:cidade,address:x.display_name,lat:x.lat,lon:x.lon,rating:"",ratingCount:0,open24:false,maps:""})); source="OpenStreetMap";
+   // Sem cidade digitada, a busca do OpenStreetMap fica limitada à região atual.
+   // Isso evita resultados aleatórios de outros países quando a localização do aparelho está disponível.
+   if(!cidade && !coords){
+    $("resultados").innerHTML='<div class="empty"><strong>📍 Não consegui obter sua localização.</strong><br>Permita a localização do celular ou informe uma cidade para pesquisar.</div>';
+    return;
+   }
+   const nq=[q,vinteQuatro?"24 horas":""].filter(Boolean).join(" ");
+   let params="?format=json&limit=12&addressdetails=1&accept-language=pt-BR";
+   if(coords){
+    const raio=0.12; // aproximadamente 13 km ao redor do ponto atual
+    params+=`&viewbox=${coords.lon+raio},${coords.lat+raio},${coords.lon-raio},${coords.lat-raio}&bounded=1`;
+   }
+   params+="&q="+encodeURIComponent(nq);
+   const url="https://nominatim.openstreetmap.org/search"+params;
+   const res=await fetch(url,{headers:{"Accept":"application/json","Accept-Language":"pt-BR"}});
+   const raw=await res.json();
+   data=raw.map(x=>({name:x.display_name.split(",")[0],type:nomes[categoria]||"Ponto de interesse",city:cidade,address:x.display_name,lat:x.lat,lon:x.lon,rating:"",ratingCount:0,open24:false,maps:""}));
+   // Reforça a proximidade: mesmo que a fonte devolva algo fora da área, não mostramos longe.
+   if(coords){
+    const rad=v=>v*Math.PI/180, R=6371;
+    data=data.map(x=>{const la=Number(x.lat),lo=Number(x.lon),dLat=rad(la-coords.lat),dLon=rad(lo-coords.lon),a=Math.sin(dLat/2)**2+Math.cos(rad(coords.lat))*Math.cos(rad(la))*Math.sin(dLon/2)**2;return {...x,distance:R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))};}).filter(x=>x.distance<=15).sort((a,b)=>a.distance-b.distance);
+   }
+   source="OpenStreetMap";
   }
   if(vinteQuatro && source==="Google Places") data=data.filter(x=>x.open24);
   if(minRating>0) data=data.filter(x=>Number(x.rating||0)>=minRating);
