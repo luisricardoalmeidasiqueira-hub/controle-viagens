@@ -145,6 +145,14 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 .transportCompact .brand99{width:38px;height:38px;border-radius:10px;font-size:20px}
 @media(max-width:430px){.transportCompact{gap:8px}.transportCompact .transportBtn{flex-basis:76px!important;width:76px!important}}
 
+
+/* Próxima viagem — destaque compacto, sem alterar a lista existente */
+.nextTripCard{border:2px solid color-mix(in srgb,var(--accent) 28%,var(--line));background:linear-gradient(135deg,#ffffff 0%,var(--panel2) 100%);box-shadow:0 5px 18px #00000012}
+.nextTripHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.nextTripHead h2{margin:0;color:var(--accent)}
+.nextTripBadge{font-size:11px;font-weight:800;color:#fff;background:var(--accent);border-radius:999px;padding:6px 9px}
+.nextTripInner{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.nextTripName{font-size:18px;font-weight:900;margin-bottom:4px}.nextTripMeta{color:var(--muted);font-size:13px;line-height:1.5}.nextTripMoney{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.nextTripMoney span{font-size:11px;font-weight:800;padding:6px 8px;border-radius:9px;background:#E9F7F0;color:#176642}.nextTripMoney .pending{background:#FFF0EF;color:#B3261E}.nextTripView{border:0;border-radius:11px;background:var(--accent);color:#fff;font-weight:800;padding:10px 12px;white-space:nowrap}.nextTripEmpty{color:var(--muted);font-size:12px}
+@media(max-width:430px){.nextTripInner{grid-template-columns:1fr}.nextTripView{width:100%}}
+
 .topTools{display:flex;justify-content:space-between;align-items:center;margin:0 0 8px}.topHint{font-weight:800;color:var(--accent)}.miniTool{width:42px;height:42px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);font-size:24px}.switchLine{display:flex!important;align-items:center;justify-content:space-between;gap:10px;background:var(--panel2);border:1px solid var(--line);padding:8px 10px;border-radius:12px}.switchLine input{display:none}.switchLine i{width:42px;height:24px;border-radius:20px;background:#aaa;position:relative}.switchLine i:after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:white;left:2px;top:2px;transition:.2s}.switchLine input:checked+i{background:var(--accent)}.switchLine input:checked+i:after{left:20px}.menuPanel{position:fixed;right:14px;top:64px;z-index:20;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 10px 30px #0003;width:min(320px,calc(100vw - 28px))}.menuPanel button{width:100%;display:flex;justify-content:space-between;border:0;background:transparent;color:var(--text);padding:13px 10px;border-radius:10px;text-align:left}.menuPanel button:hover{background:var(--panel2)}.hotelShortcut{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:12px;margin:0 0 14px;font-weight:800;display:flex;justify-content:space-between}.hiddenSection{display:none}.compactCard{padding:12px}.collapseBtn{width:100%;border:0;background:transparent;color:var(--text);font-weight:800;font-size:16px;display:flex;justify-content:space-between;padding:2px}.lockedPlace{opacity:.9}
 
 /* Revisão visual 2026-09-15 */
@@ -228,6 +236,11 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
   <div id="resultados" class="results">
     <div class="empty">Digite o que procura e a cidade para pesquisar.</div>
   </div>
+</section>
+
+<section class="card nextTripCard" id="secProximaViagem" style="display:none">
+  <div class="nextTripHead"><h2>📅 Próxima viagem</h2><span class="nextTripBadge">A seguir</span></div>
+  <div id="proximaViagemCard"></div>
 </section>
 
 <section class="card compactCard" id="secAjuda">
@@ -553,13 +566,24 @@ function render(){
  $("faltanteGeral").textContent=money(arr.reduce((s,t)=>s+faltanteViagem(t),0));
  const future=arr.find(t=>t.data>=localDate());
  $("proxima").textContent=future?dateBR(future.data):"—";
+ renderProximaViagem(future);
  $("listaViagens").innerHTML=arr.length?arr.map(card).join(""):`<div class="empty">Nenhuma viagem cadastrada.</div>`;
+}
+function renderProximaViagem(t){
+ const sec=$("secProximaViagem"), box=$("proximaViagemCard");
+ if(!sec||!box)return;
+ if(!t){sec.style.display="none";box.innerHTML="";return}
+ sec.style.display="block";
+ const falta=faltanteViagem(t);
+ const tipo={viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"}[t.tipoViagem]||"Viagem";
+ const ic={viagem:"🏖️",excursao:"🚌",carro:"🚗",moto:"🏍️",aviao:"✈️",onibus:"🚌",outro:"➕"}[t.tipoViagem]||"🧳";
+ box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">📅 ${dateBR(t.data)}${t.dataVolta?" → "+dateBR(t.dataVolta):""}${t.horaSaida?" • 🕐 "+esc(t.horaSaida):""}<br>📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div><div class="nextTripMoney"><span>💰 Total: ${money(t.valorTotal)}</span>${falta>0?`<span class="pending">🔴 Falta: ${money(falta)}</span>`:`<span>🟢 Pago</span>`}</div></div><button class="nextTripView" type="button" data-next-trip="${t.id}">👁️ Ver viagem</button></div>`;
 }
 function card(t){
  const falta=faltanteViagem(t);
  const atrasada=t.venc&&t.venc<localDate()&&falta>0;
  const badge=t.status==="paga"?"Paga":atrasada?"Atrasada":"A pagar";
- return `<div class="trip ${t.status==="paga"?"paga":""}">
+ return `<div class="trip ${t.status==="paga"?"paga":""}" data-trip-id="${t.id}">
   <div class="triptop"><div><h3>${esc(t.nome)}</h3><div class="sub">${esc(t.hotel||"")} ${t.hotel&&t.cidade?"• ":""}${esc(t.cidade||"")}</div>${t.tipoViagem?`<div class="sub">🧳 ${esc({viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"}[t.tipoViagem]||t.tipoViagem)}</div>`:""}</div></div><span class="badge">${badge}</span></div>
   <div class="info">📅 ${dateBR(t.data)}${t.dataVolta?" → "+dateBR(t.dataVolta):""}<br>
   ${t.horaSaida?"🚗 Saída: "+esc(t.horaSaida)+(t.localSaida?" • "+esc(t.localSaida):"")+"<br>":""}
@@ -816,7 +840,10 @@ let financeiroVisivel=localStorage.getItem(FIN_KEY)!=="0";
 function aplicarFinanceiro(){document.querySelectorAll(".financeValues").forEach(el=>el.classList.toggle("financeHidden",!financeiroVisivel));["totalGeral","faltanteGeral"].forEach(id=>{const el=$(id);if(el)el.classList.toggle("financeHidden",!financeiroVisivel)});$("btnFinanceiro").textContent=financeiroVisivel?"🔒 Ocultar":"🔓 Mostrar"}
 $("btnFinanceiro").onclick=()=>{financeiroVisivel=!financeiroVisivel;localStorage.setItem(FIN_KEY,financeiroVisivel?"1":"0");aplicarFinanceiro()};
 
-document.addEventListener("click",e=>{if(!e.target.closest("#btnMenu")&&!e.target.closest("#menuPanel"))$("menuPanel").style.display="none"});
+document.addEventListener("click",e=>{
+ const next=e.target.closest("[data-next-trip]");
+ if(next){const el=document.querySelector(`.trip[data-trip-id="${next.dataset.nextTrip}"]`);if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.animate([{boxShadow:"0 0 0 4px var(--accent)"},{boxShadow:"0 0 0 0 transparent"}],{duration:900});}else{$("secViagens").style.display="block";$('listaViagens').scrollIntoView({behavior:"smooth",block:"start"});}return}
+ if(!e.target.closest("#btnMenu")&&!e.target.closest("#menuPanel"))$("menuPanel").style.display="none"});
 popularCidades();function aplicarCor(c){document.documentElement.style.setProperty("--accent",c);localStorage.setItem("controle_viagens_cor",c)}
 const corSalva=localStorage.getItem("controle_viagens_cor")||"#2E9E6B"; aplicarCor(corSalva);
 $("btnCor").onclick=()=>$("colorPanel").classList.toggle("open"); document.querySelectorAll(".colorDot").forEach(b=>b.onclick=()=>{aplicarCor(b.dataset.color);$("colorPanel").classList.remove("open")});
