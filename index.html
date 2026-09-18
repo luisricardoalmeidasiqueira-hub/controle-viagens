@@ -449,7 +449,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 <script>
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
-const CIDADES=["Tatuí, SP","São Paulo, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
+const CIDADES=["Tatuí, SP","São Paulo, SP","Aparecida, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
 let viagens=[],lugares=[],editId=null,placeTemp=null,editLugarId=null;
 
 const $=id=>document.getElementById(id);
@@ -472,6 +472,35 @@ function cidades(){
 }
 function popularCidades(){
  $("listaCidades").innerHTML=cidades().map(c=>`<option value="${esc(c)}">`).join("");
+}
+function normalizarCidade(valor){
+ let c=String(valor||"").trim().replace(/\s+/g," ");
+ if(!c)return "";
+ const semAcento=c.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+ const conhecidos={
+  "aparecida":"Aparecida, SP, Brasil",
+  "aparecida sp":"Aparecida, SP, Brasil",
+  "aparecida-sp":"Aparecida, SP, Brasil",
+  "aparecida - sp":"Aparecida, SP, Brasil",
+  "aparecida, sp":"Aparecida, SP, Brasil",
+  "aparecida sp brasil":"Aparecida, SP, Brasil",
+  "aparecida, sp, brasil":"Aparecida, SP, Brasil"
+ };
+ if(conhecidos[semAcento]) return conhecidos[semAcento];
+ // Aceita também o começo do nome (ex.: "Apa") e resolve para a cidade conhecida.
+ const encontrada=cidades().find(nome=>{
+   const n=nome.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+   return n===semAcento || n.startsWith(semAcento+",") || n.startsWith(semAcento+" ");
+ });
+ return encontrada ? (encontrada.includes(", SP") && /^aparecida([ ,]|$)/i.test(encontrada) ? "Aparecida, SP, Brasil" : encontrada) : c;
+}
+function aplicarCidadeResolvida(id){
+ const el=$(id); if(!el) return "";
+ const resolvida=normalizarCidade(el.value);
+ if(resolvida && resolvida!==el.value.trim()){
+   el.value=(resolvida==="Aparecida, SP, Brasil"?"Aparecida, SP":resolvida);
+ }
+ return resolvida;
 }
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function calcFaltante(){ $("fFaltante").value=money(Math.max((Number($("fTotal").value)||0)-(Number($("fPago").value)||0),0));}
@@ -608,7 +637,7 @@ function calLugar(id){
 }
 
 async function pesquisar(cat=""){
- const termo=$("busca").value.trim(); const cidade=$("cidadeBusca").value.trim(); const categoria=$("categoriaBusca").value||cat||""; const vinteQuatro=$("filtro24").checked; const minRating=Number($("filtroRating").value||0); const apiKey=localStorage.getItem("controle_viagens_google_places_key")||"";
+ const termo=$("busca").value.trim(); const cidade=normalizarCidade($("cidadeBusca").value); const categoria=$("categoriaBusca").value||cat||""; const vinteQuatro=$("filtro24").checked; const minRating=Number($("filtroRating").value||0); const apiKey=localStorage.getItem("controle_viagens_google_places_key")||"";
  if(!termo&&!categoria){$("resultados").innerHTML=`<div class="empty">Escolha uma categoria ou digite o que procura.</div>`;return}
  const nomes={hotel:"hotel",restaurante:"restaurante",padaria:"padaria",mcdonalds:"McDonald's",habibs:"Habib's",lanchonete:"lanchonete",turismo:"ponto turístico",praia:"praia",compras:"compras",posto:"posto de combustível",farmacia:"farmácia",estacionamento:"estacionamento",cafe:"café",outros:""};
  const q=[termo,nomes[categoria]||categoria,cidade].filter(Boolean).join(" "); $("resultados").innerHTML=`<div class="empty">🔎 Pesquisando...</div>`;
@@ -632,6 +661,13 @@ async function pesquisar(cat=""){
  }catch(err){$("resultados").innerHTML=`<div class="empty">Não foi possível pesquisar agora. Verifique a internet e tente novamente.</div>`}
 }
 $("btnBusca").onclick=()=>pesquisar(); $("busca").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();pesquisar()}}); $("categoriaBusca").addEventListener("change",()=>{const c=$("categoriaBusca").value; const show=["hotel","restaurante","padaria","lanchonete","cafe"].includes(c); $("ratingRow").style.display=show?"flex":"none"; if(c==="outros")$("busca").focus(); else pesquisar()}); $("filtro24").addEventListener("change",()=>{if($("categoriaBusca").value||$("busca").value.trim())pesquisar()}); $("filtroRating").addEventListener("change",()=>{if($("categoriaBusca").value||$("busca").value.trim())pesquisar()});
+$("cidadeBusca").addEventListener("input",()=>{
+ const v=$("cidadeBusca").value.trim();
+ if(v.length>=3){ const c=normalizarCidade(v); if(c!==v && c==="Aparecida, SP, Brasil") { /* mantém a digitação até sair do campo */ } }
+});
+$("cidadeBusca").addEventListener("blur",()=>aplicarCidadeResolvida("cidadeBusca"));
+$("fCidade").addEventListener("blur",()=>aplicarCidadeResolvida("fCidade"));
+$("fCidade").addEventListener("change",()=>aplicarCidadeResolvida("fCidade"));
 
 async function compartilharLugar(p){
  const text=`📍 ${p.name}\n${p.city?p.city+"\n":""}${p.address||""}`;
