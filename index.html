@@ -150,8 +150,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 .nextTripCard{border:2px solid color-mix(in srgb,var(--accent) 28%,var(--line));background:linear-gradient(135deg,#ffffff 0%,var(--panel2) 100%);box-shadow:0 5px 18px #00000012}
 .nextTripHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.nextTripHead h2{margin:0;color:var(--accent)}
 .nextTripBadge{font-size:11px;font-weight:800;color:#fff;background:var(--accent);border-radius:999px;padding:6px 9px}
-.nextTripInner{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.nextTripName{font-size:18px;font-weight:900;margin-bottom:4px}.nextTripMeta{color:var(--muted);font-size:13px;line-height:1.5}.nextTripMoney{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.nextTripMoney span{font-size:11px;font-weight:800;padding:6px 8px;border-radius:9px;background:#E9F7F0;color:#176642}.nextTripMoney .pending{background:#FFF0EF;color:#B3261E}.nextTripView{border:0;border-radius:11px;background:var(--accent);color:#fff;font-weight:800;padding:10px 12px;white-space:nowrap}.nextTripEmpty{color:var(--muted);font-size:12px}
-@media(max-width:430px){.nextTripInner{grid-template-columns:1fr}.nextTripView{width:100%}}
+.nextTripInner{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.nextTripName{font-size:18px;font-weight:900;margin-bottom:4px}.nextTripMeta{color:var(--muted);font-size:13px;line-height:1.5}.nextTripMoney{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.nextTripMoney span{font-size:11px;font-weight:800;padding:6px 8px;border-radius:9px;background:#E9F7F0;color:#176642}.nextTripMoney .pending{background:#FFF0EF;color:#B3261E}.nextTripActions{display:flex;gap:7px;align-items:center;justify-content:flex-end}.nextTripView,.nextTripAction{width:42px;height:42px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);color:var(--text);font-size:20px;display:grid;place-items:center;padding:0}.nextTripView{background:var(--accent);color:#fff;border-color:var(--accent)}.nextTripAction.danger{background:#5a2523;color:#fff;border-color:#7b3531}.nextTripAction.saved{background:#E9F7F0;color:#176642;border-color:#9bd8bb}.nextTripEmpty{color:var(--muted);font-size:12px}
+@media(max-width:430px){.nextTripInner{grid-template-columns:1fr}.nextTripActions{justify-content:flex-end}}
 
 .topTools{display:flex;justify-content:space-between;align-items:center;margin:0 0 8px}.topHint{font-weight:800;color:var(--accent)}.miniTool{width:42px;height:42px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);font-size:24px}.switchLine{display:flex!important;align-items:center;justify-content:space-between;gap:10px;background:var(--panel2);border:1px solid var(--line);padding:8px 10px;border-radius:12px}.switchLine input{display:none}.switchLine i{width:42px;height:24px;border-radius:20px;background:#aaa;position:relative}.switchLine i:after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:white;left:2px;top:2px;transition:.2s}.switchLine input:checked+i{background:var(--accent)}.switchLine input:checked+i:after{left:20px}.menuPanel{position:fixed;right:14px;top:64px;z-index:20;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 10px 30px #0003;width:min(320px,calc(100vw - 28px))}.menuPanel button{width:100%;display:flex;justify-content:space-between;border:0;background:transparent;color:var(--text);padding:13px 10px;border-radius:10px;text-align:left}.menuPanel button:hover{background:var(--panel2)}.hotelShortcut{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:12px;margin:0 0 14px;font-weight:800;display:flex;justify-content:space-between}.hiddenSection{display:none}.compactCard{padding:12px}.collapseBtn{width:100%;border:0;background:transparent;color:var(--text);font-weight:800;font-size:16px;display:flex;justify-content:space-between;padding:2px}.lockedPlace{opacity:.9}
 
@@ -578,7 +578,8 @@ function renderProximaViagem(t){
  const falta=faltanteViagem(t);
  const tipo={viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"}[t.tipoViagem]||"Viagem";
  const ic={viagem:"🏖️",excursao:"🚌",carro:"🚗",moto:"🏍️",aviao:"✈️",onibus:"🚌",outro:"➕"}[t.tipoViagem]||"🧳";
- box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">📅 ${dateBR(t.data)}${t.dataVolta?" → "+dateBR(t.dataVolta):""}${t.horaSaida?" • 🕐 "+esc(t.horaSaida):""}<br>📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div><div class="nextTripMoney"><span>💰 Total: ${money(t.valorTotal)}</span>${falta>0?`<span class="pending">🔴 Falta: ${money(falta)}</span>`:`<span>🟢 Pago</span>`}</div></div><button class="nextTripView" type="button" data-next-trip="${t.id}">👁️ Ver viagem</button></div>`;
+ const fixada=!!t.proximaFixada;
+ box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">📅 ${dateBR(t.data)}${t.dataVolta?" → "+dateBR(t.dataVolta):""}${t.horaSaida?" • 🕐 "+esc(t.horaSaida):""}<br>📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div><div class="nextTripMoney"><span>💰 Total: ${money(t.valorTotal)}</span>${falta>0?`<span class="pending">🔴 Falta: ${money(falta)}</span>`:`<span>🟢 Pago</span>`}</div></div><div class="nextTripActions"><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>`;
 }
 function card(t){
  const falta=faltanteViagem(t);
@@ -842,8 +843,34 @@ function aplicarFinanceiro(){document.querySelectorAll(".financeValues").forEach
 $("btnFinanceiro").onclick=()=>{financeiroVisivel=!financeiroVisivel;localStorage.setItem(FIN_KEY,financeiroVisivel?"1":"0");aplicarFinanceiro()};
 
 document.addEventListener("click",e=>{
+ const delNext=e.target.closest("[data-next-delete]");
+ if(delNext){
+   const id=Number(delNext.dataset.nextDelete);
+   if(confirm("Excluir esta viagem? Ela também será excluída de 🧳 Suas viagens.")){
+     viagens=viagens.filter(x=>x.id!==id);save();render();
+   }
+   return;
+ }
+ const saveNext=e.target.closest("[data-next-save]");
+ if(saveNext){
+   const id=Number(saveNext.dataset.nextSave);
+   const t=viagens.find(x=>x.id===id);
+   if(t){t.proximaFixada=!t.proximaFixada;save();render();}
+   return;
+ }
  const next=e.target.closest("[data-next-trip]");
- if(next){const el=document.querySelector(`.trip[data-trip-id="${next.dataset.nextTrip}"]`);if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.animate([{boxShadow:"0 0 0 4px var(--accent)"},{boxShadow:"0 0 0 0 transparent"}],{duration:900});}else{$("secViagens").style.display="block";$('listaViagens').scrollIntoView({behavior:"smooth",block:"start"});}return}
+ if(next){
+   const el=document.querySelector(`.trip[data-trip-id="${next.dataset.nextTrip}"]`);
+   if(el){
+     $("secViagens").style.display="block";
+     el.scrollIntoView({behavior:"smooth",block:"center"});
+     el.animate([{boxShadow:"0 0 0 4px var(--accent)"},{boxShadow:"0 0 0 0 transparent"}],{duration:900});
+   }else{
+     $("secViagens").style.display="block";
+     $("listaViagens").scrollIntoView({behavior:"smooth",block:"start"});
+   }
+   return;
+ }
  if(!e.target.closest("#btnMenu")&&!e.target.closest("#menuPanel"))$("menuPanel").style.display="none"});
 popularCidades();function aplicarCor(c){document.documentElement.style.setProperty("--accent",c);localStorage.setItem("controle_viagens_cor",c)}
 const corSalva=localStorage.getItem("controle_viagens_cor")||"#2E9E6B"; aplicarCor(corSalva);
