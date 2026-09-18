@@ -113,8 +113,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 
 
 .emergencyGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
-.emergencyBtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:92px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);color:var(--text);text-decoration:none}
-.emergencyBtn strong{font-size:22px}.emergencyBtn span{font-size:12px;color:var(--muted)}
+.emergencyBtn{display:flex;align-items:center;justify-content:center;min-height:0;height:54px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);color:var(--text);text-decoration:none;font-weight:900;font-size:20px}
+.emergencyBtn strong{font-size:20px}.emergencyBtn span{display:none}
 @media(max-width:430px){.emergencyGrid{grid-template-columns:1fr 1fr}.emergencyBtn:last-child{grid-column:1/-1}}
 
 .paymentOptions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
@@ -165,7 +165,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 .transportBtn.uber{background:#000;color:#fff}.transportBtn.n99{background:#FFDD00;color:#121212}.transportBtn.indrive{background:#B7F000;color:#121212}.transportBtn.taxi{background:#1976D2;color:#fff}.transportBtn.other{background:#E9EDF0;color:#121212}
 .uberWordmark{width:62px!important;height:auto!important;filter:brightness(0) invert(1)}
 .brand99{width:34px;height:34px;border-radius:9px;background:#FFDD00;display:grid;place-items:center;font-weight:1000;font-size:18px;color:#121212;border:2px solid #121212}
-.emergencyGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.emergencyBtn{border:0;border-radius:12px;padding:12px 8px;font-weight:900;color:#fff;text-decoration:none;text-align:center;display:block}.police{background:#1565C0}.samu{background:#D32F2F}.fire{background:#E65100}
+.emergencyGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.emergencyBtn{border:0;border-radius:12px;height:52px;padding:0 8px;font-weight:900;color:#fff;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;font-size:20px}.police{background:#1565C0}.samu{background:#D32F2F}.fire{background:#E65100}
 .recommendGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.recommendBtn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:11px;padding:12px;font-weight:800}
 .financeToggle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px 12px;border:1px solid var(--line);background:var(--panel2);border-radius:12px}.financeHidden{filter:blur(6px);user-select:none}.transportOrigin{display:flex;gap:7px}.transportOrigin input{flex:1}.transportOrigin button{width:46px}
 @media(max-width:430px){.transportGrid{grid-template-columns:1fr}.emergencyGrid{grid-template-columns:1fr 1fr 1fr}}
@@ -224,6 +224,11 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
   <p>Planeje viagens, encontre lugares e organize tudo no celular.</p>
 </header>
 
+<section class="card nextTripCard" id="secProximaViagem" style="display:none">
+  <div class="nextTripHead"><h2>📅 Próxima viagem</h2><span class="nextTripBadge">A seguir</span></div>
+  <div id="proximaViagemCard"></div>
+</section>
+
 <div class="topTools"><span class="topHint">🔎 Encontrar lugares</span><div class="actions" style="align-items:center;gap:6px"><button class="miniTool" id="btnCor" aria-label="Cor do aplicativo" title="Cor do aplicativo">🎨</button><button class="miniTool" id="btnMenu" aria-label="Mais opções">⋮</button></div></div>
 <section class="card" id="secBusca">
   <div class="searchTitleRow"><h2>🔎 Encontrar lugares</h2><label class="compactSwitch" title="Priorizar somente locais 24 horas"><span>🕐 24h</span><input type="checkbox" id="filtro24"><i></i></label></div>
@@ -238,10 +243,6 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
   </div>
 </section>
 
-<section class="card nextTripCard" id="secProximaViagem" style="display:none">
-  <div class="nextTripHead"><h2>📅 Próxima viagem</h2><span class="nextTripBadge">A seguir</span></div>
-  <div id="proximaViagemCard"></div>
-</section>
 
 <section class="card compactCard" id="secAjuda">
   <button class="collapseBtn" id="btnAjuda">🚨 Ajuda rápida <span>︾</span></button>
@@ -253,9 +254,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
     <div class="featureCard"><h3>🚨 Emergência</h3><p>Toque no número correspondente para ligar pelo celular.</p></div>
   </div>
   <div class="emergencyGrid">
-    <a class="emergencyBtn police" href="tel:190">🚔 190<br><small>Polícia</small></a>
-    <a class="emergencyBtn samu" href="tel:192">🚑 192<br><small>SAMU</small></a>
-    <a class="emergencyBtn fire" href="tel:193">🚒 193<br><small>Bombeiros</small></a>
+    <a class="emergencyBtn police" href="tel:190" aria-label="Ligar 190">190</a>
+    <a class="emergencyBtn samu" href="tel:192" aria-label="Ligar 192">192</a>
+    <a class="emergencyBtn fire" href="tel:193" aria-label="Ligar 193">193</a>
   </div>
   </div>
 </section>
@@ -306,7 +307,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
   <div class="notice">O preço da corrida é mostrado pelo próprio serviço. O Controle de Viagens não inventa nem fixa tarifas.</div>
 </div></div>
 
-<div class="modal" id="modalEmergencias"><div class="sheet"><button class="close" id="fecharEmergencias">×</button><h2>🚨 Ajuda rápida</h2><p class="sourceNote">Use somente em uma emergência. Os números abaixo abrem a ligação pelo celular.</p><div class="emergencyGrid"><a class="emergencyBtn" href="tel:190">🚔<strong>190</strong><span>Polícia</span></a><a class="emergencyBtn" href="tel:192">🚑<strong>192</strong><span>SAMU</span></a><a class="emergencyBtn" href="tel:193">🚒<strong>193</strong><span>Bombeiros</span></a></div></div></div>
+<div class="modal" id="modalEmergencias"><div class="sheet"><button class="close" id="fecharEmergencias">×</button><h2>🚨 Ajuda rápida</h2><p class="sourceNote">Use somente em uma emergência. Os números abaixo abrem a ligação pelo celular.</p><div class="emergencyGrid"><a class="emergencyBtn police" href="tel:190" aria-label="Ligar 190"><strong>190</strong></a><a class="emergencyBtn samu" href="tel:192" aria-label="Ligar 192"><strong>192</strong></a><a class="emergencyBtn fire" href="tel:193" aria-label="Ligar 193"><strong>193</strong></a></div></div></div>
 <div class="modal" id="modalRecomendacoes"><div class="sheet"><button class="close" id="fecharRecomendacoes">×</button><h2>📎 Recomendações da internet</h2><div class="field"><label>Cidade / local</label><input id="recLocal" placeholder="Ex.: Balneário Camboriú, SC"></div><div class="field"><label>O que você procura?</label><input id="recBusca" placeholder="Ex.: melhores restaurantes"></div><div class="recommendGrid"><button class="recommendBtn" id="recGoogle" type="button">🔎 Google</button><button class="recommendBtn" id="recMaps" type="button">📍 Google Maps</button><button class="recommendBtn" id="recTrip" type="button">⭐ TripAdvisor</button><button class="recommendBtn" id="recYouTube" type="button">▶️ YouTube</button></div><div class="notice">As recomendações são abertas diretamente na internet; o aplicativo não inventa avaliações.</div></div></div>
 <div class="hotelShortcut" id="hotelShortcut">📍 Perto do hotel <span>🔍</span></div>
 <button class="fab" id="btnNova" aria-label="Nova viagem">＋</button>
