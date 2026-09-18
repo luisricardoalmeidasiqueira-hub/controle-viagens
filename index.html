@@ -161,6 +161,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 .recommendGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.recommendBtn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:11px;padding:12px;font-weight:800}
 .financeToggle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px 12px;border:1px solid var(--line);background:var(--panel2);border-radius:12px}.financeHidden{filter:blur(6px);user-select:none}.transportOrigin{display:flex;gap:7px}.transportOrigin input{flex:1}.transportOrigin button{width:46px}
 @media(max-width:430px){.transportGrid{grid-template-columns:1fr}.emergencyGrid{grid-template-columns:1fr 1fr 1fr}}
+
+/* Controle financeiro mensal — adição independente */
+.financeValues.financeLink{cursor:pointer}.paymentModeRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.paymentModeCard{border:1.5px solid #d8e3dc;border-radius:16px;background:#f7faf8;padding:12px;display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:800;color:var(--text,#26351f)}.paymentModeCard input{accent-color:var(--accent,#2e9e6b)}.installmentBox{margin-top:10px;padding:12px;border:1px solid #d8e3dc;border-radius:16px;background:#f7faf8}.installmentGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.installmentList{display:grid;gap:8px;margin-top:12px}.installmentItem{border:1px solid #d8e3dc;border-left:5px solid #aeb8b2;border-radius:14px;background:#fff;padding:10px}.installmentItem.paid{border-left-color:#2e9e6b;background:#f0faf4}.installmentItem.overdue{border-left-color:#d32f2f;background:#fff2f2}.installmentItem.soon{border-left-color:#ef8c00;background:#fff8eb}.installmentHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.installmentMonth{font-weight:900}.installmentValue{font-weight:900}.installmentMeta{font-size:.9rem;color:#66735f;margin-top:3px}.installmentStatus{font-weight:900;margin-top:6px}.installmentStatus.paid{color:#16834c}.installmentStatus.overdue{color:#c62828}.installmentStatus.soon{color:#c56b00}.installmentStatus.future{color:#68736d}.installmentActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.installmentActions button{font-size:.86rem;padding:8px 10px;border-radius:11px}@media(max-width:520px){.paymentModeRow{grid-template-columns:1fr 1fr}}
 </style>
 
 <style id="controleViagensSplashCSS">
@@ -332,6 +335,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
       <div class="field"><label>Valor total</label><input id="fTotal" type="number" min="0" step="0.01"></div>
       <div class="field"><label>Valor já pago</label><input id="fPago" type="number" min="0" step="0.01"></div>
     </div>
+    <div class="field"><label>💳 Forma de pagamento</label><div class="paymentModeRow"><label class="paymentModeCard"><input type="radio" name="modoPagamentoViagem" value="avista"> <span>À vista</span></label><label class="paymentModeCard"><input type="radio" name="modoPagamentoViagem" value="parcelado"> <span>Parcelado mensal</span></label></div><div id="parcelamentoConfig" class="installmentBox" style="display:none"><div class="installmentGrid"><div class="field" style="margin:0"><label>Nº de parcelas</label><input id="fParcelas" type="number" min="2" max="60" step="1" placeholder="Ex.: 6"></div><div class="field" style="margin:0"><label>1º vencimento</label><input id="fPrimeiroVenc" type="date"></div></div><div class="notice" id="parcelamentoInfo" style="margin-top:8px">As parcelas serão geradas automaticamente, mês a mês.</div></div></div>
     <div class="field"><label>Falta pagar</label><input id="fFaltante" disabled></div>
     <div class="field">
       <label>🔔 Lembretes</label>
@@ -407,6 +411,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
   </form>
 </div>
 </div>
+
+<div class="modal" id="modalPagamentos"><div class="sheet"><button class="close" id="fecharPagamentos">×</button><h2>💰 Pagamentos da viagem</h2><div id="pagamentoViagemTitulo" class="notice"></div><div id="pagamentoEditor"></div><div class="actions"><button class="btn secondary" type="button" id="fecharPagamentos2">Fechar</button></div></div></div>
 
 <div class="modal" id="modalLugar">
 <div class="sheet">
@@ -515,36 +521,42 @@ function openModal(id=null){
  $("fHoraSaida").value=t.horaSaida||"";$("fLocalSaida").value=t.localSaida||"";
  $("fInicio").value=t.dataInicioPagamento||"";$("fVenc").value=t.venc||"";
  $("fTotal").value=t.valorTotal??"";$("fPago").value=t.valorPago??"";
- $("fObs").value=t.obs||"";$("fGastos").value=t.gastos??"";$("fRoteiro").value=t.roteiro||"";$("fOrigemTransporte").value=t.origemTransporte||"";$("fDestinoTransporte").value=t.destinoTransporte||"";document.querySelectorAll('input[name="pagamento"]').forEach(x=>x.checked=(t.pagamentos||[]).includes(x.value));calcFaltante();
+ $("fObs").value=t.obs||"";$("fGastos").value=t.gastos??"";$("fRoteiro").value=t.roteiro||"";$("fOrigemTransporte").value=t.origemTransporte||"";$("fDestinoTransporte").value=t.destinoTransporte||"";document.querySelectorAll('input[name="pagamento"]').forEach(x=>x.checked=(t.pagamentos||[]).includes(x.value));const modo=t.modoPagamento||((t.parcelas&&t.parcelas.length>1)?"parcelado":"avista");document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(x=>x.checked=x.value===modo);$("fParcelas").value=t.numeroParcelas||((t.parcelas||[]).length||"");$("fPrimeiroVenc").value=t.primeiroVencimento||t.venc||"";toggleParcelamentoUI();calcFaltante();
  [...$("fLembretes").options].forEach(o=>o.selected=(t.lembretes||["7","1","hora","embarque"]).includes(o.value));
  $("modal").classList.add("open");
 }
 function closeModal(){$("modal").classList.remove("open");editId=null}
 $("btnNova").onclick=()=>openModal();$("fechar").onclick=closeModal;$("cancelar").onclick=closeModal;
+function toggleParcelamentoUI(){const modo=document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value||"avista";$("parcelamentoConfig").style.display=modo==="parcelado"?"block":"none";if(modo==="parcelado"&&!$("fPrimeiroVenc").value)$("fPrimeiroVenc").value=$("fVenc").value||localDate();atualizarInfoParcelamento()}
+function addMonthsISO(iso,months){const d=new Date(iso+"T12:00:00");d.setMonth(d.getMonth()+months);const p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}
+function gerarParcelas(total,qtd,primeiro,existentes=[]){const n=Math.max(parseInt(qtd)||0,0);if(n<2)return[];const totalC=Math.max(Number(total)||0,0),base=Math.floor(totalC/n*100)/100,resto=Math.round((totalC-base*n)*100)/100;return Array.from({length:n},(_,i)=>{const a=existentes?.[i];return{numero:i+1,valor:i===n-1?Math.round((base+resto)*100)/100:base,vencimento:addMonthsISO(primeiro,i),pago:!!a?.pago,dataPago:a?.dataPago||""}})}
+function atualizarInfoParcelamento(){const modo=document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value||"avista";if(modo!=="parcelado")return;const n=Math.max(parseInt($("fParcelas").value)||0,0),total=Math.max(Number($("fTotal").value)||0,0);$("parcelamentoInfo").textContent=n>=2?`${n} parcelas mensais • ${money(total/n)} por mês (a última pode ajustar centavos).`:`Informe o número de parcelas e o primeiro vencimento.`}
+document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(x=>x.addEventListener('change',toggleParcelamentoUI));$("fParcelas").addEventListener('input',atualizarInfoParcelamento);$("fPrimeiroVenc").addEventListener('change',atualizarInfoParcelamento);$("fTotal").addEventListener('input',atualizarInfoParcelamento);
 
 $("formViagem").onsubmit=e=>{
  e.preventDefault();
  const total=Math.max(Number($("fTotal").value)||0,0),pago=Math.max(Number($("fPago").value)||0,0);
  const obj={id:editId||Date.now(),nome:$("fNome").value.trim(),tipoViagem:$("fTipoViagem").value,cidade:$("fCidade").value.trim(),hotel:$("fHotel").value.trim(),
  data:$("fData").value,dataVolta:$("fDataVolta").value,horaSaida:$("fHoraSaida").value,localSaida:$("fLocalSaida").value.trim(),
- dataInicioPagamento:$("fInicio").value,venc:$("fVenc").value,valorTotal:total,valorPago:pago,obs:$("fObs").value.trim(),
+ dataInicioPagamento:$("fInicio").value,venc:$("fVenc").value,valorTotal:total,valorPago:pago,modoPagamento:document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value||"avista",numeroParcelas:Math.max(parseInt($("fParcelas").value)||0,0),primeiroVencimento:$("fPrimeiroVenc").value,obs:$("fObs").value.trim(),
  lembretes:[...$("fLembretes").selectedOptions].map(o=>o.value),gastos:Math.max(Number($("fGastos").value)||0,0),roteiro:$("fRoteiro").value.trim(),pagamentos:[...document.querySelectorAll('input[name="pagamento"]:checked')].map(x=>x.value),origemTransporte:$("fOrigemTransporte").value.trim(),destinoTransporte:$("fDestinoTransporte").value.trim(),status:pago>=total&&total>0?"paga":"pagar"};
- if(obj.dataVolta&&obj.dataVolta<obj.data){alert("A data de volta não pode ser anterior à ida.");return}
+ if(obj.modoPagamento==="parcelado"){if(obj.numeroParcelas<2){alert("Informe pelo menos 2 parcelas.");return}if(!obj.primeiroVencimento){alert("Informe o primeiro vencimento.");return}obj.parcelas=gerarParcelas(obj.valorTotal,obj.numeroParcelas,obj.primeiroVencimento,editId?viagens.find(x=>x.id===editId)?.parcelas:[]);obj.valorPago=obj.parcelas.filter(p=>p.pago).reduce((s,p)=>s+p.valor,0)}else{obj.parcelas=[]}if(obj.dataVolta&&obj.dataVolta<obj.data){alert("A data de volta não pode ser anterior à ida.");return}
  if(editId) viagens=viagens.map(x=>x.id===editId?obj:x);else viagens.push(obj);
  save();closeModal();render();
 };
 
+function faltanteViagem(t){if(t?.modoPagamento==="parcelado"&&Array.isArray(t.parcelas)&&t.parcelas.length)return Math.max(t.parcelas.filter(p=>!p.pago).reduce((s,p)=>s+(Number(p.valor)||0),0),0);return Math.max((Number(t?.valorTotal)||0)-(Number(t?.valorPago)||0),0)}
 function render(){
  const arr=[...viagens].sort((a,b)=>(a.data||"").localeCompare(b.data||""));
  $("qtdViagens").textContent=arr.length;
  $("totalGeral").textContent=money(arr.reduce((s,t)=>s+(Number(t.valorTotal)||0),0));
- $("faltanteGeral").textContent=money(arr.reduce((s,t)=>s+Math.max((Number(t.valorTotal)||0)-(Number(t.valorPago)||0),0),0));
+ $("faltanteGeral").textContent=money(arr.reduce((s,t)=>s+faltanteViagem(t),0));
  const future=arr.find(t=>t.data>=localDate());
  $("proxima").textContent=future?dateBR(future.data):"—";
  $("listaViagens").innerHTML=arr.length?arr.map(card).join(""):`<div class="empty">Nenhuma viagem cadastrada.</div>`;
 }
 function card(t){
- const falta=Math.max((Number(t.valorTotal)||0)-(Number(t.valorPago)||0),0);
+ const falta=faltanteViagem(t);
  const atrasada=t.venc&&t.venc<localDate()&&falta>0;
  const badge=t.status==="paga"?"Paga":atrasada?"Atrasada":"A pagar";
  return `<div class="trip ${t.status==="paga"?"paga":""}">
@@ -553,17 +565,18 @@ function card(t){
   ${t.horaSaida?"🚗 Saída: "+esc(t.horaSaida)+(t.localSaida?" • "+esc(t.localSaida):"")+"<br>":""}
   ${t.dataInicioPagamento?"💳 Começou a pagar: "+dateBR(t.dataInicioPagamento)+"<br>":""}
   ${t.venc?"📆 Vencimento: "+dateBR(t.venc)+"<br>":""}
-  <span class="financeValues">💰 Total: ${money(t.valorTotal)} • Pago: ${money(t.valorPago)} • Falta: ${money(falta)}${t.gastos?`<br>💸 Gastos adicionais: ${money(t.gastos)}`:""}</span></div>
+  <span class="financeValues financeLink" data-action="pagamentos" data-id="${t.id}" role="button" tabindex="0" title="Abrir pagamentos">💰 Total: ${money(t.valorTotal)} • Pago: ${money(t.valorPago)} • Falta: ${money(falta)}${t.modoPagamento==="parcelado"&&t.parcelas?.length?` • 💳 ${t.parcelas.length}x mensal`:""}${t.gastos?`<br>💸 Gastos adicionais: ${money(t.gastos)}`:""}</span></div>
   ${t.roteiro?`<div class="obs">🗺️ ${esc(t.roteiro)}</div>`:""}${t.obs?`<div class="obs">📝 ${esc(t.obs)}</div>`:""}
   <div class="actions" style="margin-top:10px">
    <button class="btn secondary" data-action="edit" data-id="${t.id}">Editar</button>
    <button class="btn secondary" data-action="toggle" data-id="${t.id}">${t.status==="paga"?"Reabrir":"Marcar paga"}</button>
    <button class="btn secondary" data-action="calendar" data-id="${t.id}">📅 Calendário</button>
+   <button class="btn secondary" data-action="pagamentos" data-id="${t.id}">💳 Pagamentos</button>
    <button class="iconBtn trashBtn" title="Excluir viagem" aria-label="Excluir viagem" data-action="delete" data-id="${t.id}">🗑️</button>
   </div>
  </div>`;
 }
-function togglePago(id){const t=viagens.find(x=>x.id===id);if(!t)return;if(t.status==="paga"){t.status="pagar"}else{t.status="paga";t.valorPago=t.valorTotal}save();render()}
+function togglePago(id){const t=viagens.find(x=>x.id===id);if(!t)return;if(t.modoPagamento==="parcelado"&&t.parcelas?.length){const p=t.parcelas.find(x=>!x.pago);if(p){p.pago=true;p.dataPago=localDate()}else{t.parcelas.forEach(x=>{x.pago=false;x.dataPago=""})}t.valorPago=t.parcelas.filter(x=>x.pago).reduce((s,x)=>s+(Number(x.valor)||0),0);t.status=faltanteViagem(t)<=0?"paga":"pagar"}else if(t.status==="paga"){t.status="pagar";t.valorPago=0}else{t.status="paga";t.valorPago=t.valorTotal}save();render()}
 function deleteTrip(id){if(confirm("Excluir esta viagem?")){viagens=viagens.filter(x=>x.id!==id);save();render()}}
 function gerarCalendario(id){
  const t=viagens.find(x=>x.id===id);if(!t)return;
@@ -741,7 +754,11 @@ document.querySelectorAll("[data-resource]").forEach(btn=>btn.addEventListener("
 }));
 $("fecharEmergencias").onclick=()=>$("modalEmergencias").classList.remove("open");
 
+function abrirPagamentos(id){const t=viagens.find(x=>x.id===id);if(!t)return;$("pagamentoViagemTitulo").innerHTML=`<b>${esc(t.nome)}</b><br>💰 Total: ${money(t.valorTotal)} • ✅ Pago: ${money(t.valorPago)} • 🔴 Falta: ${money(faltanteViagem(t))}`;if(t.modoPagamento!=="parcelado"||!t.parcelas?.length){$("pagamentoEditor").innerHTML=`<div class="notice">Esta viagem está configurada como <b>à vista</b>. Para usar pagamentos mensais, abra <b>Editar</b> e selecione <b>Parcelado mensal</b>.</div>`}else{const hoje=localDate();$("pagamentoEditor").innerHTML=`<div class="installmentList">${t.parcelas.map(p=>{const overdue=!p.pago&&p.vencimento<hoje,soon=!p.pago&&!overdue&&Math.ceil((new Date(p.vencimento+"T12:00:00")-new Date(hoje+"T12:00:00"))/86400000)<=7,cls=p.pago?"paid":overdue?"overdue":soon?"soon":"",status=p.pago?`<div class="installmentStatus paid">🟢 Pago em ${dateBR(p.dataPago)}</div>`:overdue?`<div class="installmentStatus overdue">🔴 Atrasado</div>`:soon?`<div class="installmentStatus soon">🟠 Vence em breve</div>`:`<div class="installmentStatus future">⚪ Pendente</div>`;return `<div class="installmentItem ${cls}"><div class="installmentHead"><div><div class="installmentMonth">${p.numero}ª parcela • ${dateBR(p.vencimento)}</div><div class="installmentMeta">Vencimento mensal</div></div><div class="installmentValue">${money(p.valor)}</div></div>${status}<div class="installmentActions">${p.pago?`<button class="btn secondary" type="button" data-pay-action="unpay" data-trip-id="${t.id}" data-pay-num="${p.numero}">↩️ Desmarcar pago</button>`:`<button class="btn" type="button" data-pay-action="pay" data-trip-id="${t.id}" data-pay-num="${p.numero}">✅ Marcar pago hoje</button>`}</div></div>`}).join("")}</div>`}$("modalPagamentos").classList.add("open")}
+function fecharPagamentos(){$("modalPagamentos").classList.remove("open")}$("fecharPagamentos").onclick=fecharPagamentos;$("fecharPagamentos2").onclick=fecharPagamentos;
+
 document.addEventListener("click",e=>{
+ const pay=e.target.closest("[data-pay-action]");if(pay){const t=viagens.find(x=>x.id===Number(pay.dataset.tripId));const parcela=t?.parcelas?.find(x=>x.numero===Number(pay.dataset.payNum));if(t&&parcela){if(pay.dataset.payAction==="pay"){parcela.pago=true;parcela.dataPago=localDate()}else{parcela.pago=false;parcela.dataPago=""}t.valorPago=t.parcelas.filter(x=>x.pago).reduce((s,x)=>s+(Number(x.valor)||0),0);t.status=faltanteViagem(t)<=0?"paga":"pagar";save();render();abrirPagamentos(t.id)}return}
  const tripBtn=e.target.closest("[data-action]");
  if(tripBtn){
    const id=Number(tripBtn.dataset.id);
@@ -750,6 +767,7 @@ document.addEventListener("click",e=>{
    else if(action==="toggle") togglePago(id);
    else if(action==="calendar") gerarCalendario(id);
    else if(action==="delete") deleteTrip(id);
+   else if(action==="pagamentos") abrirPagamentos(id);
    return;
  }
  const placeBtn=e.target.closest("[data-place-action]");
