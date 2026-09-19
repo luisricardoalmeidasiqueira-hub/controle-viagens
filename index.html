@@ -143,7 +143,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 .transportCompact .transportBtn img{width:42px;height:30px;object-fit:contain}
 .transportCompact .transportBtn>span:not(.brand99){font-size:0!important}
 .transportCompact .brand99{width:38px;height:38px;border-radius:10px;font-size:20px}
-@media(max-width:430px){.transportCompact{gap:8px}.transportCompact .transportBtn{flex-basis:76px!important;width:76px!important}}
+@media(max-width:430px){.transportCompact{gap:8px!important}.transportCompact .transportBtn{flex-basis:76px!important;width:76px!important}}
 
 
 /* Próxima viagem — destaque compacto, sem alterar a lista existente */
@@ -173,6 +173,56 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 
 /* Controle financeiro mensal — adição independente */
 .financeValues.financeLink{cursor:pointer}.paymentModeRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.paymentModeCard{border:1.5px solid #d8e3dc;border-radius:16px;background:#f7faf8;padding:12px;display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:800;color:var(--text,#26351f)}.paymentModeCard input{accent-color:var(--accent,#2e9e6b)}.installmentBox{margin-top:10px;padding:12px;border:1px solid #d8e3dc;border-radius:16px;background:#f7faf8}.installmentGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.installmentList{display:grid;gap:8px;margin-top:12px}.installmentItem{border:1px solid #d8e3dc;border-left:5px solid #aeb8b2;border-radius:14px;background:#fff;padding:10px}.installmentItem.paid{border-left-color:#2e9e6b;background:#f0faf4}.installmentItem.overdue{border-left-color:#d32f2f;background:#fff2f2}.installmentItem.soon{border-left-color:#ef8c00;background:#fff8eb}.installmentHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.installmentMonth{font-weight:900}.installmentValue{font-weight:900}.installmentMeta{font-size:.9rem;color:#66735f;margin-top:3px}.installmentStatus{font-weight:900;margin-top:6px}.installmentStatus.paid{color:#16834c}.installmentStatus.overdue{color:#c62828}.installmentStatus.soon{color:#c56b00}.installmentStatus.future{color:#68736d}.installmentActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.installmentActions button{font-size:.86rem;padding:8px 10px;border-radius:11px}@media(max-width:520px){.paymentModeRow{grid-template-columns:1fr 1fr}}
+/* Ajustes 2026-09-19: emergência compacta, cartões pequenos, abas de parcelas */
+.emergencyGrid{display:flex;justify-content:center;gap:8px;margin-top:10px}
+.emergencyBtn{flex:0 0 auto;width:auto;min-width:0;height:34px;padding:0 16px;font-size:18px;line-height:1;border-radius:10px;gap:0;white-space:nowrap}
+.emergencyBtn strong{font-size:15px}
+.paymentOptions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.paymentOptions label{flex:0 0 auto;min-height:26px;padding:2px 7px 2px 23px;border-radius:8px;justify-content:flex-start}
+.paymentOptions label:has(input:checked){border-color:var(--accent);background:#E9F7F0}
+.paymentOptions input{left:6px;width:12px;height:12px}
+.payLogo{min-width:0;height:18px;font-size:10px}
+.payLogo.visa{font-size:12px}
+.payLogo.mc{width:26px;min-width:26px}
+.payLogo.mc:before,.payLogo.mc:after{width:14px;height:14px;top:2px}
+.payLogo.mc:before{left:1px}
+.payLogo.mc:after{right:1px}
+.payLogo.elo{font-size:12px;display:flex;align-items:center}
+.payLogo.elo:before{font-size:13px;margin-right:2px}
+.payLogo.amex{font-size:8px;padding:2px 4px;letter-spacing:-.2px}
+.payLogo.pix{font-size:13px}
+.payLogo.cash{font-size:13px}
+.payLogo.ticket,.payLogo.alelo,.payLogo.pluxee{font-size:10px}
+.payLogo.vr{font-size:12px}
+.transportCompact{gap:8px}
+.transportCompact .transportBtn{flex:0 0 66px!important;width:66px!important;min-height:42px!important;height:42px!important;padding:6px!important;border-radius:13px!important}
+.transportCompact .transportBtn>span:not(.brand99){font-size:13px!important}
+.transportGrid .transportBtn{height:42px;min-width:54px;font-size:13px}
+.transportGrid .transportBtn>span:not(.brand99){font-size:13px!important}
+input[readonly]{background:var(--panel2)}
+#modalTransporte,#modalEmergencias{z-index:20}
+.ideasHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.ideasHead h2{margin:0;font-size:16px;color:var(--accent)}
+.ideasCount{font-size:12px;font-weight:800;color:var(--accent);background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.searchLine .ideaSaveBtn{width:auto!important;min-width:0!important;height:40px!important;padding:0 14px!important;font-size:14px!important;border-radius:10px!important;display:block!important;flex:none}
+.ideaSuggest{display:grid;gap:6px;margin-top:8px}
+.ideaSuggest:empty{display:none}
+.ideaSug{width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text);padding:8px 10px;font-size:13px;font-weight:700}
+.ideaSug small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:2px;overflow-wrap:anywhere}
+.ideasList{display:grid;gap:8px;margin-top:4px}
+.ideaItem{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;background:#fff;padding:9px 10px}
+.ideaInfo{min-width:0}
+.ideaInfo strong{display:block;font-size:14px;overflow-wrap:anywhere}
+.ideaInfo small{display:block;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.ideaActions{display:flex;gap:6px;flex:none}
+.abasResumo{font-size:12px;font-weight:800;color:#66735f;margin-top:4px}
+.abaParcela{border:1px solid #d8e3dc;border-left:5px solid #aeb8b2;border-radius:14px;background:#fff;overflow:hidden}
+.abaParcela.paid{border-left-color:#2e9e6b;background:#f0faf4}
+.abaParcela.overdue{border-left-color:#d32f2f;background:#fff2f2}
+.abaHead{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 12px;border:0;background:transparent;color:var(--text);text-align:left;font-weight:800;font-size:14px}
+.abaBody{display:none;padding:0 12px 12px}
+.abaParcela.open .abaBody{display:block}
+.abaSeta{color:var(--muted);font-weight:400}
 </style>
 
 <style id="controleViagensSplashCSS">
@@ -230,6 +280,18 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
   <div id="proximaViagemCard"></div>
 </section>
 
+<section class="card ideasCard" id="secIdeias">
+  <div class="ideasHead"><h2>💡 Ideias de viagem</h2><span class="ideasCount" id="ideiasQtd">0</span></div>
+  <div class="field"><label>Destino ou local indicado</label>
+    <div class="searchLine"><input id="ideiaDestino" placeholder="Ex.: Gramado, RS" autocomplete="off"><button class="btn searchSmall" id="ideiaBuscar" type="button" title="Buscar destino" aria-label="Buscar destino">🔍</button></div>
+    <div id="ideiaSugestoes" class="ideaSuggest"></div>
+  </div>
+  <div class="field"><label>Observação (opcional)</label>
+    <div class="searchLine"><input id="ideiaObs" placeholder="Quem indicou, o que fazer lá…"><button class="btn ideaSaveBtn" id="ideiaSalvar" type="button" title="Salvar ideia" aria-label="Salvar ideia">Salvar</button></div>
+  </div>
+  <div id="listaIdeias" class="ideasList"></div>
+</section>
+
 <div class="topTools"><span class="topHint">🔎 Encontrar lugares</span><div class="actions" style="align-items:center;gap:6px"><button class="miniTool" id="btnCor" aria-label="Cor do aplicativo" title="Cor do aplicativo">🎨</button><button class="miniTool" id="btnMenu" aria-label="Mais opções">⋮</button></div></div>
 <section class="card" id="secBusca">
   <div class="searchTitleRow"><h2>🔎 Encontrar lugares</h2><label class="compactSwitch" title="Priorizar somente locais 24 horas"><span>🕐 24h</span><input type="checkbox" id="filtro24"><i></i></label></div>
@@ -255,9 +317,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
     <div class="featureCard"><h3>🚨 Emergência</h3><p>Toque no número correspondente para ligar pelo celular.</p></div>
   </div>
   <div class="emergencyGrid">
-    <a class="emergencyBtn police" href="tel:190" aria-label="Ligar 190">190</a>
-    <a class="emergencyBtn samu" href="tel:192" aria-label="Ligar 192">192</a>
-    <a class="emergencyBtn fire" href="tel:193" aria-label="Ligar 193">193</a>
+    <a class="emergencyBtn police" href="tel:190" aria-label="Ligar 190, Polícia" title="Polícia (190)">🚔</a>
+    <a class="emergencyBtn samu" href="tel:192" aria-label="Ligar 192, SAMU" title="SAMU (192)">🚑</a>
+    <a class="emergencyBtn fire" href="tel:193" aria-label="Ligar 193, Bombeiros" title="Bombeiros (193)">🚒</a>
   </div>
   </div>
 </section>
@@ -291,6 +353,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
   <button id="menuTransporte">🚕 Transporte <span>›</span></button>
   <button id="menuRecomendacoes">📎 Recomendações da internet <span>›</span></button><button id="menuFonte">🌐 Fonte de avaliações <span>›</span></button>
   <button data-menu="secAjuda">🚨 Ajuda rápida <span>›</span></button>
+  <button id="menuCompartilhar" style="display:none">📤 Compartilhar este app <span>›</span></button>
 </div>
 <div class="colorPanel" id="colorPanel"><strong>🎨 Cor do aplicativo</strong><div class="sourceNote">O fundo permanece branco. Escolha apenas a cor dos destaques e botões.</div><div class="colorChoices"><button class="colorDot" data-color="#2E9E6B" style="background:#2E9E6B" aria-label="Verde"></button><button class="colorDot" data-color="#1976D2" style="background:#1976D2" aria-label="Azul"></button><button class="colorDot" data-color="#7B1FA2" style="background:#7B1FA2" aria-label="Roxo"></button><button class="colorDot" data-color="#EF6C00" style="background:#EF6C00" aria-label="Laranja"></button><button class="colorDot" data-color="#C62828" style="background:#C62828" aria-label="Vermelho"></button></div></div>
 <div class="modal" id="modalFonte"><div class="sheet"><button class="close" id="fecharFonte">×</button><h2>🌐 Fonte de avaliações</h2><p class="sourceNote">O Google Places pode fornecer nota, endereço, horário e avaliações. A API exige configuração própria e pode ter cobrança. Sem chave, o aplicativo continua usando a busca pública e não inventa notas.</p><div class="field"><label>Chave da Google Places API (opcional)</label><div class="apiKeyRow"><input id="googleApiKey" type="password" placeholder="Cole sua chave aqui"><button class="smallBtn" id="salvarApiKey" type="button">Salvar</button></div></div><div class="notice">A chave fica somente neste aparelho. Nunca coloque uma chave pessoal diretamente no código público do GitHub.</div></div></div>
@@ -299,16 +362,16 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
   <div class="field"><label>Origem</label><div class="transportOrigin"><input id="tOrigem" placeholder="Minha localização atual"><button class="smallBtn" id="btnLocalizacao" type="button">📍</button></div><div class="notice" id="localStatus">Toque em 📍 para usar a localização do celular.</div></div>
   <div class="field"><label>Destino</label><div class="transportOrigin"><input id="tDestino" placeholder="Digite o destino"><button class="smallBtn" id="btnBuscaDestino" type="button">🔍</button></div></div>
   <div class="transportGrid">
-    <button class="transportBtn uber" id="transportUber" type="button"><img class="uberWordmark" src="https://d1a3f4spazzrp4.cloudfront.net/uberex/duc/images/logos/Uber_Logotype_Digital_black.png" alt="Uber"><span>Uber</span></button>
-    <button class="transportBtn n99" id="transport99" type="button"><span class="brand99">99</span><span>99</span></button>
-    <button class="transportBtn indrive" id="transportInDrive" type="button"><span style="font-size:24px">inDrive</span></button>
-    <button class="transportBtn taxi" id="transportTaxi" type="button"><span style="font-size:24px">🚕</span><span>Táxi</span></button>
-    <button class="transportBtn other" id="transportOutros" type="button"><span style="font-size:24px">🗺️</span><span>Outros</span></button>
+    <button class="transportBtn uber" id="transportUber" type="button"><span>Uber</span></button>
+    <button class="transportBtn n99" id="transport99" type="button"><span>99</span></button>
+    <button class="transportBtn indrive" id="transportInDrive" type="button"><span>inDrive</span></button>
+    <button class="transportBtn taxi" id="transportTaxi" type="button"><span>🚕 Táxi</span></button>
+    <button class="transportBtn other" id="transportOutros" type="button"><span>Outros</span></button>
   </div>
   <div class="notice">O preço da corrida é mostrado pelo próprio serviço. O Controle de Viagens não inventa nem fixa tarifas.</div>
 </div></div>
 
-<div class="modal" id="modalEmergencias"><div class="sheet"><button class="close" id="fecharEmergencias">×</button><h2>🚨 Ajuda rápida</h2><p class="sourceNote">Use somente em uma emergência. Os números abaixo abrem a ligação pelo celular.</p><div class="emergencyGrid"><a class="emergencyBtn police" href="tel:190" aria-label="Ligar 190"><strong>190</strong></a><a class="emergencyBtn samu" href="tel:192" aria-label="Ligar 192"><strong>192</strong></a><a class="emergencyBtn fire" href="tel:193" aria-label="Ligar 193"><strong>193</strong></a></div></div></div>
+<div class="modal" id="modalEmergencias"><div class="sheet"><button class="close" id="fecharEmergencias">×</button><h2>🚨 Ajuda rápida</h2><p class="sourceNote">Use somente em uma emergência. Os números abaixo abrem a ligação pelo celular.</p><div class="emergencyGrid"><a class="emergencyBtn police" href="tel:190" aria-label="Ligar 190, Polícia" title="Polícia (190)">🚔</a><a class="emergencyBtn samu" href="tel:192" aria-label="Ligar 192, SAMU" title="SAMU (192)">🚑</a><a class="emergencyBtn fire" href="tel:193" aria-label="Ligar 193, Bombeiros" title="Bombeiros (193)">🚒</a></div></div></div>
 <div class="modal" id="modalRecomendacoes"><div class="sheet"><button class="close" id="fecharRecomendacoes">×</button><h2>📎 Recomendações da internet</h2><div class="field"><label>Cidade / local</label><input id="recLocal" placeholder="Ex.: Balneário Camboriú, SC"></div><div class="field"><label>O que você procura?</label><input id="recBusca" placeholder="Ex.: melhores restaurantes"></div><div class="recommendGrid"><button class="recommendBtn" id="recGoogle" type="button">🔎 Google</button><button class="recommendBtn" id="recMaps" type="button">📍 Google Maps</button><button class="recommendBtn" id="recTrip" type="button">⭐ TripAdvisor</button><button class="recommendBtn" id="recYouTube" type="button">▶️ YouTube</button></div><div class="notice">As recomendações são abertas diretamente na internet; o aplicativo não inventa avaliações.</div></div></div>
 <div class="hotelShortcut" id="hotelShortcut">📍 Perto do hotel <span>🔍</span></div>
 <button class="fab" id="btnNova" aria-label="Nova viagem">＋</button>
@@ -350,7 +413,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
       <div class="field"><label>Valor total</label><input id="fTotal" type="number" min="0" step="0.01"></div>
       <div class="field"><label>Valor já pago</label><input id="fPago" type="number" min="0" step="0.01"></div>
     </div>
-    <div class="field"><label>💳 Forma de pagamento</label><div class="paymentModeRow"><label class="paymentModeCard"><input type="radio" name="modoPagamentoViagem" value="avista"> <span>À vista</span></label><label class="paymentModeCard"><input type="radio" name="modoPagamentoViagem" value="parcelado"> <span>Parcelado mensal</span></label></div><div id="parcelamentoConfig" class="installmentBox" style="display:none"><div class="installmentGrid"><div class="field" style="margin:0"><label>Nº de parcelas</label><input id="fParcelas" type="number" min="2" max="60" step="1" placeholder="Ex.: 6"></div><div class="field" style="margin:0"><label>1º vencimento</label><input id="fPrimeiroVenc" type="date"></div></div><div class="notice" id="parcelamentoInfo" style="margin-top:8px">As parcelas serão geradas automaticamente, mês a mês.</div></div></div>
+    <div class="field"><label>💳 Forma de pagamento</label><div class="paymentModeRow"><label class="paymentModeCard"><input type="radio" name="modoPagamentoViagem" value="avista"> <span>À vista</span></label><label class="paymentModeCard"><input type="radio" name="modoPagamentoViagem" value="parcelado"> <span>Parcelado mensal</span></label></div><div id="parcelamentoConfig" class="installmentBox" style="display:none"><div class="installmentGrid"><div class="field" style="margin:0"><label>Nº de parcelas</label><input id="fParcelas" type="number" min="2" max="60" step="1" placeholder="Ex.: 6"></div><div class="field" style="margin:0"><label>1º vencimento</label><input id="fPrimeiroVenc" type="date"></div></div><div class="notice" id="parcelamentoInfo" style="margin-top:8px">As parcelas serão geradas automaticamente, mês a mês.</div><div id="parcelasAbas" class="installmentList"></div></div></div>
     <div class="field"><label>Falta pagar</label><input id="fFaltante" disabled></div>
     <div class="field">
       <label>🔔 Lembretes</label>
@@ -394,8 +457,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
           <input id="fDestinoTransporte" placeholder="Destino">
         </div>
         <div class="actions transportCompact">
-          <button class="transportBtn uber" type="button" id="btnUber" aria-label="Abrir Uber" title="Uber"><img class="uberWordmark" src="https://d1a3f4spazzrp4.cloudfront.net/uberex/duc/images/logos/Uber_Logotype_Digital_white.png" alt="Uber"></button>
-          <button class="transportBtn n99" type="button" id="btn99" aria-label="Abrir 99" title="99"><span class="brand99">99</span></button>
+          <button class="transportBtn uber" type="button" id="btnUber" aria-label="Abrir Uber" title="Uber"><span>Uber</span></button>
+          <button class="transportBtn n99" type="button" id="btn99" aria-label="Abrir 99" title="99"><span>99</span></button>
         </div>
         <div class="notice">O serviço de transporte mostra o preço atualizado. O app não inventa nem fixa o valor da corrida.</div>
       </div>
@@ -407,7 +470,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
         <label title="Visa"><input type="checkbox" name="pagamento" value="Visa"><span class="payLogo visa">VISA</span></label>
         <label title="Mastercard"><input type="checkbox" name="pagamento" value="Mastercard"><span class="payLogo mc" aria-label="Mastercard"></span></label>
         <label title="Elo"><input type="checkbox" name="pagamento" value="Elo"><span class="payLogo elo">elo</span></label>
-        <label title="American Express"><input type="checkbox" name="pagamento" value="Amex"><span class="payLogo amex">AMERICAN EXPRESS</span></label>
+        <label title="American Express"><input type="checkbox" name="pagamento" value="Amex"><span class="payLogo amex">AMEX</span></label>
         <label title="Pix"><input type="checkbox" name="pagamento" value="Pix"><span class="payLogo pix">✣</span></label>
         <label title="Dinheiro"><input type="checkbox" name="pagamento" value="Dinheiro"><span class="payLogo cash">💵</span></label>
         <label title="Ticket"><input type="checkbox" name="pagamento" value="Ticket"><span class="payLogo ticket">●</span></label>
@@ -439,7 +502,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
     <div class="field"><label>Cidade</label><input id="pCidade"></div>
     <div class="field"><label>📍 Endereço / localização</label><input id="pEndereco"></div>
     <div class="grid"><div class="field"><label>🌐 Avaliação da internet</label><input id="pRatingInternet" type="number" min="0" max="5" step="0.1" placeholder="Ex.: 4,6"></div><div class="field"><label>⭐ Minha avaliação</label><select id="pMinhaRating"><option value="">Não avaliado</option><option value="1">⭐</option><option value="2">⭐⭐</option><option value="3">⭐⭐⭐</option><option value="4">⭐⭐⭐⭐</option><option value="5">⭐⭐⭐⭐⭐</option></select></div></div>
-    <div class="field"><label>💳 Pagamentos confirmados</label><div class="paymentOptions"><label title="Visa"><input type="checkbox" name="pagLugar" value="Visa"><span class="payLogo visa">VISA</span></label><label title="Mastercard"><input type="checkbox" name="pagLugar" value="Mastercard"><span class="payLogo mc"></span></label><label title="Elo"><input type="checkbox" name="pagLugar" value="Elo"><span class="payLogo elo">elo</span></label><label title="Amex"><input type="checkbox" name="pagLugar" value="Amex"><span class="payLogo amex">AMERICAN EXPRESS</span></label><label title="Pix"><input type="checkbox" name="pagLugar" value="Pix"><span class="payLogo pix">✣</span></label><label title="Dinheiro"><input type="checkbox" name="pagLugar" value="Dinheiro"><span class="payLogo cash">💵</span></label><label title="Ticket"><input type="checkbox" name="pagLugar" value="Ticket"><span class="payLogo ticket">●</span></label><label title="Alelo"><input type="checkbox" name="pagLugar" value="Alelo"><span class="payLogo alelo">Alelo</span></label><label title="VR"><input type="checkbox" name="pagLugar" value="VR"><span class="payLogo vr">VR</span></label><label title="Pluxee"><input type="checkbox" name="pagLugar" value="Pluxee"><span class="payLogo pluxee">pluxee</span></label></div></div>
+    <div class="field"><label>💳 Pagamentos confirmados</label><div class="paymentOptions"><label title="Visa"><input type="checkbox" name="pagLugar" value="Visa"><span class="payLogo visa">VISA</span></label><label title="Mastercard"><input type="checkbox" name="pagLugar" value="Mastercard"><span class="payLogo mc"></span></label><label title="Elo"><input type="checkbox" name="pagLugar" value="Elo"><span class="payLogo elo">elo</span></label><label title="Amex"><input type="checkbox" name="pagLugar" value="Amex"><span class="payLogo amex">AMEX</span></label><label title="Pix"><input type="checkbox" name="pagLugar" value="Pix"><span class="payLogo pix">✣</span></label><label title="Dinheiro"><input type="checkbox" name="pagLugar" value="Dinheiro"><span class="payLogo cash">💵</span></label><label title="Ticket"><input type="checkbox" name="pagLugar" value="Ticket"><span class="payLogo ticket">●</span></label><label title="Alelo"><input type="checkbox" name="pagLugar" value="Alelo"><span class="payLogo alelo">Alelo</span></label><label title="VR"><input type="checkbox" name="pagLugar" value="VR"><span class="payLogo vr">VR</span></label><label title="Pluxee"><input type="checkbox" name="pagLugar" value="Pluxee"><span class="payLogo pluxee">pluxee</span></label></div></div>
     <div class="grid">
       <div class="field"><label>Data da visita</label><input id="pData" type="date"></div>
       <div class="field"><label>Horário</label><input id="pHora" type="time"></div>
@@ -472,6 +535,9 @@ const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
 const CIDADES=["Tatuí, SP","São Paulo, SP","Aparecida, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
 let viagens=[],lugares=[],editId=null,placeTemp=null,editLugarId=null;
+let parcelasForm=[],abaAberta=-1,parcelasAtivas=false;
+const IDEIAS_KEY="controle_viagens_ideias";
+let ideias=[],ideiaSel=null,ideiaEmEdicao=null,sugestoesIdeia=[];
 
 const $=id=>document.getElementById(id);
 const money=v=>(Number(v)||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
@@ -485,7 +551,7 @@ function savePlaces(){localStorage.setItem(PLACES_KEY,JSON.stringify(lugares))}
 function load(){
  try{viagens=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]")}catch{viagens=[]}
  try{lugares=JSON.parse(localStorage.getItem(PLACES_KEY)||"[]")}catch{lugares=[]}
- render();renderPlaces();
+ render();renderPlaces();loadIdeias();
 }
 function cidades(){
  const extras=JSON.parse(localStorage.getItem("cidades_extra")||"[]");
@@ -524,11 +590,20 @@ function aplicarCidadeResolvida(id){
  return resolvida;
 }
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function calcFaltante(){ $("fFaltante").value=money(Math.max((Number($("fTotal").value)||0)-(Number($("fPago").value)||0),0));}
+function modoPagForm(){return document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value||"avista"}
+function calcFaltante(){
+ if(parcelasAtivas&&modoPagForm()==="parcelado"){
+  const soma=f=>Math.round(parcelasForm.filter(f).reduce((s,p)=>s+(Number(p.valor)||0),0)*100)/100;
+  $("fPago").value=soma(p=>p.pago);
+  $("fFaltante").value=money(soma(p=>!p.pago));
+  return;
+ }
+ $("fFaltante").value=money(Math.max((Number($("fTotal").value)||0)-(Number($("fPago").value)||0),0));
+}
 $("fTotal").addEventListener("input",calcFaltante);$("fPago").addEventListener("input",calcFaltante);
 
 function openModal(id=null){
- editId=id;
+ editId=id;ideiaEmEdicao=null;
  $("modalTitulo").textContent=id?"Editar viagem":"Nova viagem";
  const t=id?viagens.find(x=>x.id===id):{};
  $("fNome").value=t.nome||"";$("fTipoViagem").value=t.tipoViagem||"viagem";$("fCidade").value=t.cidade||"";$("fHotel").value=t.hotel||"";
@@ -536,17 +611,56 @@ function openModal(id=null){
  $("fHoraSaida").value=t.horaSaida||"";$("fLocalSaida").value=t.localSaida||"";
  $("fInicio").value=t.dataInicioPagamento||"";$("fVenc").value=t.venc||"";
  $("fTotal").value=t.valorTotal??"";$("fPago").value=t.valorPago??"";
- $("fObs").value=t.obs||"";$("fGastos").value=t.gastos??"";$("fRoteiro").value=t.roteiro||"";$("fOrigemTransporte").value=t.origemTransporte||"";$("fDestinoTransporte").value=t.destinoTransporte||"";document.querySelectorAll('input[name="pagamento"]').forEach(x=>x.checked=(t.pagamentos||[]).includes(x.value));const modo=t.modoPagamento||((t.parcelas&&t.parcelas.length>1)?"parcelado":"avista");document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(x=>x.checked=x.value===modo);$("fParcelas").value=t.numeroParcelas||((t.parcelas||[]).length||"");$("fPrimeiroVenc").value=t.primeiroVencimento||t.venc||"";toggleParcelamentoUI();calcFaltante();
+ $("fObs").value=t.obs||"";$("fGastos").value=t.gastos??"";$("fRoteiro").value=t.roteiro||"";$("fOrigemTransporte").value=t.origemTransporte||"";$("fDestinoTransporte").value=t.destinoTransporte||"";document.querySelectorAll('input[name="pagamento"]').forEach(x=>x.checked=(t.pagamentos||[]).includes(x.value));const modo=t.modoPagamento||((t.parcelas&&t.parcelas.length>1)?"parcelado":"avista");document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(x=>x.checked=x.value===modo);$("fParcelas").value=t.numeroParcelas||((t.parcelas||[]).length||"");$("fPrimeiroVenc").value=t.primeiroVencimento||t.venc||"";parcelasForm=(t.parcelas||[]).map(p=>({...p}));abaAberta=-1;parcelasAtivas=false;toggleParcelamentoUI();calcFaltante();
  [...$("fLembretes").options].forEach(o=>o.selected=(t.lembretes||["7","1","hora","embarque"]).includes(o.value));
  $("modal").classList.add("open");
 }
-function closeModal(){$("modal").classList.remove("open");editId=null}
+function closeModal(){$("modal").classList.remove("open");editId=null;ideiaEmEdicao=null}
 $("btnNova").onclick=()=>openModal();$("fechar").onclick=closeModal;$("cancelar").onclick=closeModal;
-function toggleParcelamentoUI(){const modo=document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value||"avista";$("parcelamentoConfig").style.display=modo==="parcelado"?"block":"none";if(modo==="parcelado"&&!$("fPrimeiroVenc").value)$("fPrimeiroVenc").value=$("fVenc").value||localDate();atualizarInfoParcelamento()}
+function toggleParcelamentoUI(){const modo=document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value||"avista";$("parcelamentoConfig").style.display=modo==="parcelado"?"block":"none";if(modo==="parcelado"&&!$("fPrimeiroVenc").value)$("fPrimeiroVenc").value=$("fVenc").value||localDate();$("fPago").readOnly=modo==="parcelado";atualizarInfoParcelamento();sincronizarParcelas()}
 function addMonthsISO(iso,months){const d=new Date(iso+"T12:00:00");d.setMonth(d.getMonth()+months);const p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}
 function gerarParcelas(total,qtd,primeiro,existentes=[]){const n=Math.max(parseInt(qtd)||0,0);if(n<2)return[];const totalC=Math.max(Number(total)||0,0),base=Math.floor(totalC/n*100)/100,resto=Math.round((totalC-base*n)*100)/100;return Array.from({length:n},(_,i)=>{const a=existentes?.[i];return{numero:i+1,valor:i===n-1?Math.round((base+resto)*100)/100:base,vencimento:addMonthsISO(primeiro,i),pago:!!a?.pago,dataPago:a?.dataPago||""}})}
 function atualizarInfoParcelamento(){const modo=document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value||"avista";if(modo!=="parcelado")return;const n=Math.max(parseInt($("fParcelas").value)||0,0),total=Math.max(Number($("fTotal").value)||0,0);$("parcelamentoInfo").textContent=n>=2?`${n} parcelas mensais • ${money(total/n)} por mês (a última pode ajustar centavos).`:`Informe o número de parcelas e o primeiro vencimento.`}
 document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(x=>x.addEventListener('change',toggleParcelamentoUI));$("fParcelas").addEventListener('input',atualizarInfoParcelamento);$("fPrimeiroVenc").addEventListener('change',atualizarInfoParcelamento);$("fTotal").addEventListener('input',atualizarInfoParcelamento);
+const MESES_ABR=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+function mesAno(iso){const d=new Date(iso+"T12:00:00");return MESES_ABR[d.getMonth()]+"/"+d.getFullYear()}
+function sincronizarParcelas(){
+ const n=Math.max(parseInt($("fParcelas").value)||0,0),primeiro=$("fPrimeiroVenc").value;
+ parcelasAtivas=modoPagForm()==="parcelado"&&n>=2&&!!primeiro;
+ if(parcelasAtivas){
+  parcelasForm=gerarParcelas($("fTotal").value,n,primeiro,parcelasForm);
+  if(abaAberta<0||abaAberta>=parcelasForm.length||parcelasForm[abaAberta].pago)abaAberta=parcelasForm.findIndex(p=>!p.pago);
+ }
+ renderAbasParcelas();calcFaltante();
+}
+function renderAbasParcelas(){
+ const box=$("parcelasAbas");if(!box)return;
+ if(!parcelasAtivas){box.innerHTML="";return}
+ const hoje=localDate(),pagas=parcelasForm.filter(p=>p.pago).length;
+ box.innerHTML=`<div class="abasResumo">${pagas} de ${parcelasForm.length} parcelas pagas</div>`+parcelasForm.map((p,i)=>{
+  const atrasada=!p.pago&&p.vencimento<hoje,aberta=i===abaAberta,cls=p.pago?"paid":atrasada?"overdue":"";
+  return `<div class="abaParcela ${cls} ${aberta?"open":""}"><button type="button" class="abaHead" data-aba="${i}" aria-expanded="${aberta}"><span>${p.numero}ª • ${mesAno(p.vencimento)}</span><span>${money(p.valor)} ${p.pago?"✅":atrasada?"🔴":"⚪"} <b class="abaSeta">${aberta?"︿":"﹀"}</b></span></button><div class="abaBody"><div class="installmentMeta">Vence em ${dateBR(p.vencimento)}${p.pago?" • pago em "+dateBR(p.dataPago):""}</div><div class="installmentActions">${p.pago?`<button class="btn secondary" type="button" data-aba-pay="${i}" data-aba-acao="unpay">↩️ Desmarcar pago</button>`:`<button class="btn" type="button" data-aba-pay="${i}" data-aba-acao="pay">✅ Marcar pago</button>`}</div></div></div>`}).join("");
+}
+$("parcelasAbas").addEventListener("click",e=>{
+ const pay=e.target.closest("[data-aba-pay]");
+ if(pay){
+  const i=Number(pay.dataset.abaPay),p=parcelasForm[i];if(!p)return;
+  if(pay.dataset.abaAcao==="pay"){
+   p.pago=true;p.dataPago=localDate();
+   let prox=parcelasForm.findIndex((x,j)=>j>i&&!x.pago);
+   if(prox<0)prox=parcelasForm.findIndex(x=>!x.pago);
+   abaAberta=prox;
+  }else{p.pago=false;p.dataPago="";abaAberta=i}
+  renderAbasParcelas();calcFaltante();
+  $("parcelasAbas").querySelector(".abaParcela.open")?.scrollIntoView({behavior:"smooth",block:"nearest"});
+  return;
+ }
+ const h=e.target.closest("[data-aba]");
+ if(h){const i=Number(h.dataset.aba);abaAberta=abaAberta===i?-1:i;renderAbasParcelas()}
+});
+$("fParcelas").addEventListener("input",sincronizarParcelas);
+$("fPrimeiroVenc").addEventListener("change",sincronizarParcelas);
+$("fTotal").addEventListener("input",sincronizarParcelas);
 
 $("formViagem").onsubmit=e=>{
  e.preventDefault();
@@ -555,10 +669,64 @@ $("formViagem").onsubmit=e=>{
  data:$("fData").value,dataVolta:$("fDataVolta").value,horaSaida:$("fHoraSaida").value,localSaida:$("fLocalSaida").value.trim(),
  dataInicioPagamento:$("fInicio").value,venc:$("fVenc").value,valorTotal:total,valorPago:pago,modoPagamento:document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value||"avista",numeroParcelas:Math.max(parseInt($("fParcelas").value)||0,0),primeiroVencimento:$("fPrimeiroVenc").value,obs:$("fObs").value.trim(),
  lembretes:[...$("fLembretes").selectedOptions].map(o=>o.value),gastos:Math.max(Number($("fGastos").value)||0,0),roteiro:$("fRoteiro").value.trim(),pagamentos:[...document.querySelectorAll('input[name="pagamento"]:checked')].map(x=>x.value),origemTransporte:$("fOrigemTransporte").value.trim(),destinoTransporte:$("fDestinoTransporte").value.trim(),status:pago>=total&&total>0?"paga":"pagar"};
- if(obj.modoPagamento==="parcelado"){if(obj.numeroParcelas<2){alert("Informe pelo menos 2 parcelas.");return}if(!obj.primeiroVencimento){alert("Informe o primeiro vencimento.");return}obj.parcelas=gerarParcelas(obj.valorTotal,obj.numeroParcelas,obj.primeiroVencimento,editId?viagens.find(x=>x.id===editId)?.parcelas:[]);obj.valorPago=obj.parcelas.filter(p=>p.pago).reduce((s,p)=>s+p.valor,0)}else{obj.parcelas=[]}if(obj.dataVolta&&obj.dataVolta<obj.data){alert("A data de volta não pode ser anterior à ida.");return}
+ if(obj.modoPagamento==="parcelado"){if(obj.numeroParcelas<2){alert("Informe pelo menos 2 parcelas.");return}if(!obj.primeiroVencimento){alert("Informe o primeiro vencimento.");return}obj.parcelas=gerarParcelas(obj.valorTotal,obj.numeroParcelas,obj.primeiroVencimento,parcelasForm);obj.valorPago=obj.parcelas.filter(p=>p.pago).reduce((s,p)=>s+p.valor,0);obj.status=obj.valorTotal>0&&faltanteViagem(obj)<=0?"paga":"pagar"}else{obj.parcelas=[]}if(obj.dataVolta&&obj.dataVolta<obj.data){alert("A data de volta não pode ser anterior à ida.");return}
  if(editId) viagens=viagens.map(x=>x.id===editId?obj:x);else viagens.push(obj);
- save();closeModal();render();
+ save();const ideiaOrigem=ideiaEmEdicao;closeModal();if(ideiaOrigem){ideias=ideias.filter(x=>x.id!==ideiaOrigem);saveIdeias();renderIdeias()}render();
 };
+
+
+function saveIdeias(){localStorage.setItem(IDEIAS_KEY,JSON.stringify(ideias))}
+function loadIdeias(){try{ideias=JSON.parse(localStorage.getItem(IDEIAS_KEY)||"[]")}catch{ideias=[]}renderIdeias()}
+function renderIdeias(){
+ $("ideiasQtd").textContent=ideias.length;
+ $("listaIdeias").innerHTML=ideias.length?ideias.map(i=>`<div class="ideaItem"><div class="ideaInfo"><strong>📍 ${esc(i.destino)}</strong>${i.obs?`<small>${esc(i.obs)}</small>`:""}<small>Salva em ${dateBR(i.criado)}</small></div><div class="ideaActions"><button class="nextTripAction" type="button" data-idea-edit="${i.id}" title="Editar: abrir como nova viagem" aria-label="Editar ideia">✏️</button><button class="nextTripAction danger" type="button" data-idea-del="${i.id}" title="Apagar ideia" aria-label="Apagar ideia">🗑️</button></div></div>`).join(""):`<div class="empty">Nenhuma ideia salva. Digite um destino e toque em Salvar.</div>`;
+}
+function montarSugestaoIdeia(x){
+ const a=x.address||{},nome=x.name||String(x.display_name||"").split(",")[0];
+ const cid=a.city||a.town||a.village||a.municipality||a.county||"";
+ const uf=(a.country_code||"")==="br"?((a["ISO3166-2-lvl4"]||"").split("-")[1]||a.state||""):(a.country||"");
+ const destino=cid&&cid!==nome?`${nome}, ${cid}${uf?" - "+uf:""}`:`${nome}${uf?", "+uf:""}`;
+ const base=cid||nome;
+ return{destino,cidade:uf?`${base}, ${uf}`:base,lat:x.lat||"",lon:x.lon||"",detalhe:x.display_name||""};
+}
+async function buscarDestinoIdeia(){
+ const q=$("ideiaDestino").value.trim(),box=$("ideiaSugestoes");
+ if(q.length<2){box.innerHTML=`<div class="empty">Digite o destino para buscar.</div>`;return}
+ box.innerHTML=`<div class="empty">Buscando…</div>`;
+ try{
+  const res=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q="+encodeURIComponent(q),{headers:{"Accept":"application/json","Accept-Language":"pt-BR"}});
+  const raw=await res.json();
+  if(!raw.length){box.innerHTML=`<div class="empty">Nada encontrado. Você pode salvar o texto digitado mesmo assim.</div>`;return}
+  sugestoesIdeia=raw.map(montarSugestaoIdeia);
+  box.innerHTML=sugestoesIdeia.map((x,i)=>`<button type="button" class="ideaSug" data-idea-pick="${i}">📍 ${esc(x.destino)}<small>${esc(x.detalhe)}</small></button>`).join("");
+ }catch{box.innerHTML=`<div class="empty">Sem conexão para buscar. Você pode salvar o texto digitado.</div>`}
+}
+function abrirIdeiaComoViagem(id){
+ const i=ideias.find(x=>x.id===id);if(!i)return;
+ openModal();
+ ideiaEmEdicao=id;
+ $("modalTitulo").textContent="Nova viagem (a partir da ideia)";
+ $("fNome").value=i.destino;$("fCidade").value=i.cidade||i.destino;$("fObs").value=i.obs||"";
+}
+$("ideiaBuscar").onclick=buscarDestinoIdeia;
+$("ideiaDestino").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();buscarDestinoIdeia()}});
+$("ideiaDestino").addEventListener("input",()=>{ideiaSel=null});
+$("ideiaSugestoes").addEventListener("click",e=>{
+ const b=e.target.closest("[data-idea-pick]");if(!b)return;
+ const x=sugestoesIdeia[Number(b.dataset.ideaPick)];if(!x)return;
+ ideiaSel=x;$("ideiaDestino").value=x.destino;$("ideiaSugestoes").innerHTML="";
+});
+$("ideiaSalvar").onclick=()=>{
+ const destino=$("ideiaDestino").value.trim();
+ if(!destino){$("ideiaDestino").focus();$("ideiaSugestoes").innerHTML=`<div class="empty">Digite um destino para salvar.</div>`;return}
+ ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate()});
+ saveIdeias();$("ideiaDestino").value="";$("ideiaObs").value="";$("ideiaSugestoes").innerHTML="";ideiaSel=null;renderIdeias();
+};
+$("listaIdeias").addEventListener("click",e=>{
+ const ed=e.target.closest("[data-idea-edit]"),del=e.target.closest("[data-idea-del]");
+ if(ed){abrirIdeiaComoViagem(Number(ed.dataset.ideaEdit));return}
+ if(del){const id=Number(del.dataset.ideaDel);if(confirm("Apagar esta ideia?")){ideias=ideias.filter(x=>x.id!==id);saveIdeias();renderIdeias()}}
+});
 
 function faltanteViagem(t){if(t?.modoPagamento==="parcelado"&&Array.isArray(t.parcelas)&&t.parcelas.length)return Math.max(t.parcelas.filter(p=>!p.pago).reduce((s,p)=>s+(Number(p.valor)||0),0),0);return Math.max((Number(t?.valorTotal)||0)-(Number(t?.valorPago)||0),0)}
 function render(){
@@ -574,6 +742,7 @@ function render(){
 function renderProximaViagem(t){
  const sec=$("secProximaViagem"), box=$("proximaViagemCard");
  if(!sec||!box)return;
+ const selo=sec.querySelector(".nextTripBadge");if(selo)selo.style.display=t?"":"none";
  if(!t){sec.style.display="none";box.innerHTML="";return}
  sec.style.display="block";
  const falta=faltanteViagem(t);
@@ -761,6 +930,18 @@ function abrirBuscaDestino(){
 $("btnUber").onclick=()=>{ $("tOrigem").value=$("fOrigemTransporte").value||"Minha localização atual"; $("tDestino").value=$("fDestinoTransporte").value||""; $("modalTransporte").classList.add("open"); };
 $("btn99").onclick=()=>{ $("tOrigem").value=$("fOrigemTransporte").value||"Minha localização atual"; $("tDestino").value=$("fDestinoTransporte").value||""; $("modalTransporte").classList.add("open"); };
 $("menuTransporte").onclick=()=>{ $("menuPanel").style.display="none"; abrirTransporteModal(); };
+(function(){
+ let hospedado=false;try{hospedado=/^https?:$/.test(location.protocol)&&window.self===window.top}catch{}
+ if(hospedado)$("menuCompartilhar").style.display="flex";
+ $("menuCompartilhar").onclick=async()=>{
+  $("menuPanel").style.display="none";
+  const dados={title:"Controle de Viagens",text:"Controle de Viagens: organize suas viagens, pagamentos e lugares.",url:location.href.split("#")[0]};
+  try{
+   if(navigator.share){await navigator.share(dados);return}
+   await navigator.clipboard.writeText(dados.url);alert("Link do app copiado!");
+  }catch(err){if(err&&err.name==="AbortError")return;prompt("Copie o link do app:",dados.url)}
+ };
+})();
 $("fecharTransporte").onclick=()=>$("modalTransporte").classList.remove("open");
 $("btnLocalizacao").onclick=usarLocalizacao;
 $("btnBuscaDestino").onclick=abrirBuscaDestino;
