@@ -275,11 +275,6 @@ input[readonly]{background:var(--panel2)}
   <p>Planeje viagens, encontre lugares e organize tudo no celular.</p>
 </header>
 
-<section class="card nextTripCard" id="secProximaViagem" style="display:none">
-  <div class="nextTripHead"><h2>📅 Próxima viagem</h2><span class="nextTripBadge">A seguir</span></div>
-  <div id="proximaViagemCard"></div>
-</section>
-
 <section class="card ideasCard" id="secIdeias">
   <div class="ideasHead"><h2>💡 Ideias de viagem</h2><span class="ideasCount" id="ideiasQtd">0</span></div>
   <div class="field"><label>Destino ou local indicado</label>
@@ -343,6 +338,11 @@ input[readonly]{background:var(--panel2)}
 <section class="card hiddenSection" id="secViagens">
   <h2>🧳 Suas viagens</h2>
   <div id="listaViagens"></div>
+</section>
+
+<section class="card nextTripCard" id="secProximaViagem" style="display:none">
+  <div class="nextTripHead"><h2>📅 Próxima viagem</h2><span class="nextTripBadge">A seguir</span></div>
+  <div id="proximaViagemCard"></div>
 </section>
 </div>
 
@@ -774,6 +774,28 @@ function card(t){
 }
 function togglePago(id){const t=viagens.find(x=>x.id===id);if(!t)return;if(t.modoPagamento==="parcelado"&&t.parcelas?.length){const p=t.parcelas.find(x=>!x.pago);if(p){p.pago=true;p.dataPago=localDate()}else{t.parcelas.forEach(x=>{x.pago=false;x.dataPago=""})}t.valorPago=t.parcelas.filter(x=>x.pago).reduce((s,x)=>s+(Number(x.valor)||0),0);t.status=faltanteViagem(t)<=0?"paga":"pagar"}else if(t.status==="paga"){t.status="pagar";t.valorPago=0}else{t.status="paga";t.valorPago=t.valorTotal}save();render()}
 function deleteTrip(id){if(confirm("Excluir esta viagem?")){viagens=viagens.filter(x=>x.id!==id);save();render()}}
+function maisUmaHora(iso){const d=new Date(iso),n=x=>String(x).padStart(2,"0");d.setHours(d.getHours()+1);return `${d.getFullYear()}-${n(d.getMonth()+1)}-${n(d.getDate())}T${n(d.getHours())}:${n(d.getMinutes())}:00`}
+function urlGoogleAgenda(ev){
+ const f=x=>x.replace(/[-:]/g,"").slice(0,15),fim=ev.fim>ev.inicio?ev.fim:maisUmaHora(ev.inicio);
+ const q=new URLSearchParams({action:"TEMPLATE",text:ev.titulo,dates:f(ev.inicio)+"/"+f(fim),details:ev.detalhes||"",location:ev.local||""});
+ return "https://calendar.google.com/calendar/render?"+q.toString();
+}
+async function entregarCalendario(nome,ics,ev){
+ let emFrame=false;try{emFrame=window.self!==window.top}catch{emFrame=true}
+ try{
+  const arq=new File([ics],nome,{type:"text/calendar"});
+  if(navigator.canShare&&navigator.canShare({files:[arq]})){await navigator.share({files:[arq],title:ev.titulo});return}
+ }catch(e){if(e&&e.name==="AbortError")return}
+ if(!emFrame){
+  const blob=new Blob([ics],{type:"text/calendar;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=nome;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
+  return;
+ }
+ const link=urlGoogleAgenda(ev);
+ if(!window.open(link,"_blank"))prompt("Copie este link e abra no navegador para criar o evento no Google Agenda:",link);
+}
 function gerarCalendario(id){
  const t=viagens.find(x=>x.id===id);if(!t)return;
  const start=t.data+(t.horaSaida?`T${t.horaSaida}:00`:"T09:00:00");
@@ -782,10 +804,7 @@ function gerarCalendario(id){
  let alarms="";
  (t.lembretes||["7","1","hora","embarque"]).forEach(v=>{let tr=v==="hora"?"PT1H":v==="embarque"?"PT0M":`P${v}D`;alarms+=`BEGIN:VALARM\nTRIGGER:-${tr}\nACTION:DISPLAY\nDESCRIPTION:Lembrete da viagem\nEND:VALARM\n`});
  const ics=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Controle de Viagens//PT-BR\nBEGIN:VEVENT\nUID:${t.id}@controleviagens\nDTSTART:${fmt(start)}\nDTEND:${fmt(end)}\nSUMMARY:🧳 ${t.nome}${t.cidade?" - "+t.cidade:""}\nDESCRIPTION:Saída: ${t.horaSaida||"não informada"}${t.localSaida?"\\nLocal: "+t.localSaida:""}\\nTotal: ${money(t.valorTotal)}\\nFalta pagar: ${money(Math.max(t.valorTotal-t.valorPago,0))}\n${alarms}END:VEVENT\nEND:VCALENDAR`;
- const blob=new Blob([ics],{type:"text/calendar;charset=utf-8"});
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");a.href=url;a.download="lembrete-viagem.ics";document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),3000);
+ entregarCalendario("lembrete-viagem.ics",ics,{titulo:`🧳 ${t.nome}${t.cidade?" - "+t.cidade:""}`,inicio:start,fim:end,local:t.localSaida||t.cidade||"",detalhes:`Saída: ${t.horaSaida||"não informada"}${t.localSaida?"\nLocal: "+t.localSaida:""}\nTotal: ${money(t.valorTotal)}\nFalta pagar: ${money(Math.max(t.valorTotal-t.valorPago,0))}`});
 }
 
 function abrirLugar(data){
@@ -839,10 +858,7 @@ function calLugar(id){
  const st=p.data+(p.hora?`T${p.hora}:00`:"T12:00:00"),fmt=s=>s.replace(/[-:]/g,"");
  let alarm=p.lembrete?`BEGIN:VALARM\nTRIGGER:-PT${p.lembrete}M\nACTION:DISPLAY\nDESCRIPTION:Lembrete da visita\nEND:VALARM\n`:"";
  const ics=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Controle de Viagens//PT-BR\nBEGIN:VEVENT\nUID:${p.id}@controleviagens\nDTSTART:${fmt(st)}\nDTEND:${fmt(st)}\nSUMMARY:${p.nome}${p.cidade?" - "+p.cidade:""}\nDESCRIPTION:${p.obs||"Visita programada"}\n${alarm}END:VEVENT\nEND:VCALENDAR`;
- const blob=new Blob([ics],{type:"text/calendar;charset=utf-8"});
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");a.href=url;a.download="lembrete-visita.ics";document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),3000);
+ entregarCalendario("lembrete-visita.ics",ics,{titulo:`${p.nome}${p.cidade?" - "+p.cidade:""}`,inicio:st,fim:st,local:p.endereco||p.cidade||"",detalhes:p.obs||"Visita programada"});
 }
 
 async function pesquisar(cat=""){
