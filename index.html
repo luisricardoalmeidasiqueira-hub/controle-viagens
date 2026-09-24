@@ -9,6 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#F1F8F4">
 <title>Controle de Viagens</title>
 <style>
 :root{
@@ -54,7 +55,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 .trip h3{margin:0 0 3px}
 .trip .sub{color:var(--muted);font-size:13px}
 .badge{font-size:12px;padding:6px 9px;border-radius:20px;background:var(--panel2);height:max-content}
-.info{font-size:13px;line-height:1.55;color:#cbd5dc;margin:9px 0}
+.info{font-size:13px;line-height:1.55;color:var(--muted);margin:9px 0}
 .obs{color:var(--muted);font-size:13px}
 .fab{position:fixed;right:18px;bottom:20px;width:58px;height:58px;border:0;border-radius:50%;background:var(--accent);color:white;font-size:30px;box-shadow:0 5px 20px #0008}
 .modal{position:fixed;inset:0;background:#000b;display:none;align-items:flex-end;z-index:10}
@@ -172,28 +173,11 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 @media(max-width:430px){.transportGrid{gap:7px}.transportBtn{min-width:58px;height:54px}.emergencyGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 /* Controle financeiro mensal — adição independente */
-.financeValues.financeLink{cursor:pointer}.paymentModeRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.paymentModeCard{border:1.5px solid #d8e3dc;border-radius:16px;background:#f7faf8;padding:12px;display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:800;color:var(--text,#26351f)}.paymentModeCard input{accent-color:var(--accent,#2e9e6b)}.installmentBox{margin-top:10px;padding:12px;border:1px solid #d8e3dc;border-radius:16px;background:#f7faf8}.installmentGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.installmentList{display:grid;gap:8px;margin-top:12px}.installmentItem{border:1px solid #d8e3dc;border-left:5px solid #aeb8b2;border-radius:14px;background:#fff;padding:10px}.installmentItem.paid{border-left-color:#2e9e6b;background:#f0faf4}.installmentItem.overdue{border-left-color:#d32f2f;background:#fff2f2}.installmentItem.soon{border-left-color:#ef8c00;background:#fff8eb}.installmentHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.installmentMonth{font-weight:900}.installmentValue{font-weight:900}.installmentMeta{font-size:.9rem;color:#66735f;margin-top:3px}.installmentStatus{font-weight:900;margin-top:6px}.installmentStatus.paid{color:#16834c}.installmentStatus.overdue{color:#c62828}.installmentStatus.soon{color:#c56b00}.installmentStatus.future{color:#68736d}.installmentActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.installmentActions button{font-size:.86rem;padding:8px 10px;border-radius:11px}@media(max-width:520px){.paymentModeRow{grid-template-columns:1fr 1fr}}
+.financeValues.financeLink{cursor:pointer}.paymentModeRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.paymentModeCard{border:1.5px solid var(--line);border-radius:16px;background:var(--panel2);padding:12px;display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:800;color:var(--text,#26351f)}.paymentModeCard input{accent-color:var(--accent,#2e9e6b)}.installmentBox{margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--panel2)}.installmentGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.installmentList{display:grid;gap:8px;margin-top:12px}.installmentItem{border:1px solid #d8e3dc;border-left:5px solid #aeb8b2;border-radius:14px;background:#fff;padding:10px}.installmentItem.paid{border-left-color:#2e9e6b;background:#f0faf4}.installmentItem.overdue{border-left-color:#d32f2f;background:#fff2f2}.installmentItem.soon{border-left-color:#ef8c00;background:#fff8eb}.installmentHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.installmentMonth{font-weight:900}.installmentValue{font-weight:900}.installmentMeta{font-size:.9rem;color:#66735f;margin-top:3px}.installmentStatus{font-weight:900;margin-top:6px}.installmentStatus.paid{color:#16834c}.installmentStatus.overdue{color:#c62828}.installmentStatus.soon{color:#c56b00}.installmentStatus.future{color:#68736d}.installmentActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.installmentActions button{font-size:.86rem;padding:8px 10px;border-radius:11px}@media(max-width:520px){.paymentModeRow{grid-template-columns:1fr 1fr}}
 /* Ajustes 2026-09-19: emergência compacta, cartões pequenos, abas de parcelas */
 .emergencyGrid{display:flex;justify-content:center;gap:8px;margin-top:10px}
 .emergencyBtn{flex:0 0 auto;width:auto;min-width:0;height:34px;padding:0 16px;font-size:18px;line-height:1;border-radius:10px;gap:0;white-space:nowrap}
 .emergencyBtn strong{font-size:15px}
-.paymentOptions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-.paymentOptions label{flex:0 0 auto;min-height:26px;padding:2px 7px 2px 23px;border-radius:8px;justify-content:flex-start}
-.paymentOptions label:has(input:checked){border-color:var(--accent);background:#E9F7F0}
-.paymentOptions input{left:6px;width:12px;height:12px}
-.payLogo{min-width:0;height:18px;font-size:10px}
-.payLogo.visa{font-size:12px}
-.payLogo.mc{width:26px;min-width:26px}
-.payLogo.mc:before,.payLogo.mc:after{width:14px;height:14px;top:2px}
-.payLogo.mc:before{left:1px}
-.payLogo.mc:after{right:1px}
-.payLogo.elo{font-size:12px;display:flex;align-items:center}
-.payLogo.elo:before{font-size:13px;margin-right:2px}
-.payLogo.amex{font-size:8px;padding:2px 4px;letter-spacing:-.2px}
-.payLogo.pix{font-size:13px}
-.payLogo.cash{font-size:13px}
-.payLogo.ticket,.payLogo.alelo,.payLogo.pluxee{font-size:10px}
-.payLogo.vr{font-size:12px}
 .transportCompact{gap:8px}
 .transportCompact .transportBtn{flex:0 0 66px!important;width:66px!important;min-height:42px!important;height:42px!important;padding:6px!important;border-radius:13px!important}
 .transportCompact .transportBtn>span:not(.brand99){font-size:13px!important}
@@ -223,6 +207,67 @@ input[readonly]{background:var(--panel2)}
 .abaBody{display:none;padding:0 12px 12px}
 .abaParcela.open .abaBody{display:block}
 .abaSeta{color:var(--muted);font-weight:400}
+
+/* ===== Ajustes 2026-09-24: letras menores, tema completo, cabeçalho, pagamentos ===== */
+body{font-size:15px}
+header h1{font-size:21px;color:var(--accent);line-height:1.15}
+header p{font-size:13px;margin:4px 0 14px}
+.headRow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.headTools{display:flex;gap:6px;flex:none}
+.headTools .miniTool{width:36px;height:36px;font-size:17px;display:grid;place-items:center;padding:0;color:var(--text)}
+.miniTool.girando{animation:girar .8s linear infinite;pointer-events:none}
+@keyframes girar{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.miniTool.girando{animation:none;opacity:.5}}
+.menuPanel,.colorPanel{top:calc(58px + env(safe-area-inset-top))}
+.menuPanel button{padding:11px 10px;font-size:14px}
+.card{padding:13px}
+.card h2{font-size:16px;margin-bottom:10px}
+.ideasHead h2{font-size:15px}
+.field label{font-size:12px;margin-bottom:4px}
+input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
+.btn{padding:10px 12px;font-size:14px}
+.searchSmall{width:38px!important;height:38px!important;min-width:38px!important;font-size:16px!important}
+.searchLine .ideaSaveBtn{height:38px!important;font-size:13px!important;padding:0 12px!important}
+.empty,.notice{font-size:12px}
+.compactSwitch{font-size:11px}
+.sheet h2{font-size:18px}
+.featureCard{padding:10px}
+.featureCard h3{font-size:14px}
+.trip h3{font-size:16px}
+.collapseBtn{font-size:15px}
+.fab{width:52px;height:52px;font-size:26px}
+.colorChoices{grid-template-columns:repeat(4,1fr)}
+.colorDot.ativo{box-shadow:0 0 0 3px var(--text)}
+
+/* Pagamentos: selos dentro do quadro + seção recolhível */
+.payDetails{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:0 10px}
+.payDetails summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 0;font-size:13px;font-weight:700;color:var(--text);cursor:pointer}
+.payDetails summary::-webkit-details-marker{display:none}
+.payDetails .paySeta{transition:transform .2s;color:var(--muted)}
+.payDetails[open] .paySeta{transform:rotate(180deg)}
+.payCount{font-size:11px;font-weight:800;color:#fff;background:var(--accent);border-radius:999px;padding:2px 8px;margin-left:auto}
+.payCount:empty{display:none}
+.payDetails .notice{margin:0 0 10px}
+.paymentOptions{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 10px}
+.paymentOptions label{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:4px 11px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-size:0;cursor:pointer;margin:0}
+.paymentOptions input{position:absolute;opacity:0;width:1px;height:1px;left:0;top:0;transform:none;pointer-events:none}
+.paymentOptions label:has(input:checked){border-color:var(--accent);background:var(--panel2);box-shadow:inset 0 0 0 1px var(--accent)}
+.paymentOptions label:has(input:checked)::after{content:"✓";position:absolute;top:-7px;right:-7px;width:17px;height:17px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:900;display:grid;place-items:center}
+.paymentOptions label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.paymentOptions .payLogo{display:inline-flex;align-items:center;min-width:0;height:auto;font-size:13px;font-weight:900;letter-spacing:0;line-height:1}
+.paymentOptions .payLogo.visa{font-size:14px}
+.paymentOptions .payLogo.mc{width:30px;min-width:30px;height:18px}
+.paymentOptions .payLogo.mc:before,.paymentOptions .payLogo.mc:after{width:18px;height:18px;top:0}
+.paymentOptions .payLogo.mc:before{left:0}
+.paymentOptions .payLogo.mc:after{right:0}
+.paymentOptions .payLogo.elo{font-size:14px}
+.paymentOptions .payLogo.elo:before{font-size:13px;margin-right:2px}
+.paymentOptions .payLogo.amex{font-size:10px;padding:3px 5px}
+.paymentOptions .payLogo.pix{color:#20A89A;font-size:13px}
+.paymentOptions .payLogo.cash{font-size:12px;color:var(--text)}
+.paymentOptions .payLogo.ticket{color:#D9252A;font-size:12px}
+.paymentOptions .payLogo.alelo,.paymentOptions .payLogo.pluxee{font-size:12px}
+.paymentOptions .payLogo.vr{font-size:14px}
 </style>
 
 <style id="controleViagensSplashCSS">
@@ -271,7 +316,14 @@ input[readonly]{background:var(--panel2)}
 
 <div class="wrap">
 <header>
-  <h1>Controle de Viagens</h1>
+  <div class="headRow">
+    <h1>Controle de Viagens</h1>
+    <div class="headTools">
+      <button class="miniTool" id="btnAtualizar" type="button" aria-label="Atualizar app" title="Atualizar app">🔄</button>
+      <button class="miniTool" id="btnCor" type="button" aria-label="Cor do aplicativo" title="Cor do aplicativo">🎨</button>
+      <button class="miniTool" id="btnMenu" type="button" aria-label="Mais opções" title="Mais opções">⋮</button>
+    </div>
+  </div>
   <p>Planeje viagens, encontre lugares e organize tudo no celular.</p>
 </header>
 
@@ -287,10 +339,9 @@ input[readonly]{background:var(--panel2)}
   <div id="listaIdeias" class="ideasList"></div>
 </section>
 
-<div class="topTools"><span class="topHint">🔎 Encontrar lugares</span><div class="actions" style="align-items:center;gap:6px"><button class="miniTool" id="btnCor" aria-label="Cor do aplicativo" title="Cor do aplicativo">🎨</button><button class="miniTool" id="btnMenu" aria-label="Mais opções">⋮</button></div></div>
 <section class="card" id="secBusca">
   <div class="searchTitleRow"><h2>🔎 Encontrar lugares</h2><label class="compactSwitch" title="Priorizar somente locais 24 horas"><span>🕐 24h</span><input type="checkbox" id="filtro24"><i></i></label></div>
-  <div class="field"><label>Pesquisar ponto de interesse</label><div class="searchLine"><input id="busca" placeholder="Digite local, endereço ou estabelecimento"><button class="btn searchSmall" id="btnBusca" title="Pesquisar" aria-label="Pesquisar">🔍</button></div></div>
+  <div class="field"><label>Pesquisar ponto de interesse</label><div class="searchLine"><input id="busca" placeholder="Local, endereço ou estabelecimento"><button class="btn searchSmall" id="btnBusca" title="Pesquisar" aria-label="Pesquisar">🔍</button></div></div>
   <div class="field"><label>Categoria</label><select id="categoriaBusca" aria-label="Categoria">
     <option value="">Categoria</option><option value="hotel">🏨 Hotéis</option><option value="restaurante">🍽️ Restaurantes</option><option value="padaria">🥖 Padarias</option><option value="mcdonalds">🍔 McDonald's</option><option value="habibs">🌯 Habib's</option><option value="lanchonete">🍟 Lanchonetes</option><option value="turismo">📸 Pontos turísticos</option><option value="praia">🏖️ Praias</option><option value="compras">🛍️ Compras</option><option value="posto">⛽ Postos</option><option value="farmacia">💊 Farmácias</option><option value="estacionamento">🅿️ Estacionamentos</option><option value="cafe">☕ Cafés</option><option value="outros">➕ Outros</option>
   </select></div>
@@ -354,8 +405,10 @@ input[readonly]{background:var(--panel2)}
   <button id="menuRecomendacoes">📎 Recomendações da internet <span>›</span></button><button id="menuFonte">🌐 Fonte de avaliações <span>›</span></button>
   <button data-menu="secAjuda">🚨 Ajuda rápida <span>›</span></button>
   <button id="menuCompartilhar" style="display:none">📤 Compartilhar este app <span>›</span></button>
+  <div class="menuDivider"></div>
+  <button id="menuAtualizar">🔄 Atualizar app <span>›</span></button>
 </div>
-<div class="colorPanel" id="colorPanel"><strong>🎨 Cor do aplicativo</strong><div class="sourceNote">O fundo permanece branco. Escolha apenas a cor dos destaques e botões.</div><div class="colorChoices"><button class="colorDot" data-color="#2E9E6B" style="background:#2E9E6B" aria-label="Verde"></button><button class="colorDot" data-color="#1976D2" style="background:#1976D2" aria-label="Azul"></button><button class="colorDot" data-color="#7B1FA2" style="background:#7B1FA2" aria-label="Roxo"></button><button class="colorDot" data-color="#EF6C00" style="background:#EF6C00" aria-label="Laranja"></button><button class="colorDot" data-color="#C62828" style="background:#C62828" aria-label="Vermelho"></button></div></div>
+<div class="colorPanel" id="colorPanel"><strong>🎨 Cor do aplicativo</strong><div class="sourceNote">Muda a cor do app inteiro: fundo, bordas, botões e títulos.</div><div class="colorChoices"><button class="colorDot" data-color="#2E9E6B" style="background:#2E9E6B" aria-label="Verde"></button><button class="colorDot" data-color="#1976D2" style="background:#1976D2" aria-label="Azul"></button><button class="colorDot" data-color="#7B1FA2" style="background:#7B1FA2" aria-label="Roxo"></button><button class="colorDot" data-color="#EF6C00" style="background:#EF6C00" aria-label="Laranja"></button><button class="colorDot" data-color="#C62828" style="background:#C62828" aria-label="Vermelho"></button><button class="colorDot" data-color="#D81B60" style="background:#D81B60" aria-label="Rosa"></button><button class="colorDot" data-color="#00838F" style="background:#00838F" aria-label="Azul-petróleo"></button><button class="colorDot" data-color="#455A64" style="background:#455A64" aria-label="Grafite"></button></div></div>
 <div class="modal" id="modalFonte"><div class="sheet"><button class="close" id="fecharFonte">×</button><h2>🌐 Fonte de avaliações</h2><p class="sourceNote">O Google Places pode fornecer nota, endereço, horário e avaliações. A API exige configuração própria e pode ter cobrança. Sem chave, o aplicativo continua usando a busca pública e não inventa notas.</p><div class="field"><label>Chave da Google Places API (opcional)</label><div class="apiKeyRow"><input id="googleApiKey" type="password" placeholder="Cole sua chave aqui"><button class="smallBtn" id="salvarApiKey" type="button">Salvar</button></div></div><div class="notice">A chave fica somente neste aparelho. Nunca coloque uma chave pessoal diretamente no código público do GitHub.</div></div></div>
 <div class="modal" id="modalTransporte"><div class="sheet">
   <button class="close" id="fecharTransporte">×</button><h2>🚕 Transporte</h2>
@@ -465,20 +518,22 @@ input[readonly]{background:var(--panel2)}
     </div>
     
     <div class="field">
-      <label>💳 Cartões / Pagamento aceitos (opcional)</label>
-      <div class="paymentOptions">
-        <label title="Visa"><input type="checkbox" name="pagamento" value="Visa"><span class="payLogo visa">VISA</span></label>
-        <label title="Mastercard"><input type="checkbox" name="pagamento" value="Mastercard"><span class="payLogo mc" aria-label="Mastercard"></span></label>
-        <label title="Elo"><input type="checkbox" name="pagamento" value="Elo"><span class="payLogo elo">elo</span></label>
-        <label title="American Express"><input type="checkbox" name="pagamento" value="Amex"><span class="payLogo amex">AMEX</span></label>
-        <label title="Pix"><input type="checkbox" name="pagamento" value="Pix"><span class="payLogo pix">✣</span></label>
-        <label title="Dinheiro"><input type="checkbox" name="pagamento" value="Dinheiro"><span class="payLogo cash">💵</span></label>
-        <label title="Ticket"><input type="checkbox" name="pagamento" value="Ticket"><span class="payLogo ticket">●</span></label>
-        <label title="Alelo"><input type="checkbox" name="pagamento" value="Alelo"><span class="payLogo alelo">Alelo</span></label>
-        <label title="VR"><input type="checkbox" name="pagamento" value="VR"><span class="payLogo vr">VR</span></label>
-        <label title="Pluxee"><input type="checkbox" name="pagamento" value="Pluxee"><span class="payLogo pluxee">pluxee</span></label>
-      </div>
-      <div class="notice">Informação manual: só marque o que você confirmou no estabelecimento.</div>
+      <details class="payDetails" id="payDetViagem">
+        <summary>💳 Cartões / Pagamento aceitos (opcional) <span class="payCount"></span><span class="paySeta">▾</span></summary>
+        <div class="paymentOptions">
+          <label title="Visa"><input type="checkbox" name="pagamento" value="Visa"><span class="payLogo visa">VISA</span></label>
+          <label title="Mastercard"><input type="checkbox" name="pagamento" value="Mastercard"><span class="payLogo mc" aria-label="Mastercard"></span></label>
+          <label title="Elo"><input type="checkbox" name="pagamento" value="Elo"><span class="payLogo elo">elo</span></label>
+          <label title="American Express"><input type="checkbox" name="pagamento" value="Amex"><span class="payLogo amex">AMEX</span></label>
+          <label title="Pix"><input type="checkbox" name="pagamento" value="Pix"><span class="payLogo pix">❖ pix</span></label>
+          <label title="Dinheiro"><input type="checkbox" name="pagamento" value="Dinheiro"><span class="payLogo cash">💵 Dinheiro</span></label>
+          <label title="Ticket"><input type="checkbox" name="pagamento" value="Ticket"><span class="payLogo ticket">Ticket</span></label>
+          <label title="Alelo"><input type="checkbox" name="pagamento" value="Alelo"><span class="payLogo alelo">Alelo</span></label>
+          <label title="VR"><input type="checkbox" name="pagamento" value="VR"><span class="payLogo vr">VR</span></label>
+          <label title="Pluxee"><input type="checkbox" name="pagamento" value="Pluxee"><span class="payLogo pluxee">pluxee</span></label>
+        </div>
+        <div class="notice">Informação manual: só marque o que você confirmou no estabelecimento.</div>
+      </details>
     </div>
     
     <div class="field"><label>Observações</label><textarea id="fObs"></textarea></div>
@@ -502,7 +557,12 @@ input[readonly]{background:var(--panel2)}
     <div class="field"><label>Cidade</label><input id="pCidade"></div>
     <div class="field"><label>📍 Endereço / localização</label><input id="pEndereco"></div>
     <div class="grid"><div class="field"><label>🌐 Avaliação da internet</label><input id="pRatingInternet" type="number" min="0" max="5" step="0.1" placeholder="Ex.: 4,6"></div><div class="field"><label>⭐ Minha avaliação</label><select id="pMinhaRating"><option value="">Não avaliado</option><option value="1">⭐</option><option value="2">⭐⭐</option><option value="3">⭐⭐⭐</option><option value="4">⭐⭐⭐⭐</option><option value="5">⭐⭐⭐⭐⭐</option></select></div></div>
-    <div class="field"><label>💳 Pagamentos confirmados</label><div class="paymentOptions"><label title="Visa"><input type="checkbox" name="pagLugar" value="Visa"><span class="payLogo visa">VISA</span></label><label title="Mastercard"><input type="checkbox" name="pagLugar" value="Mastercard"><span class="payLogo mc"></span></label><label title="Elo"><input type="checkbox" name="pagLugar" value="Elo"><span class="payLogo elo">elo</span></label><label title="Amex"><input type="checkbox" name="pagLugar" value="Amex"><span class="payLogo amex">AMEX</span></label><label title="Pix"><input type="checkbox" name="pagLugar" value="Pix"><span class="payLogo pix">✣</span></label><label title="Dinheiro"><input type="checkbox" name="pagLugar" value="Dinheiro"><span class="payLogo cash">💵</span></label><label title="Ticket"><input type="checkbox" name="pagLugar" value="Ticket"><span class="payLogo ticket">●</span></label><label title="Alelo"><input type="checkbox" name="pagLugar" value="Alelo"><span class="payLogo alelo">Alelo</span></label><label title="VR"><input type="checkbox" name="pagLugar" value="VR"><span class="payLogo vr">VR</span></label><label title="Pluxee"><input type="checkbox" name="pagLugar" value="Pluxee"><span class="payLogo pluxee">pluxee</span></label></div></div>
+    <div class="field">
+      <details class="payDetails" id="payDetLugar">
+        <summary>💳 Pagamentos confirmados <span class="payCount"></span><span class="paySeta">▾</span></summary>
+        <div class="paymentOptions"><label title="Visa"><input type="checkbox" name="pagLugar" value="Visa"><span class="payLogo visa">VISA</span></label><label title="Mastercard"><input type="checkbox" name="pagLugar" value="Mastercard"><span class="payLogo mc"></span></label><label title="Elo"><input type="checkbox" name="pagLugar" value="Elo"><span class="payLogo elo">elo</span></label><label title="Amex"><input type="checkbox" name="pagLugar" value="Amex"><span class="payLogo amex">AMEX</span></label><label title="Pix"><input type="checkbox" name="pagLugar" value="Pix"><span class="payLogo pix">❖ pix</span></label><label title="Dinheiro"><input type="checkbox" name="pagLugar" value="Dinheiro"><span class="payLogo cash">💵 Dinheiro</span></label><label title="Ticket"><input type="checkbox" name="pagLugar" value="Ticket"><span class="payLogo ticket">Ticket</span></label><label title="Alelo"><input type="checkbox" name="pagLugar" value="Alelo"><span class="payLogo alelo">Alelo</span></label><label title="VR"><input type="checkbox" name="pagLugar" value="VR"><span class="payLogo vr">VR</span></label><label title="Pluxee"><input type="checkbox" name="pagLugar" value="Pluxee"><span class="payLogo pluxee">pluxee</span></label></div>
+      </details>
+    </div>
     <div class="grid">
       <div class="field"><label>Data da visita</label><input id="pData" type="date"></div>
       <div class="field"><label>Horário</label><input id="pHora" type="time"></div>
@@ -602,6 +662,18 @@ function calcFaltante(){
 }
 $("fTotal").addEventListener("input",calcFaltante);$("fPago").addEventListener("input",calcFaltante);
 
+/* Contador de formas de pagamento marcadas (seção recolhível) */
+function contarPagamentos(detId,nome,abrirSeMarcado){
+ const det=$(detId);if(!det)return;
+ const n=document.querySelectorAll(`input[name="${nome}"]:checked`).length;
+ const c=det.querySelector(".payCount");if(c)c.textContent=n?String(n):"";
+ if(abrirSeMarcado!==undefined)det.open=!!(abrirSeMarcado&&n);
+}
+document.addEventListener("change",e=>{
+ if(e.target.name==="pagamento")contarPagamentos("payDetViagem","pagamento");
+ else if(e.target.name==="pagLugar")contarPagamentos("payDetLugar","pagLugar");
+});
+
 function openModal(id=null){
  editId=id;ideiaEmEdicao=null;
  $("modalTitulo").textContent=id?"Editar viagem":"Nova viagem";
@@ -611,7 +683,7 @@ function openModal(id=null){
  $("fHoraSaida").value=t.horaSaida||"";$("fLocalSaida").value=t.localSaida||"";
  $("fInicio").value=t.dataInicioPagamento||"";$("fVenc").value=t.venc||"";
  $("fTotal").value=t.valorTotal??"";$("fPago").value=t.valorPago??"";
- $("fObs").value=t.obs||"";$("fGastos").value=t.gastos??"";$("fRoteiro").value=t.roteiro||"";$("fOrigemTransporte").value=t.origemTransporte||"";$("fDestinoTransporte").value=t.destinoTransporte||"";document.querySelectorAll('input[name="pagamento"]').forEach(x=>x.checked=(t.pagamentos||[]).includes(x.value));const modo=t.modoPagamento||((t.parcelas&&t.parcelas.length>1)?"parcelado":"avista");document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(x=>x.checked=x.value===modo);$("fParcelas").value=t.numeroParcelas||((t.parcelas||[]).length||"");$("fPrimeiroVenc").value=t.primeiroVencimento||t.venc||"";parcelasForm=(t.parcelas||[]).map(p=>({...p}));abaAberta=-1;parcelasAtivas=false;toggleParcelamentoUI();calcFaltante();
+ $("fObs").value=t.obs||"";$("fGastos").value=t.gastos??"";$("fRoteiro").value=t.roteiro||"";$("fOrigemTransporte").value=t.origemTransporte||"";$("fDestinoTransporte").value=t.destinoTransporte||"";document.querySelectorAll('input[name="pagamento"]').forEach(x=>x.checked=(t.pagamentos||[]).includes(x.value));contarPagamentos("payDetViagem","pagamento",true);const modo=t.modoPagamento||((t.parcelas&&t.parcelas.length>1)?"parcelado":"avista");document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(x=>x.checked=x.value===modo);$("fParcelas").value=t.numeroParcelas||((t.parcelas||[]).length||"");$("fPrimeiroVenc").value=t.primeiroVencimento||t.venc||"";parcelasForm=(t.parcelas||[]).map(p=>({...p}));abaAberta=-1;parcelasAtivas=false;toggleParcelamentoUI();calcFaltante();
  [...$("fLembretes").options].forEach(o=>o.selected=(t.lembretes||["7","1","hora","embarque"]).includes(o.value));
  $("modal").classList.add("open");
 }
@@ -809,7 +881,7 @@ function gerarCalendario(id){
 
 function abrirLugar(data){
  editLugarId=null; placeTemp=data;
- $("pNome").value=data.name||"";$("pTipo").value=data.type||"";$("pCidade").value=data.city||"";$("pEndereco").value=data.address||"";$("pRatingInternet").value=data.rating||"";$("pMinhaRating").value="";document.querySelectorAll('input[name="pagLugar"]').forEach(x=>x.checked=false);$("lugarTitulo").textContent="⭐ Salvar lugar";
+ $("pNome").value=data.name||"";$("pTipo").value=data.type||"";$("pCidade").value=data.city||"";$("pEndereco").value=data.address||"";$("pRatingInternet").value=data.rating||"";$("pMinhaRating").value="";document.querySelectorAll('input[name="pagLugar"]').forEach(x=>x.checked=false);contarPagamentos("payDetLugar","pagLugar",false);$("lugarTitulo").textContent="⭐ Salvar lugar";
  $("pData").value="";$("pHora").value="";$("pLembrete").value="";$("pObs").value="";$("pFoto").value="";$("previewFoto").style.display="none";
  $("modalLugar").classList.add("open");
 }
@@ -829,7 +901,7 @@ $("formLugar").onsubmit=e=>{
 };
 function editarLugar(id){
  const p=lugares.find(x=>x.id===id);if(!p)return;editLugarId=id;placeTemp=p;
- $("lugarTitulo").textContent="✏️ Editar lugar";$("pNome").value=p.nome||"";$("pTipo").value=p.tipo||"";$("pCidade").value=p.cidade||"";$("pEndereco").value=p.endereco||"";$("pRatingInternet").value=p.ratingInternet||"";$("pMinhaRating").value=p.minhaRating||"";$("pData").value=p.data||"";$("pHora").value=p.hora||"";$("pLembrete").value=p.lembrete||"";$("pObs").value=p.obs||"";$("pFoto").value="";$("previewFoto").src=p.foto||"";$("previewFoto").style.display=p.foto?"block":"none";document.querySelectorAll('input[name="pagLugar"]').forEach(x=>x.checked=(p.pagamentos||[]).includes(x.value));$("modalLugar").classList.add("open");
+ $("lugarTitulo").textContent="✏️ Editar lugar";$("pNome").value=p.nome||"";$("pTipo").value=p.tipo||"";$("pCidade").value=p.cidade||"";$("pEndereco").value=p.endereco||"";$("pRatingInternet").value=p.ratingInternet||"";$("pMinhaRating").value=p.minhaRating||"";$("pData").value=p.data||"";$("pHora").value=p.hora||"";$("pLembrete").value=p.lembrete||"";$("pObs").value=p.obs||"";$("pFoto").value="";$("previewFoto").src=p.foto||"";$("previewFoto").style.display=p.foto?"block":"none";document.querySelectorAll('input[name="pagLugar"]').forEach(x=>x.checked=(p.pagamentos||[]).includes(x.value));contarPagamentos("payDetLugar","pagLugar",true);$("modalLugar").classList.add("open");
 }
 function favoritarLugar(data){
  const exists=lugares.some(p=>(data.lat&&data.lon&&p.lat&&p.lon)?(String(p.lat)===String(data.lat)&&String(p.lon)===String(data.lon)):p.nome===data.name&&p.endereco===data.address);
@@ -1017,7 +1089,7 @@ document.addEventListener("click",e=>{
  }
 });
 
-$("btnMenu").onclick=()=>{const m=$("menuPanel");m.style.display=m.style.display==="none"?"block":"none"};
+$("btnMenu").onclick=()=>{const m=$("menuPanel");$("colorPanel").classList.remove("open");m.style.display=m.style.display==="none"?"block":"none"};
 document.querySelectorAll("[data-menu]").forEach(b=>b.onclick=()=>{const id=b.dataset.menu;$("menuPanel").style.display="none";const el=$(id);if(id==="secAjuda"){el.style.display="block";el.scrollIntoView({behavior:"smooth"});$("ajudaConteudo").style.display="block"}else{el.style.display="block";el.scrollIntoView({behavior:"smooth"})}});
 $("menuLugares").onclick=()=>{const el=$("secLugares"),m=$("menuPanel");const abrir=el.style.display==="none"||!el.style.display;el.style.display=abrir?"block":"none";$("setaLugares").textContent=abrir?"︿":"︾";if(abrir){m.style.display="none";el.scrollIntoView({behavior:"smooth"})}};
 $("btnAjuda").onclick=()=>{$("ajudaConteudo").style.display=$("ajudaConteudo").style.display==="none"?"block":"none"};
@@ -1069,10 +1141,43 @@ document.addEventListener("click",e=>{
    }
    return;
  }
- if(!e.target.closest("#btnMenu")&&!e.target.closest("#menuPanel"))$("menuPanel").style.display="none"});
-popularCidades();function aplicarCor(c){document.documentElement.style.setProperty("--accent",c);localStorage.setItem("controle_viagens_cor",c)}
+ if(!e.target.closest("#btnMenu")&&!e.target.closest("#menuPanel"))$("menuPanel").style.display="none";
+ if(!e.target.closest("#btnCor")&&!e.target.closest("#colorPanel"))$("colorPanel").classList.remove("open");
+});
+popularCidades();
+
+/* Tema: a cor escolhida pinta o app inteiro (fundo, quadros, bordas, botões e títulos) */
+function misturarBranco(hex,p){
+ const n=parseInt(String(hex).replace("#",""),16),r=n>>16&255,g=n>>8&255,b=n&255,m=x=>Math.round(x+(255-x)*p);
+ return `rgb(${m(r)},${m(g)},${m(b)})`;
+}
+function aplicarCor(c){
+ const s=document.documentElement.style;
+ s.setProperty("--accent",c);
+ s.setProperty("--bg",misturarBranco(c,.93));
+ s.setProperty("--panel2",misturarBranco(c,.88));
+ s.setProperty("--line",misturarBranco(c,.72));
+ document.querySelector('meta[name="theme-color"]')?.setAttribute("content",misturarBranco(c,.93));
+ localStorage.setItem("controle_viagens_cor",c);
+ document.querySelectorAll(".colorDot").forEach(d=>d.classList.toggle("ativo",d.dataset.color.toLowerCase()===c.toLowerCase()));
+}
 const corSalva=localStorage.getItem("controle_viagens_cor")||"#2E9E6B"; aplicarCor(corSalva);
-$("btnCor").onclick=()=>$("colorPanel").classList.toggle("open"); document.querySelectorAll(".colorDot").forEach(b=>b.onclick=()=>{aplicarCor(b.dataset.color);$("colorPanel").classList.remove("open")});
+$("btnCor").onclick=()=>{$("menuPanel").style.display="none";$("colorPanel").classList.toggle("open")}; document.querySelectorAll(".colorDot").forEach(b=>b.onclick=()=>{aplicarCor(b.dataset.color);$("colorPanel").classList.remove("open")});
+
+/* Atualizar app: busca a versão mais nova do GitHub sem apagar os dados salvos */
+async function atualizarApp(){
+ $("menuPanel").style.display="none";
+ const b=$("btnAtualizar");b.classList.add("girando");
+ try{
+  if("serviceWorker" in navigator){const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.update().catch(()=>{})))}
+  if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}
+ }catch(e){}
+ try{const u=new URL(location.href);u.searchParams.set("v",Date.now());location.replace(u.toString())}
+ catch(e){location.reload()}
+}
+$("btnAtualizar").onclick=atualizarApp;
+$("menuAtualizar").onclick=atualizarApp;
+
 $("menuFonte").onclick=()=>{$("menuPanel").style.display="none";$("googleApiKey").value=localStorage.getItem("controle_viagens_google_places_key")||"";$("modalFonte").classList.add("open")}; $("fecharFonte").onclick=()=>$("modalFonte").classList.remove("open"); $("salvarApiKey").onclick=()=>{localStorage.setItem("controle_viagens_google_places_key",$("googleApiKey").value.trim());$("modalFonte").classList.remove("open");alert("Fonte de avaliações salva neste aparelho.")};
 document.addEventListener("click",e=>{const m=e.target.closest("[data-open-map]");if(m)window.open(decodeURIComponent(m.dataset.openMap),"_blank")});
 load();
