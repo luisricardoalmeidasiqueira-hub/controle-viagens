@@ -345,6 +345,9 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .tripHotel a{color:var(--accent);font-weight:700;text-decoration:none}
 .stars{display:block;color:#F5B400;font-size:14px;letter-spacing:1px}
 .stars .off{color:#C9CFCB}
+#modal .sheet{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+.saveFloat{position:fixed;right:18px;bottom:calc(22px + env(safe-area-inset-bottom));z-index:12;width:56px;height:56px;border:0;border-radius:50%;background:var(--accent);color:#fff;font-size:25px;display:grid;place-items:center;box-shadow:0 5px 18px #0006}
+.saveFloat:active{transform:scale(.94)}
 .appFooter{text-align:center;font-size:11px;color:var(--muted);line-height:1.5;margin:18px 0 6px}
 </style>
 
@@ -479,6 +482,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 <div class="modal" id="modal">
 <div class="sheet">
   <button class="close" id="fechar">×</button>
+  <button class="saveFloat" type="submit" form="formViagem" title="Salvar viagem" aria-label="Salvar viagem">💾</button>
   <h2 id="modalTitulo">Nova viagem</h2>
   <form id="formViagem">
     <div class="field"><label>Nome da viagem <span class="required">*</span></label><input id="fNome" required></div>
@@ -504,7 +508,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
         <div class="hotelNome" id="hotelNomePrev">Hotel</div>
         <div class="starPick" id="starPick" role="group" aria-label="Estrelas do hotel"></div>
         <div class="hotelNota" id="hotelNotaPrev"></div>
-        <div class="hotelBtns"><label class="smallBtn">📷 Foto<input type="file" id="fHotelFoto" accept="image/*" hidden></label><button type="button" class="smallBtn" id="hotelFotoRemover">🗑️ Tirar foto</button></div>
+        <div class="hotelBtns"><label class="smallBtn">📷 Foto<input type="file" id="fHotelFoto" accept="image/*" hidden></label><button type="button" class="smallBtn" id="hotelGoogle">🔎 Ver estrelas no Google</button><button type="button" class="smallBtn" id="hotelFotoRemover">🗑️ Tirar foto</button></div>
       </div>
     </div>
     <div class="grid">
@@ -1002,6 +1006,7 @@ $("fHotelFoto").addEventListener("change",e=>{
  r.readAsDataURL(f);
 });
 $("hotelFotoRemover").onclick=()=>{hotelForm.foto="";renderHotelBox()};
+$("hotelGoogle").onclick=()=>{const q=[$("fHotel").value.trim(),$("fCidade").value.trim(),"hotel estrelas"].filter(Boolean).join(" ");window.open("https://www.google.com/search?q="+encodeURIComponent(q),"_blank")};
 
 function abrirListaViagens(abrir){
  listaViagensAberta=abrir;
