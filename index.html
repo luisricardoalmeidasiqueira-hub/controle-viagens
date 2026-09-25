@@ -348,6 +348,15 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 #modal .sheet{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
 .saveFloat{position:fixed;right:18px;bottom:calc(22px + env(safe-area-inset-bottom));z-index:12;width:56px;height:56px;border:0;border-radius:50%;background:var(--accent);color:#fff;font-size:25px;display:grid;place-items:center;box-shadow:0 5px 18px #0006}
 .saveFloat:active{transform:scale(.94)}
+.tripRow{display:flex;align-items:center}
+.tripRow .tripHead{flex:1;min-width:0;padding-right:4px}
+.pinBtn{width:30px;height:30px;flex:none;margin-right:8px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:14px;display:grid;place-items:center;padding:0}
+.listHead .pinBtn{margin:0;width:34px;height:34px;font-size:16px}
+/* Próxima viagem: botões menores */
+.nextTripActions{gap:5px}
+.nextTripView,.nextTripAction{width:30px;height:30px;font-size:14px;border-radius:8px}
+.nextTripName{font-size:15px}
+.nextTripHead h2{font-size:15px}
 .appFooter{text-align:center;font-size:11px;color:var(--muted);line-height:1.5;margin:18px 0 6px}
 </style>
 
@@ -434,6 +443,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 <section class="card compactCard" id="secViagens">
   <div class="listHead">
     <button class="collapseBtn" id="btnViagens" type="button" aria-expanded="false"><span>🧳 Suas viagens<span class="qtdMini" id="viagensQtd">0</span></span><span id="setaViagens">︾</span></button>
+    <button class="pinBtn" id="pinSemViagem" type="button" title="Perto do hotel" aria-label="Perto do hotel" style="display:none">📍</button>
     <button class="eyeBtn" id="btnOlhoValores" type="button" title="Valores ocultos — toque para mostrar" aria-label="Mostrar ou ocultar valores">🔒</button>
   </div>
   <div id="listaViagens" style="display:none;margin-top:6px"></div>
@@ -476,7 +486,6 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <div class="modal" id="modalEmergencias"><div class="sheet"><button class="close" id="fecharEmergencias">×</button><h2>🚨 Ajuda rápida</h2><p class="sourceNote">Use somente em uma emergência. Os números abaixo abrem a ligação pelo celular.</p><div class="emergencyGrid"><a class="emergencyBtn police" href="tel:190" aria-label="Ligar 190, Polícia" title="Polícia (190)">🚔</a><a class="emergencyBtn samu" href="tel:192" aria-label="Ligar 192, SAMU" title="SAMU (192)">🚑</a><a class="emergencyBtn fire" href="tel:193" aria-label="Ligar 193, Bombeiros" title="Bombeiros (193)">🚒</a></div></div></div>
 <div class="modal" id="modalRecomendacoes"><div class="sheet"><button class="close" id="fecharRecomendacoes">×</button><h2>📎 Recomendações da internet</h2><div class="field"><label>Cidade / local</label><input id="recLocal" placeholder="Ex.: Balneário Camboriú, SC"></div><div class="field"><label>O que você procura?</label><input id="recBusca" placeholder="Ex.: melhores restaurantes"></div><div class="recommendGrid"><button class="recommendBtn" id="recGoogle" type="button">🔎 Google</button><button class="recommendBtn" id="recMaps" type="button">📍 Google Maps</button><button class="recommendBtn" id="recTrip" type="button">⭐ TripAdvisor</button><button class="recommendBtn" id="recYouTube" type="button">▶️ YouTube</button></div><div class="notice">As recomendações são abertas diretamente na internet; o aplicativo não inventa avaliações.</div></div></div>
-<div class="hotelShortcut" id="hotelShortcut">📍 Perto do hotel <span>🔍</span></div>
 <button class="fab" id="btnNova" aria-label="Nova viagem">＋</button>
 
 <div class="modal" id="modal">
@@ -874,6 +883,7 @@ function render(){
  const arr=[...viagens].sort((a,b)=>(a.data||"").localeCompare(b.data||""));
  $("qtdViagens").textContent=arr.length;
  $("viagensQtd").textContent=arr.length;
+ $("pinSemViagem").style.display=arr.length?"none":"grid";
  $("totalGeral").textContent=money(arr.reduce((s,t)=>s+(Number(t.valorTotal)||0),0));
  $("faltanteGeral").textContent=money(arr.reduce((s,t)=>s+faltanteViagem(t),0));
  const future=arr.find(t=>t.data>=localDate());
@@ -902,7 +912,7 @@ function card(t){
  const aberta=tripsAbertas.has(t.id);
  const tipo={viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"}[t.tipoViagem]||t.tipoViagem||"";
  return `<div class="trip ${t.status==="paga"?"paga":""} ${aberta?"open":""}" data-trip-id="${t.id}">
-  <button type="button" class="tripHead" data-trip-toggle="${t.id}" aria-expanded="${aberta}"><span class="tripTexto"><span class="tripName">${esc(t.nome)}</span><span class="sub">📅 ${dateBR(t.data)}${t.cidade?" • "+esc(t.cidade):""}</span></span><span class="tripLado"><span class="badge ${badgeCls}">${badge}</span><span class="tripSeta">${aberta?"︿":"﹀"}</span></span></button>
+  <div class="tripRow"><button type="button" class="tripHead" data-trip-toggle="${t.id}" aria-expanded="${aberta}"><span class="tripTexto"><span class="tripName">${esc(t.nome)}</span><span class="sub">📅 ${dateBR(t.data)}${t.cidade?" • "+esc(t.cidade):""}</span></span><span class="tripLado"><span class="badge ${badgeCls}">${badge}</span><span class="tripSeta">${aberta?"︿":"﹀"}</span></span></button><button type="button" class="pinBtn" data-trip-pin="${t.id}" title="Restaurantes perto do hotel" aria-label="Restaurantes perto do hotel desta viagem">📍</button></div>
   <div class="tripBody">
   ${hotelCard(t)}
   ${tipo?`<div class="sub">🧳 ${esc(tipo)}</div>`:""}
@@ -1264,6 +1274,8 @@ function fecharPagamentos(){$("modalPagamentos").classList.remove("open")}$("fec
 document.addEventListener("click",e=>{
  const pc=e.target.closest("[data-parcela-cal]");if(pc){lembretesParcelas(Number(pc.dataset.parcelaCal));return}
  const pay=e.target.closest("[data-pay-action]");if(pay){const doAviso=!!pay.dataset.fromAviso;const t=viagens.find(x=>x.id===Number(pay.dataset.tripId));const parcela=t?.parcelas?.find(x=>x.numero===Number(pay.dataset.payNum));if(t&&parcela){if(doAviso&&!confirm(`Marcar a ${parcela.numero}ª parcela de "${t.nome}" como paga hoje?`))return;if(pay.dataset.payAction==="pay"){parcela.pago=true;parcela.dataPago=localDate()}else{parcela.pago=false;parcela.dataPago=""}t.valorPago=t.parcelas.filter(x=>x.pago).reduce((s,x)=>s+(Number(x.valor)||0),0);t.status=faltanteViagem(t)<=0?"paga":"pagar";save();render();if(!doAviso)abrirPagamentos(t.id)}return}
+ const pin=e.target.closest("[data-trip-pin]");
+ if(pin){pertoDoHotel(viagens.find(x=>x.id===Number(pin.dataset.tripPin)));return}
  const tg=e.target.closest("[data-trip-toggle]");
  if(tg){const id=Number(tg.dataset.tripToggle);if(tripsAbertas.has(id))tripsAbertas.delete(id);else tripsAbertas.add(id);render();return}
  const tripBtn=e.target.closest("[data-action]");
@@ -1304,12 +1316,13 @@ $("btnMenu").onclick=()=>{const m=$("menuPanel");$("colorPanel").classList.remov
 document.querySelectorAll("[data-menu]").forEach(b=>b.onclick=()=>{const id=b.dataset.menu;$("menuPanel").style.display="none";const el=$(id);if(id==="secAjuda"){el.style.display="block";el.scrollIntoView({behavior:"smooth"});$("ajudaConteudo").style.display="block"}else if(id==="secViagens"){abrirListaViagens(true);el.scrollIntoView({behavior:"smooth"})}else{el.style.display="block";el.scrollIntoView({behavior:"smooth"})}});
 $("menuLugares").onclick=()=>{const el=$("secLugares"),m=$("menuPanel");const abrir=el.style.display==="none"||!el.style.display;el.style.display=abrir?"block":"none";$("setaLugares").textContent=abrir?"︿":"︾";if(abrir){m.style.display="none";el.scrollIntoView({behavior:"smooth"})}};
 $("btnAjuda").onclick=()=>{$("ajudaConteudo").style.display=$("ajudaConteudo").style.display==="none"?"block":"none"};
-$("hotelShortcut").onclick=()=>{
- const base=[...viagens].sort((a,b)=>(b.data||"").localeCompare(a.data||""))[0]||{};
+function pertoDoHotel(base){
+ base=base||{};
  const hotel=base.hotel||""; const cidade=base.cidade||"";
- if(!hotel){alert("Cadastre o hotel em uma viagem para usar este atalho.");$("secBusca").scrollIntoView({behavior:"smooth"});return}
+ if(!hotel){alert(viagens.length?"Cadastre o hotel nesta viagem (✏️ Editar) para ver os lugares perto dele.":"Cadastre uma viagem com hotel para usar este atalho.");return}
  $("busca").value="restaurantes perto de "+hotel;$("categoriaBusca").value="restaurante";$("cidadeBusca").value=cidade;$("ratingRow").style.display="flex";$("secBusca").scrollIntoView({behavior:"smooth"});pesquisar("restaurante");
-};
+}
+$("pinSemViagem").onclick=()=>pertoDoHotel(null);
 $("menuRecomendacoes").onclick=()=>{$("menuPanel").style.display="none";const t=[...viagens].sort((a,b)=>(b.data||"").localeCompare(a.data||""))[0]||{};$("recLocal").value=t.cidade||"";$("recBusca").value="melhores lugares";$("modalRecomendacoes").classList.add("open")};
 $("fecharRecomendacoes").onclick=()=>$("modalRecomendacoes").classList.remove("open");
 function abrirRecomendacao(base){const local=$("recLocal").value.trim(),busca=$("recBusca").value.trim()||"melhores lugares";if(!local){alert("Informe a cidade ou local.");return}window.open(base+encodeURIComponent(busca+" em "+local),"_blank")}
