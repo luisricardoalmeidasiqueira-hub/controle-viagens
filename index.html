@@ -330,6 +330,8 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
 .hotelChips .addDica{border-style:dashed;background:transparent;color:var(--accent)}
 .hotelChips button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700}
 .hotelChips button:active{transform:scale(.97)}
+.abaTit small{display:block;font-size:11px;font-weight:700;color:#176642;margin-top:1px}
+.dataPagInput{max-width:190px}
 .valorEdit{margin-top:8px}
 .valorEdit label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
 .valorEditRow{display:flex;align-items:center;gap:7px}
@@ -694,7 +696,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="2.2";
+const APP_VERSAO="2.3";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -844,7 +846,7 @@ function sincronizarParcelas(manterAba){
  parcelasAtivas=modoPagForm()==="parcelado"&&n>=2&&!!primeiro;
  if(parcelasAtivas){
   parcelasForm=gerarParcelas(totalParcelarForm(),n,primeiro,parcelasForm);
-  if(!manterAba&&(abaAberta<0||abaAberta>=parcelasForm.length||parcelasForm[abaAberta].pago))abaAberta=parcelasForm.findIndex(p=>!p.pago);
+  if(manterAba!==true&&(abaAberta<0||abaAberta>=parcelasForm.length||parcelasForm[abaAberta].pago))abaAberta=parcelasForm.findIndex(p=>!p.pago);
  }
  renderAbasParcelas();calcFaltante();atualizarInfoParcelamento();
 }
@@ -854,9 +856,12 @@ function renderAbasParcelas(){
  const hoje=localDate(),pagas=parcelasForm.filter(p=>p.pago).length;
  box.innerHTML=`<div class="abasResumo">${pagas} de ${parcelasForm.length} parcelas pagas</div>`+parcelasForm.map((p,i)=>{
   const atrasada=!p.pago&&p.vencimento<hoje,aberta=i===abaAberta,cls=p.pago?"paid":atrasada?"overdue":"";
-  return `<div class="abaParcela ${cls} ${aberta?"open":""}"><button type="button" class="abaHead" data-aba="${i}" aria-expanded="${aberta}"><span>${p.numero}ª • ${mesAno(p.vencimento)}</span><span>${money(p.valor)}${p.fixo?" ✏️":""} ${p.pago?"✅":atrasada?"🔴":"⚪"} <b class="abaSeta">${aberta?"︿":"﹀"}</b></span></button><div class="abaBody"><div class="installmentMeta">Vence em ${dateBR(p.vencimento)}${p.pago?" • pago em "+dateBR(p.dataPago):""}</div><div class="valorEdit"><label for="valParc${i}">${p.pago?"Valor pago":"Valor da parcela"}</label><div class="valorEditRow"><span>R$</span><input id="valParc${i}" class="moneyInput" type="text" inputmode="decimal" value="${fmtBR(p.valor)}" data-aba-valor="${i}" autocomplete="off">${p.fixo?`<button type="button" class="smallBtn" data-aba-auto="${i}" title="Voltar ao valor automático">↺ Auto</button>`:""}</div>${p.fixo?`<div class="installmentMeta">✏️ Valor editado</div>`:""}</div><div class="installmentActions">${p.pago?`<button class="btn secondary" type="button" data-aba-pay="${i}" data-aba-acao="unpay">↩️ Desmarcar pago</button>`:`<button class="btn" type="button" data-aba-pay="${i}" data-aba-acao="pay">✅ Marcar pago</button>`}</div></div></div>`}).join("");
+  return `<div class="abaParcela ${cls} ${aberta?"open":""}"><button type="button" class="abaHead" data-aba="${i}" aria-expanded="${aberta}"><span class="abaTit">${p.numero}ª • ${mesAno(p.vencimento)}${p.pago&&p.dataPago?`<small>pago ${dateBR(p.dataPago).slice(0,5)}${p.dataPago<p.vencimento?" • ⏩ antecipado":""}</small>`:""}</span><span>${money(p.valor)}${p.fixo?" ✏️":""} ${p.pago?"✅":atrasada?"🔴":"⚪"} <b class="abaSeta">${aberta?"︿":"﹀"}</b></span></button><div class="abaBody"><div class="installmentMeta">Vence em ${dateBR(p.vencimento)}${p.pago&&p.dataPago?" • pago em "+dateBR(p.dataPago)+(p.dataPago<p.vencimento?" (antecipado)":p.dataPago>p.vencimento?" (com atraso)":""):""}</div><div class="valorEdit"><label for="dtParc${i}">📅 Data do pagamento</label><input id="dtParc${i}" type="date" class="dataPagInput" value="${p.pago?(p.dataPago||""):(p.dataTmp||hoje)}" data-aba-data="${i}"></div><div class="valorEdit"><label for="valParc${i}">${p.pago?"Valor pago":"Valor da parcela"}</label><div class="valorEditRow"><span>R$</span><input id="valParc${i}" class="moneyInput" type="text" inputmode="decimal" value="${fmtBR(p.valor)}" data-aba-valor="${i}" autocomplete="off">${p.fixo?`<button type="button" class="smallBtn" data-aba-auto="${i}" title="Voltar ao valor automático">↺ Auto</button>`:""}</div>${p.fixo?`<div class="installmentMeta">✏️ Valor editado</div>`:""}</div><div class="installmentActions">${p.pago?`<button class="btn secondary" type="button" data-aba-pay="${i}" data-aba-acao="unpay">↩️ Desmarcar pago</button>`:`<button class="btn" type="button" data-aba-pay="${i}" data-aba-acao="pay">✅ Marcar pago</button>`}</div></div></div>`}).join("");
 }
 $("parcelasAbas").addEventListener("change",e=>{
+ const dt=e.target.closest("[data-aba-data]");
+ if(dt){const i=Number(dt.dataset.abaData),p=parcelasForm[i];if(!p)return;
+  if(p.pago){p.dataPago=dt.value||localDate();abaAberta=i;renderAbasParcelas()}else p.dataTmp=dt.value;return}
  const inp=e.target.closest("[data-aba-valor]");if(!inp)return;
  const i=Number(inp.dataset.abaValor),p=parcelasForm[i];if(!p)return;
  p.valor=Math.max(numBR(inp.value),0);p.fixo=true;abaAberta=i;sincronizarParcelas(true);
@@ -869,7 +874,8 @@ $("parcelasAbas").addEventListener("click",e=>{
  if(pay){
   const i=Number(pay.dataset.abaPay),p=parcelasForm[i];if(!p)return;
   if(pay.dataset.abaAcao==="pay"){
-   p.pago=true;p.dataPago=localDate();
+   const d=$("dtParc"+i)?.value||p.dataTmp||localDate();
+   p.pago=true;p.dataPago=d;delete p.dataTmp;
    let prox=parcelasForm.findIndex((x,j)=>j>i&&!x.pago);
    if(prox<0)prox=parcelasForm.findIndex(x=>!x.pago);
    abaAberta=prox;
@@ -1310,7 +1316,7 @@ document.querySelectorAll("[data-resource]").forEach(btn=>btn.addEventListener("
 }));
 $("fecharEmergencias").onclick=()=>$("modalEmergencias").classList.remove("open");
 
-function abrirPagamentos(id){const t=viagens.find(x=>x.id===id);if(!t)return;$("pagamentoViagemTitulo").innerHTML=`<b>${esc(t.nome)}</b><br>💰 Total: ${money(t.valorTotal)} • ✅ Pago: ${money(t.valorPago)} • 🔴 Falta: ${money(faltanteViagem(t))}`;if(t.modoPagamento!=="parcelado"||!t.parcelas?.length){$("pagamentoEditor").innerHTML=`<div class="notice">Esta viagem está configurada como <b>à vista</b>. Para usar pagamentos mensais, abra <b>Editar</b> e selecione <b>Parcelado mensal</b>.</div>`}else{const hoje=localDate();$("pagamentoEditor").innerHTML=`<div class="installmentList">${entradaDe(t)?`<div class="installmentItem paid"><div class="installmentHead"><div><div class="installmentMonth">💵 Entrada${t.dataEntrada?" • "+dateBR(t.dataEntrada):""}</div><div class="installmentMeta">Paga no início</div></div><div class="installmentValue">${money(entradaDe(t))}</div></div><div class="installmentStatus paid">🟢 Pago</div></div>`:""}${t.parcelas.map(p=>{const overdue=!p.pago&&p.vencimento<hoje,soon=!p.pago&&!overdue&&Math.ceil((new Date(p.vencimento+"T12:00:00")-new Date(hoje+"T12:00:00"))/86400000)<=7,cls=p.pago?"paid":overdue?"overdue":soon?"soon":"",status=p.pago?`<div class="installmentStatus paid">🟢 Pago em ${dateBR(p.dataPago)}</div>`:overdue?`<div class="installmentStatus overdue">🔴 Atrasado</div>`:soon?`<div class="installmentStatus soon">🟠 Vence em breve</div>`:`<div class="installmentStatus future">⚪ Pendente</div>`;return `<div class="installmentItem ${cls}"><div class="installmentHead"><div><div class="installmentMonth">${p.numero}ª parcela • ${dateBR(p.vencimento)}</div><div class="installmentMeta">Vencimento mensal</div></div><div class="installmentValue">${money(p.valor)}</div></div>${status}<div class="installmentActions">${p.pago?`<button class="btn secondary" type="button" data-pay-action="unpay" data-trip-id="${t.id}" data-pay-num="${p.numero}">↩️ Desmarcar pago</button>`:`<button class="btn" type="button" data-pay-action="pay" data-trip-id="${t.id}" data-pay-num="${p.numero}">✅ Marcar pago hoje</button>`}</div></div>`}).join("")}</div>`}$("modalPagamentos").classList.add("open")}
+function abrirPagamentos(id){const t=viagens.find(x=>x.id===id);if(!t)return;$("pagamentoViagemTitulo").innerHTML=`<b>${esc(t.nome)}</b><br>💰 Total: ${money(t.valorTotal)} • ✅ Pago: ${money(t.valorPago)} • 🔴 Falta: ${money(faltanteViagem(t))}`;if(t.modoPagamento!=="parcelado"||!t.parcelas?.length){$("pagamentoEditor").innerHTML=`<div class="notice">Esta viagem está configurada como <b>à vista</b>. Para usar pagamentos mensais, abra <b>Editar</b> e selecione <b>Parcelado mensal</b>.</div>`}else{const hoje=localDate();$("pagamentoEditor").innerHTML=`<div class="installmentList">${entradaDe(t)?`<div class="installmentItem paid"><div class="installmentHead"><div><div class="installmentMonth">💵 Entrada${t.dataEntrada?" • "+dateBR(t.dataEntrada):""}</div><div class="installmentMeta">Paga no início</div></div><div class="installmentValue">${money(entradaDe(t))}</div></div><div class="installmentStatus paid">🟢 Pago</div></div>`:""}${t.parcelas.map(p=>{const overdue=!p.pago&&p.vencimento<hoje,soon=!p.pago&&!overdue&&Math.ceil((new Date(p.vencimento+"T12:00:00")-new Date(hoje+"T12:00:00"))/86400000)<=7,cls=p.pago?"paid":overdue?"overdue":soon?"soon":"",status=p.pago?`<div class="installmentStatus paid">🟢 Pago em ${dateBR(p.dataPago)}${p.dataPago&&p.dataPago<p.vencimento?" • ⏩ antecipado":""}</div>`:overdue?`<div class="installmentStatus overdue">🔴 Atrasado</div>`:soon?`<div class="installmentStatus soon">🟠 Vence em breve</div>`:`<div class="installmentStatus future">⚪ Pendente</div>`;return `<div class="installmentItem ${cls}"><div class="installmentHead"><div><div class="installmentMonth">${p.numero}ª parcela • ${dateBR(p.vencimento)}</div><div class="installmentMeta">Vencimento mensal</div></div><div class="installmentValue">${money(p.valor)}</div></div>${status}<div class="installmentActions">${p.pago?`<button class="btn secondary" type="button" data-pay-action="unpay" data-trip-id="${t.id}" data-pay-num="${p.numero}">↩️ Desmarcar pago</button>`:`<button class="btn" type="button" data-pay-action="pay" data-trip-id="${t.id}" data-pay-num="${p.numero}">✅ Marcar pago hoje</button>`}</div></div>`}).join("")}</div>`}$("modalPagamentos").classList.add("open")}
 function fecharPagamentos(){$("modalPagamentos").classList.remove("open")}$("fecharPagamentos").onclick=fecharPagamentos;$("fecharPagamentos2").onclick=fecharPagamentos;
 
 document.addEventListener("click",e=>{
