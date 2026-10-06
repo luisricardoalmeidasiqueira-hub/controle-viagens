@@ -335,6 +335,51 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
 .valorEditRow{display:flex;align-items:center;gap:7px}
 .valorEditRow span{font-weight:800}
 .valorEditRow input{flex:1;max-width:160px;text-align:right;font-weight:800}
+
+/* ===== Ajuste 2026-10-06: datas dentro da linha (iPhone) + letras menores ===== */
+.grid>*,.installmentGrid>*,.paymentModeRow>*{min-width:0}
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;min-height:40px;line-height:1.2;text-align:left;background:#fff}
+input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0}
+input[type=date]::-webkit-calendar-picker-indicator{margin-left:auto}
+.installmentBox{padding:10px}
+.installmentGrid{gap:8px}
+body{font-size:14px}
+header h1{font-size:19px}
+header p{font-size:12px}
+.card{padding:12px}
+.card h2,.collapseBtn{font-size:15px}
+.ideasHead h2,.nextTripHead h2{font-size:14px}
+.field{margin-bottom:9px}
+.field label{font-size:11.5px}
+input,textarea,select{font-size:14px;padding:9px 10px}
+.btn{font-size:13px;padding:9px 11px}
+.paymentModeCard{padding:9px 10px;font-size:13px;border-radius:12px}
+.notice,.empty{font-size:11.5px}
+.abasResumo{font-size:11.5px}
+.abaHead{font-size:13px;padding:9px 10px}
+.installmentMeta{font-size:12px}
+.valorEditRow input{max-width:130px}
+.nextTripName{font-size:15px}
+.nextTripMeta{font-size:11.5px}
+.nextTripView,.nextTripAction{width:34px;height:34px;font-size:16px}
+.tripMain strong{font-size:14px}
+.tripMain small{font-size:11.5px}
+.tripIc{font-size:19px}
+.info,.obs,.tripBody .sub{font-size:12.5px}
+.tripBtns .btn{font-size:12.5px;padding:8px 6px}
+.hotelChips button{font-size:12px;padding:7px 10px}
+.passeiosHead{font-size:13px}
+.festaItem,.festaAviso{font-size:12px}
+#verEventos{font-size:12px}
+.sheet h2{font-size:17px}
+.featureCard h3{font-size:13px}
+.featureCard p{font-size:11.5px}
+.menuPanel button{font-size:13.5px;padding:10px}
+.headTools .miniTool{width:34px;height:34px;font-size:16px}
+.searchSmall{width:36px!important;height:36px!important;min-width:36px!important;font-size:15px!important}
+.searchLine .ideaSaveBtn{height:36px!important;font-size:12.5px!important}
+.appFooter{font-size:10.5px}
+.fab{width:50px;height:50px;font-size:25px}
 </style>
 
 </head>
@@ -649,7 +694,7 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="2.1";
+const APP_VERSAO="2.2";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
