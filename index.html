@@ -12,7 +12,10 @@
 <meta name="copyright" content="© 2026 Luís Ricardo de Almeida Siqueira — Todos os direitos reservados.">
 <link rel="apple-touch-icon" sizes="180x180" href="./icone_viagens.png">
 <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./icone_viagens.png">
-<link rel="icon" type="image/png" sizes="180x180" href="./icone.png?v=2">
+<link rel="icon" type="image/png" sizes="180x180" href="./icone_viagens.png?v=3">
+<link rel="manifest" href="./manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Controle de Viagens">
 <meta name="apple-mobile-web-app-title" content="Controle de Viagens">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -418,6 +421,10 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
   <button data-menu="secAjuda">🚨 Ajuda rápida <span>›</span></button>
   <button id="menuCompartilhar" style="display:none">📤 Compartilhar este app <span>›</span></button>
   <div class="menuDivider"></div>
+  <button id="menuBackup">💾 Fazer backup <span id="backupInfo" class="verMenu"></span></button>
+  <button id="menuRestaurar">📥 Restaurar backup <span>›</span></button>
+  <input type="file" id="arqBackup" accept=".json,application/json,text/plain" style="display:none">
+  <div class="menuDivider"></div>
   <button id="menuAtualizar">🔄 Atualizar app <span id="verMenu" class="verMenu"></span></button>
 </div>
 <div class="colorPanel" id="colorPanel"><strong>🎨 Cor do aplicativo</strong><div class="sourceNote">Muda a cor do app inteiro: fundo, bordas, botões e títulos.</div><div class="colorChoices"><button class="colorDot" data-color="#2E9E6B" style="background:#2E9E6B" aria-label="Verde"></button><button class="colorDot" data-color="#1976D2" style="background:#1976D2" aria-label="Azul"></button><button class="colorDot" data-color="#7B1FA2" style="background:#7B1FA2" aria-label="Roxo"></button><button class="colorDot" data-color="#EF6C00" style="background:#EF6C00" aria-label="Laranja"></button><button class="colorDot" data-color="#C62828" style="background:#C62828" aria-label="Vermelho"></button><button class="colorDot" data-color="#D81B60" style="background:#D81B60" aria-label="Rosa"></button><button class="colorDot" data-color="#00838F" style="background:#00838F" aria-label="Azul-petróleo"></button><button class="colorDot" data-color="#455A64" style="background:#455A64" aria-label="Grafite"></button></div></div>
@@ -604,7 +611,7 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="1.9";
+const APP_VERSAO="2.0";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1277,6 +1284,58 @@ async function atualizarApp(){
  catch(e){location.reload()}
 }
 $("btnAtualizar").onclick=atualizarApp;
+
+/* ===== Backup e restauração — nada é apagado ===== */
+const BK_CHAVES=["controle_viagens_dados","controle_viagens_lugares","controle_viagens_ideias","cidades_extra","controle_viagens_cor","controle_viagens_financeiro_visivel_v2"];
+const BK_ULTIMO="controle_viagens_ultimo_backup";
+function lerJSON(k,pad){try{const v=localStorage.getItem(k);return v==null?pad:JSON.parse(v)}catch{return pad}}
+function mostrarInfoBackup(){const d=localStorage.getItem(BK_ULTIMO);$("backupInfo").textContent=d?"último "+dateBR(d).slice(0,5):"nunca feito"}
+async function fazerBackup(){
+ $("menuPanel").style.display="none";
+ const dados={app:"Controle de Viagens",versao:APP_VERSAO,criadoEm:new Date().toISOString(),chaves:{}};
+ BK_CHAVES.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)dados.chaves[k]=v});
+ const txt=JSON.stringify(dados);
+ const nome=`backup-controle-viagens-${localDate()}.json`;
+ let ok=false;
+ try{const arq=new File([txt],nome,{type:"application/json"});if(navigator.canShare&&navigator.canShare({files:[arq]})){await navigator.share({files:[arq],title:"Backup Controle de Viagens"});ok=true}}
+ catch(e){if(e&&e.name==="AbortError")return}
+ if(!ok){try{const u=URL.createObjectURL(new Blob([txt],{type:"application/json"}));const a=document.createElement("a");a.href=u;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);ok=true}catch(e){}}
+ if(ok){localStorage.setItem(BK_ULTIMO,localDate());mostrarInfoBackup();
+  avisar(`💾 Backup feito: ${viagens.length} viagem(ns), ${ideias.length} ideia(s), ${lugares.length} lugar(es). Guarde o arquivo no WhatsApp ou no Drive.`)}
+ else alert("Não foi possível gerar o arquivo neste navegador.");
+}
+function juntarPorId(atual,vindo){
+ const ids=new Set((atual||[]).map(x=>String(x.id)));
+ const novos=(vindo||[]).filter(x=>x&&x.id!=null&&!ids.has(String(x.id)));
+ return{lista:[...(atual||[]),...novos],novos:novos.length};
+}
+function restaurarBackup(txt){
+ let d;try{d=JSON.parse(txt)}catch{alert("Este arquivo não é um backup válido do Controle de Viagens.");return}
+ if(!d||d.app!=="Controle de Viagens"||!d.chaves){alert("Este arquivo não é um backup do Controle de Viagens.");return}
+ const lerK=(k,pad)=>{try{return d.chaves[k]!=null?JSON.parse(d.chaves[k]):pad}catch{return pad}};
+ const bV=lerK("controle_viagens_dados",[]),bL=lerK("controle_viagens_lugares",[]),bI=lerK("controle_viagens_ideias",[]);
+ if(!confirm(`Restaurar backup de ${dateBR(String(d.criadoEm).slice(0,10))}?\n\n🧳 ${bV.length} viagem(ns) • 💡 ${bI.length} ideia(s) • ⭐ ${bL.length} lugar(es)\n\nNada do que já está neste celular será apagado: o backup só ADICIONA o que estiver faltando.`))return;
+ /* cópia de segurança automática antes de mexer */
+ const antes={};BK_CHAVES.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)antes[k]=v});
+ localStorage.setItem("controle_viagens_antes_restaurar",JSON.stringify({em:new Date().toISOString(),chaves:antes}));
+ const v=juntarPorId(lerJSON("controle_viagens_dados",[]),bV),l=juntarPorId(lerJSON("controle_viagens_lugares",[]),bL),i=juntarPorId(lerJSON("controle_viagens_ideias",[]),bI);
+ localStorage.setItem("controle_viagens_dados",JSON.stringify(v.lista));
+ localStorage.setItem("controle_viagens_lugares",JSON.stringify(l.lista));
+ localStorage.setItem("controle_viagens_ideias",JSON.stringify(i.lista));
+ const cx=[...new Set([...lerJSON("cidades_extra",[]),...lerK("cidades_extra",[])])];localStorage.setItem("cidades_extra",JSON.stringify(cx));
+ if(!localStorage.getItem("controle_viagens_cor")&&d.chaves.controle_viagens_cor)localStorage.setItem("controle_viagens_cor",d.chaves.controle_viagens_cor);
+ viagens=v.lista;lugares=l.lista;ideias=i.lista;render();renderPlaces();renderIdeias();popularCidades();aplicarFinanceiro();
+ alert(`✅ Backup restaurado!\n\nAdicionado: ${v.novos} viagem(ns), ${i.novos} ideia(s), ${l.novos} lugar(es).${v.novos+i.novos+l.novos===0?"\n\nTudo do backup já estava neste celular.":""}`);
+}
+$("menuBackup").onclick=fazerBackup;
+$("menuRestaurar").onclick=()=>{$("menuPanel").style.display="none";$("arqBackup").value="";$("arqBackup").click()};
+$("arqBackup").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>restaurarBackup(String(r.result||""));r.readAsText(f)};
+function avisar(msg){const t=$("toastVer");t.textContent=msg;t.classList.add("show");clearTimeout(avisar._t);avisar._t=setTimeout(()=>t.classList.remove("show"),5000)}
+mostrarInfoBackup();
+/* Pede ao navegador para não apagar os dados sozinho (Android/Chrome/Opera) */
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+/* Lembrete gentil: se tem viagens e o último backup tem mais de 30 dias */
+setTimeout(()=>{const u=localStorage.getItem(BK_ULTIMO),dias=u?(new Date(localDate())-new Date(u))/864e5:999;if(viagens.length&&dias>30)avisar("💾 Dica: faça um backup em ⋮ → Fazer backup para não perder suas viagens.")},3500);
 (function mostrarVersao(){
  const txt="v"+APP_VERSAO;
  $("verTopo").textContent=txt;

@@ -1,0 +1,15 @@
+{
+  "name": "Controle de Viagens",
+  "short_name": "Viagens",
+  "description": "Planeje viagens, pagamentos e lugares no celular. © 2026 Luís Ricardo de Almeida Siqueira.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#2E9E6B",
+  "icons": [
+    { "src": "./icone_viagens.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}
