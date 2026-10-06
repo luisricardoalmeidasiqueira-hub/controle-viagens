@@ -1,7 +1,15 @@
 <!DOCTYPE html>
+<!--
+  Controle de Viagens
+  Desenvolvido por Luís Ricardo de Almeida Siqueira
+  © 2026 Luís Ricardo de Almeida Siqueira — Todos os direitos reservados.
+  Proibida a cópia, reprodução ou distribuição sem autorização do autor.
+-->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="author" content="Luís Ricardo de Almeida Siqueira">
+<meta name="copyright" content="© 2026 Luís Ricardo de Almeida Siqueira — Todos os direitos reservados.">
 <link rel="apple-touch-icon" sizes="180x180" href="./icone_viagens.png">
 <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./icone_viagens.png">
 <link rel="icon" type="image/png" sizes="180x180" href="./icone.png?v=2">
@@ -20,7 +28,7 @@
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 button,input,textarea,select{font:inherit}
 button{cursor:pointer}
-.wrap{max-width:760px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 14px 110px}
+.wrap{max-width:760px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 14px 10px}
 header h1{margin:0;font-size:25px}
 header p{margin:5px 0 18px;color:var(--muted)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:14px}
@@ -273,6 +281,13 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
 .starPick button.on{color:#F5B400}
 .starPick .starClear{font-size:15px;color:var(--muted);margin-left:6px;width:28px;height:28px;border-radius:50%;background:var(--panel2);display:grid;place-items:center}
 .starHint{font-size:11px;color:var(--muted);margin-top:2px}
+.verTag{display:inline-block;font-size:11px;font-weight:800;color:var(--accent);background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:4px;vertical-align:1px;white-space:nowrap}
+.verMenu{font-size:12px;font-weight:800;color:var(--accent)}
+.appFooter{max-width:760px;margin:0 auto;padding:4px 14px 100px;text-align:center;font-size:11px;line-height:1.5;color:var(--muted)}
+.footCopy{font-weight:700;color:var(--text)}
+.footVer{font-weight:800;color:var(--accent);margin-bottom:2px}
+.toastVer{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--text);color:#fff;font-size:13px;font-weight:700;padding:10px 14px;border-radius:12px;box-shadow:0 6px 20px #0004;opacity:0;pointer-events:none;transition:.3s;z-index:30;max-width:calc(100vw - 32px);text-align:center}
+.toastVer.show{opacity:1;transform:translate(-50%,0)}
 .valorEdit{margin-top:8px}
 .valorEdit label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
 .valorEditRow{display:flex;align-items:center;gap:7px}
@@ -334,7 +349,7 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
       <button class="miniTool" id="btnMenu" type="button" aria-label="Mais opções" title="Mais opções">⋮</button>
     </div>
   </div>
-  <p>Planeje viagens, encontre lugares e organize tudo no celular.</p>
+  <p>Planeje viagens, encontre lugares e organize tudo no celular. <span class="verTag" id="verTopo"></span></p>
 </header>
 
 <section class="card ideasCard" id="secIdeias">
@@ -407,6 +422,8 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
 </section>
 </div>
 
+<footer class="appFooter"><div class="footVer" id="verRodape"></div><div>Desenvolvido por Luís Ricardo de Almeida Siqueira</div><div class="footCopy">© 2026 Luís Ricardo de Almeida Siqueira — Todos os direitos reservados.</div></footer>
+<div class="toastVer" id="toastVer" role="status" aria-live="polite"></div>
 <div class="menuPanel" id="menuPanel" style="display:none">
   <button data-menu="secViagens">🧳 Suas viagens <span>›</span></button>
   <button id="menuLugares">⭐ Meus lugares salvos <span id="setaLugares">︾</span></button>
@@ -416,7 +433,7 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
   <button data-menu="secAjuda">🚨 Ajuda rápida <span>›</span></button>
   <button id="menuCompartilhar" style="display:none">📤 Compartilhar este app <span>›</span></button>
   <div class="menuDivider"></div>
-  <button id="menuAtualizar">🔄 Atualizar app <span>›</span></button>
+  <button id="menuAtualizar">🔄 Atualizar app <span id="verMenu" class="verMenu"></span></button>
 </div>
 <div class="colorPanel" id="colorPanel"><strong>🎨 Cor do aplicativo</strong><div class="sourceNote">Muda a cor do app inteiro: fundo, bordas, botões e títulos.</div><div class="colorChoices"><button class="colorDot" data-color="#2E9E6B" style="background:#2E9E6B" aria-label="Verde"></button><button class="colorDot" data-color="#1976D2" style="background:#1976D2" aria-label="Azul"></button><button class="colorDot" data-color="#7B1FA2" style="background:#7B1FA2" aria-label="Roxo"></button><button class="colorDot" data-color="#EF6C00" style="background:#EF6C00" aria-label="Laranja"></button><button class="colorDot" data-color="#C62828" style="background:#C62828" aria-label="Vermelho"></button><button class="colorDot" data-color="#D81B60" style="background:#D81B60" aria-label="Rosa"></button><button class="colorDot" data-color="#00838F" style="background:#00838F" aria-label="Azul-petróleo"></button><button class="colorDot" data-color="#455A64" style="background:#455A64" aria-label="Grafite"></button></div></div>
 <div class="modal" id="modalFonte"><div class="sheet"><button class="close" id="fecharFonte">×</button><h2>🌐 Fonte de avaliações</h2><p class="sourceNote">O Google Places pode fornecer nota, endereço, horário e avaliações. A API exige configuração própria e pode ter cobrança. Sem chave, o aplicativo continua usando a busca pública e não inventa notas.</p><div class="field"><label>Chave da Google Places API (opcional)</label><div class="apiKeyRow"><input id="googleApiKey" type="password" placeholder="Cole sua chave aqui"><button class="smallBtn" id="salvarApiKey" type="button">Salvar</button></div></div><div class="notice">A chave fica somente neste aparelho. Nunca coloque uma chave pessoal diretamente no código público do GitHub.</div></div></div>
@@ -601,6 +618,9 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
 </div>
 
 <script>
+/* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
+const APP_VERSAO="1.4";
+const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
 const CIDADES=["Tatuí, SP","São Paulo, SP","Aparecida, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
@@ -1229,7 +1249,7 @@ $("btnCor").onclick=()=>{$("menuPanel").style.display="none";$("colorPanel").cla
 /* Atualizar app: busca a versão mais nova do GitHub sem apagar os dados salvos */
 async function atualizarApp(){
  $("menuPanel").style.display="none";
- const b=$("btnAtualizar");b.classList.add("girando");
+ const b=$("btnAtualizar");b.classList.add("girando");try{sessionStorage.setItem("cv_atualizando","1")}catch(e){}
  try{
   if("serviceWorker" in navigator){const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.update().catch(()=>{})))}
   if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}
@@ -1238,6 +1258,20 @@ async function atualizarApp(){
  catch(e){location.reload()}
 }
 $("btnAtualizar").onclick=atualizarApp;
+(function mostrarVersao(){
+ const txt="v"+APP_VERSAO;
+ $("verTopo").textContent=txt;
+ $("verMenu").textContent=txt;
+ $("verRodape").textContent=`Versão ${APP_VERSAO} • ${APP_DATA_VERSAO}`;
+ $("btnAtualizar").title=`Atualizar app (versão atual ${txt})`;
+ const KEY="controle_viagens_versao",antes=localStorage.getItem(KEY);
+ let msg="";
+ if(antes&&antes!==APP_VERSAO)msg=`✅ App atualizado: v${antes} → v${APP_VERSAO}`;
+ else if(sessionStorage.getItem("cv_atualizando"))msg=`✅ Você já está na versão mais nova (v${APP_VERSAO})`;
+ sessionStorage.removeItem("cv_atualizando");
+ localStorage.setItem(KEY,APP_VERSAO);
+ if(msg){const t=$("toastVer");t.textContent=msg;setTimeout(()=>t.classList.add("show"),2100);setTimeout(()=>t.classList.remove("show"),6000)}
+})();
 $("menuAtualizar").onclick=atualizarApp;
 
 $("menuFonte").onclick=()=>{$("menuPanel").style.display="none";$("googleApiKey").value=localStorage.getItem("controle_viagens_google_places_key")||"";$("modalFonte").classList.add("open")}; $("fecharFonte").onclick=()=>$("modalFonte").classList.remove("open"); $("salvarApiKey").onclick=()=>{localStorage.setItem("controle_viagens_google_places_key",$("googleApiKey").value.trim());$("modalFonte").classList.remove("open");alert("Fonte de avaliações salva neste aparelho.")};
