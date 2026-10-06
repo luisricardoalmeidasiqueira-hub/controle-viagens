@@ -317,6 +317,17 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
 .tripsDivider{font-size:12px;font-weight:800;color:var(--muted);margin:14px 2px 0}
 @media (prefers-reduced-motion:reduce){.tripSeta{transition:none}}
 .hotelChips{display:flex;flex-wrap:wrap;gap:7px}
+.festasBox{margin-top:12px}
+.festasBox:empty{display:none}
+#verEventos{border:1px dashed var(--accent);background:transparent;color:var(--accent);border-radius:999px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;margin-top:2px}
+.festaItem{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;padding:8px 10px;border:1px solid var(--line);border-left:4px solid #F5B400;border-radius:10px;background:#fff;margin-bottom:7px;font-size:13px}
+.festaItem small{color:var(--muted);font-size:12px}
+.festaAviso{margin:8px 0;padding:8px 10px;border-radius:10px;background:#FFF8E1;border:1px solid #F5D77A;font-size:13px;color:#5C4A00}
+.passeiosBox{margin:4px 0 12px;padding-top:10px;border-top:1px solid var(--line)}
+.passeiosHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:14px;font-weight:800}
+.passeiosHead small{font-size:12px;font-weight:700;color:var(--accent);text-align:right}
+.hotelChips .minhaDica{border-color:var(--accent);background:#fff}
+.hotelChips .addDica{border-style:dashed;background:transparent;color:var(--accent)}
 .hotelChips button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700}
 .hotelChips button:active{transform:scale(.97)}
 .valorEdit{margin-top:8px}
@@ -372,6 +383,11 @@ input,textarea,select{padding:10px 11px;font-size:15px;border-radius:10px}
   </select></div>
   <div class="ratingRow" id="ratingRow" style="display:none"><label>⭐ Avaliação</label><select id="filtroRating"><option value="0">Qualquer avaliação</option><option value="3">⭐ 3,0+</option><option value="3.5">⭐ 3,5+</option><option value="4">⭐ 4,0+</option><option value="4.5">⭐ 4,5+</option></select></div>
   <div class="field"><label>Cidade</label><input id="cidadeBusca" list="listaCidades" placeholder="Digite a cidade"><datalist id="listaCidades"></datalist></div>
+  <div class="passeiosBox">
+    <div class="passeiosHead"><span>🎡 Passeios na cidade</span><small id="passeioCidade"></small></div>
+    <div class="hotelChips" id="passeiosChips"></div>
+    <div class="festasBox" id="festasBox"></div>
+  </div>
   <div id="resultados" class="results">
     <div class="empty">Digite o que procura e a cidade para pesquisar.</div>
   </div>
@@ -918,6 +934,84 @@ function renderProximaViagem(t){
  const fixada=!!t.proximaFixada;
  box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">📅 ${dateBR(t.data)}${t.dataVolta?" → "+dateBR(t.dataVolta):""}${t.horaSaida?" • 🕐 "+esc(t.horaSaida):""} • 📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div></div><div class="nextTripActions"><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>`;
 }
+/* Festas conhecidas: o mês costuma se repetir todo ano, mas as datas exatas mudam — sempre confirmar */
+const FESTAS=[
+ /* São Paulo */
+ {c:"olimpia",nome:"Festival do Folclore (FEFOL)",meses:[8]},
+ {c:"barretos",nome:"Festa do Peão de Barretos",meses:[8]},
+ {c:"aparecida",nome:"Festa de Nossa Senhora Aparecida (12/10)",meses:[10]},
+ {c:"holambra",nome:"Expoflora",meses:[8,9]},
+ {c:"atibaia",nome:"Festa das Flores e Morangos",meses:[9,10]},
+ {c:"campos do jordao",nome:"Festival de Inverno",meses:[7]},
+ {c:"jaguariuna",nome:"Jaguariúna Rodeo Festival",meses:[9]},
+ {c:"jundiai",nome:"Festa da Uva",meses:[1,2]},
+ {c:"vinhedo",nome:"Festa da Uva",meses:[1,2]},
+ {c:"louveira",nome:"Festa da Uva",meses:[1,2]},
+ {c:"ilhabela",nome:"Semana Internacional de Vela",meses:[7]},
+ {c:"iguape",nome:"Festa do Bom Jesus de Iguape",meses:[8]},
+ {c:"pirapora do bom jesus",nome:"Festa do Bom Jesus",meses:[8]},
+ {c:"sao luiz do paraitinga",nome:"Carnaval de Marchinhas",meses:[2,3]},
+ {c:"sao luiz do paraitinga",nome:"Festa do Divino",meses:[5,6]},
+ {c:"sao paulo",nome:"Carnaval (desfiles no Anhembi)",meses:[2,3]},
+ {c:"sao paulo",nome:"Virada Cultural",meses:[5]},
+ {c:"tatui",nome:"Festas Juninas / Quermesses",meses:[6,7]},
+ /* Rio de Janeiro */
+ {c:"rio de janeiro",nome:"Carnaval",meses:[2,3]},
+ {c:"rio de janeiro",nome:"Réveillon de Copacabana",meses:[12,1]},
+ {c:"rio de janeiro",nome:"Rock in Rio (costuma ser a cada 2 anos)",meses:[9]},
+ {c:"petropolis",nome:"Bauernfest (festa alemã)",meses:[6,7]},
+ {c:"paraty",nome:"Festa do Divino",meses:[5,6]},
+ /* Minas Gerais */
+ {c:"ouro preto",nome:"Carnaval das Repúblicas",meses:[2,3]},
+ {c:"ouro preto",nome:"Festival de Inverno",meses:[7]},
+ {c:"tiradentes",nome:"Mostra de Cinema de Tiradentes",meses:[1]},
+ {c:"tiradentes",nome:"Festival Cultura e Gastronomia",meses:[8]},
+ {c:"sao joao del rei",nome:"Semana Santa",meses:[3,4]},
+ {c:"diamantina",nome:"Vesperata (apresentações nas sacadas)",meses:[4,5,6,7,8,9,10]},
+ /* Sul */
+ {c:"gramado",nome:"Natal Luz",meses:[11,12,1]},
+ {c:"gramado",nome:"Festival de Cinema de Gramado",meses:[8]},
+ {c:"gramado",nome:"Festa da Colônia",meses:[4,5]},
+ {c:"canela",nome:"Sonho de Natal",meses:[11,12,1]},
+ {c:"bento goncalves",nome:"Vindima (colheita da uva)",meses:[1,2,3]},
+ {c:"caxias do sul",nome:"Festa da Uva (costuma ser a cada 2 anos)",meses:[2,3]},
+ {c:"porto alegre",nome:"Acampamento / Semana Farroupilha",meses:[9]},
+ {c:"blumenau",nome:"Oktoberfest",meses:[10]},
+ {c:"pomerode",nome:"Festa Pomerana",meses:[1]},
+ {c:"joinville",nome:"Festival de Dança de Joinville",meses:[7]},
+ {c:"itajai",nome:"Marejada",meses:[10]},
+ {c:"florianopolis",nome:"Fenaostra (festa da ostra)",meses:[10]},
+ {c:"balneario camboriu",nome:"Réveillon com queima de fogos",meses:[12,1]},
+ /* Nordeste */
+ {c:"salvador",nome:"Lavagem do Bonfim",meses:[1]},
+ {c:"salvador",nome:"Festa de Iemanjá (2/2)",meses:[2]},
+ {c:"salvador",nome:"Carnaval",meses:[2,3]},
+ {c:"olinda",nome:"Carnaval de Olinda",meses:[2,3]},
+ {c:"recife",nome:"Carnaval / Galo da Madrugada",meses:[2,3]},
+ {c:"caruaru",nome:"São João de Caruaru",meses:[6]},
+ {c:"campina grande",nome:"O Maior São João do Mundo",meses:[6]},
+ {c:"mossoro",nome:"Mossoró Cidade Junina",meses:[6]},
+ {c:"aracaju",nome:"Forró Caju",meses:[6]},
+ {c:"sao luis",nome:"Bumba Meu Boi / São João",meses:[6]},
+ {c:"fortaleza",nome:"Fortal (micareta)",meses:[7]},
+ {c:"natal",nome:"Carnatal",meses:[12]},
+ {c:"juazeiro do norte",nome:"Romarias do Padre Cícero",meses:[9,11]},
+ {c:"porto seguro",nome:"Réveillon",meses:[12,1]},
+ /* Norte e Centro-Oeste */
+ {c:"parintins",nome:"Festival Folclórico de Parintins",meses:[6]},
+ {c:"belem",nome:"Círio de Nazaré",meses:[10]},
+ {c:"pirenopolis",nome:"Festa do Divino / Cavalhadas",meses:[5,6]},
+ {c:"goias",nome:"Procissão do Fogaréu (Semana Santa)",meses:[3,4]}
+];
+const MES_NOME=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const semAc=x=>String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+function festasDaCidade(cidade){const c=semAc(cidade).split(/,| - | \/ /)[0].replace(/-/g," ").replace(/\s+/g," ").trim();return c?FESTAS.filter(f=>f.c===c):[]}
+function festasNaViagem(t){
+ if(!t.cidade||!t.data)return[];
+ const m=new Set();let d=new Date(t.data+"T12:00:00"),fim=new Date((t.dataVolta||t.data)+"T12:00:00");
+ for(let k=0;k<13&&d<=fim;k++){m.add(d.getMonth()+1);d.setMonth(d.getMonth()+1,1)}m.add(fim.getMonth()+1);
+ return festasDaCidade(t.cidade).filter(f=>f.meses.some(x=>m.has(x)));
+}
 const TIPO_NOME={viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"};
 const TIPO_IC={viagem:"🏖️",excursao:"🚌",carro:"🚗",moto:"🏍️",aviao:"✈️",onibus:"🚌",outro:"➕"};
 const viagensAbertas=new Set();
@@ -941,6 +1035,7 @@ function card(t){
   <div class="tripBody">
    ${t.hotel||t.tipoViagem?`<div class="sub">${t.hotel?"🏨 "+esc(t.hotel):""}${t.hotel&&t.tipoViagem?" • ":""}${t.tipoViagem?"🧳 "+esc(TIPO_NOME[t.tipoViagem]||t.tipoViagem):""}</div>`:""}
    <div class="info">${t.horaSaida?"🚗 Saída: "+esc(t.horaSaida)+(t.localSaida?" • "+esc(t.localSaida):"")+"<br>":""}${t.dataInicioPagamento?"💳 Começou a pagar: "+dateBR(t.dataInicioPagamento)+"<br>":""}${parc?(proxParc?`📆 Próxima parcela: ${proxParc.numero}ª • ${dateBR(proxParc.vencimento)} • ${money(proxParc.valor)}${atrasada?" 🔴 atrasada":""}<br>`:""):(t.venc?"📆 Vencimento: "+dateBR(t.venc)+"<br>":"")}<span class="financeValues financeLink" data-action="pagamentos" data-id="${t.id}" role="button" tabindex="0" title="Abrir pagamentos">💰 Total: ${money(t.valorTotal)} • Pago: ${money(t.valorPago)} • Falta: ${money(falta)}${t.modoPagamento==="parcelado"&&t.parcelas?.length?` • 💳 ${entradaDe(t)?"entrada "+money(entradaDe(t))+" + ":""}${t.parcelas.length}x mensal`:""}${t.gastos?`<br>💸 Gastos adicionais: ${money(t.gastos)}`:""}</span></div>
+   ${festasNaViagem(t).map(f=>`<div class="festaAviso">🎉 No período da viagem costuma ter: <b>${esc(f.nome)}</b>. Confirme as datas.</div>`).join("")}
    ${t.roteiro?`<div class="obs">🗺️ ${esc(t.roteiro)}</div>`:""}${t.obs?`<div class="obs">📝 ${esc(t.obs)}</div>`:""}
    <div class="tripBtns">
     <button class="btn secondary" type="button" data-action="edit" data-id="${t.id}">✏️ Editar</button>
@@ -1038,7 +1133,7 @@ function renderPlaces(){
    <button class="iconBtn" title="Bloquear informações" data-place-action="lock" data-id="${p.id}">${p.bloqueado?"🔓":"🔒"}</button>
    <button class="iconBtn" title="Localizar" data-place-action="locate" data-id="${p.id}">🔍</button>
    <button class="iconBtn" title="Lembrete no calendário" data-place-action="calendar" data-id="${p.id}">📅</button>
-   <button class="iconBtn clipIcon" title="Compartilhar localização" data-place-action="share" data-id="${p.id}"></button>
+   <button class="iconBtn" title="Compartilhar localização" aria-label="Compartilhar localização" data-place-action="share" data-id="${p.id}">📤</button>
    <button class="iconBtn trashBtn" title="Excluir local" aria-label="Excluir local" data-place-action="delete" data-id="${p.id}">🗑️</button>
  </div></div></div>`).join(""):`<div class="empty">Nenhum lugar salvo ainda. Favorite um local em 🔎 Encontrar lugares.</div>`;
 }
@@ -1074,7 +1169,7 @@ async function pesquisar(cat=""){
   if(vinteQuatro && source==="Google Places") data=data.filter(x=>x.open24);
   if(minRating>0) data=data.filter(x=>Number(x.rating||0)>=minRating);
   if(!data.length){$("resultados").innerHTML=`<div class="empty">Nenhum local encontrado com esses filtros. Tente reduzir a avaliação ou desligar 24h.</div>`;return}
-  $("resultados").innerHTML=data.map(place=>`<div class="place"><div class="placeHead"><div class="grow"><strong>${esc(place.name)}</strong><small>${esc(place.address)}</small>${place.rating?`<div class="webRating">🌐 ${Number(place.rating).toFixed(1).replace(".",",")} ⭐ ${place.ratingCount?`(${place.ratingCount} avaliações)`:""}</div>`:`<div class="sourceNote">🌐 Avaliação não disponível nesta fonte</div>`}${place.open24?`<div class="notice">🕐 Aberto 24 horas</div>`:""}</div></div><div class="iconActions"><button class="iconBtn favoriteBtn" title="Favoritar local" aria-label="Favoritar local" data-save-place='${encodeURIComponent(JSON.stringify(place))}'></button><button class="iconBtn clipIcon" title="Compartilhar localização" aria-label="Compartilhar localização" data-share-place='${encodeURIComponent(JSON.stringify(place))}'></button>${place.maps?`<button class="iconBtn" title="Abrir no Google Maps" data-open-map="${encodeURIComponent(place.maps)}">📍</button>`:""}</div><div class="sourceNote">Fonte: ${esc(source)}</div></div>`).join("");
+  $("resultados").innerHTML=data.map(place=>`<div class="place"><div class="placeHead"><div class="grow"><strong>${esc(place.name)}</strong><small>${esc(place.address)}</small>${place.rating?`<div class="webRating">🌐 ${Number(place.rating).toFixed(1).replace(".",",")} ⭐ ${place.ratingCount?`(${place.ratingCount} avaliações)`:""}</div>`:`<div class="sourceNote">🌐 Avaliação não disponível nesta fonte</div>`}${place.open24?`<div class="notice">🕐 Aberto 24 horas</div>`:""}</div></div><div class="iconActions"><button class="iconBtn favoriteBtn" title="Favoritar local" aria-label="Favoritar local" data-save-place='${encodeURIComponent(JSON.stringify(place))}'>⭐</button><button class="iconBtn" title="Compartilhar localização" aria-label="Compartilhar localização" data-share-place='${encodeURIComponent(JSON.stringify(place))}'>📤</button>${place.maps?`<button class="iconBtn" title="Abrir no Google Maps" data-open-map="${encodeURIComponent(place.maps)}">📍</button>`:""}</div><div class="sourceNote">Fonte: ${esc(source)}</div></div>`).join("");
  }catch(err){$("resultados").innerHTML=`<div class="empty">Não foi possível pesquisar agora. Verifique a internet e tente novamente.</div>`}
 }
 $("btnBusca").onclick=()=>pesquisar(); $("busca").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();pesquisar()}}); $("categoriaBusca").addEventListener("change",()=>{const c=$("categoriaBusca").value; const show=["hotel","restaurante","pizzaria","padaria","lanchonete","cafe"].includes(c); $("ratingRow").style.display=show?"flex":"none"; if(c==="outros")$("busca").focus(); else pesquisar()}); $("filtro24").addEventListener("change",()=>{if($("categoriaBusca").value||$("busca").value.trim())pesquisar()}); $("filtroRating").addEventListener("change",()=>{if($("categoriaBusca").value||$("busca").value.trim())pesquisar()});
@@ -1327,6 +1422,7 @@ async function atualizarApp(){
 }
 $("btnAtualizar").onclick=atualizarApp;
 
+
 /* ===== Backup e restauração — nada é apagado ===== */
 const BK_CHAVES=["controle_viagens_dados","controle_viagens_lugares","controle_viagens_ideias","cidades_extra","controle_viagens_cor","controle_viagens_financeiro_visivel_v2"];
 const BK_ULTIMO="controle_viagens_ultimo_backup";
@@ -1394,6 +1490,51 @@ setTimeout(()=>{const u=localStorage.getItem(BK_ULTIMO),dias=u?(new Date(localDa
 })();
 $("menuAtualizar").onclick=atualizarApp;
 
+/* ===== Passeios na cidade: botões que funcionam em qualquer cidade + dicas próprias ===== */
+const PASSEIOS_PADRAO=[["🎳","Boliche","boliche"],["🌊","Parque aquático","parque aquático"],["♨️","Águas termais","águas termais"],["🛍️","Shopping","shopping"],["🎬","Cinema","cinema"],["🏛️","Museu","museu"],["⛪","Igreja / Santuário","igreja santuário"],["🌳","Parque / Praça","parque praça"],["🦁","Zoológico / Aquário","zoológico aquário"],["🎨","Feira / Artesanato","feira artesanato"],["🏞️","Mirante / Cachoeira","mirante cachoeira"],["🎤","Bar / Música ao vivo","bar música ao vivo"],["🎮","Diversão / Fliperama","diversão fliperama kart"]];
+const PASSEIOS_KEY="controle_viagens_passeios_extra";
+if(!BK_CHAVES.includes(PASSEIOS_KEY))BK_CHAVES.push(PASSEIOS_KEY);
+function passeiosExtra(){return lerJSON(PASSEIOS_KEY,[])}
+function cidadePasseio(){
+ const digitada=$("cidadeBusca").value.trim();if(digitada)return digitada;
+ const hoje=localDate(),prox=[...viagens].filter(t=>t.cidade&&(t.dataVolta||t.data)>=hoje).sort((a,b)=>a.data.localeCompare(b.data))[0];
+ return prox?.cidade||"";
+}
+let passeiosTodos=false;
+function renderPasseios(){
+ const c=cidadePasseio();
+ $("passeioCidade").textContent=c?"em "+c:"digite a cidade acima";
+ const fs=festasDaCidade(c),hoje=localDate(),tv=viagens.find(t=>t.cidade&&semAc(t.cidade).split(",")[0].trim()===semAc(c).split(",")[0].trim()&&(t.dataVolta||t.data)>=hoje);
+ const mesRef=tv?new Date(tv.data+"T12:00:00"):new Date();
+ $("festasBox").innerHTML=c?`<div class="passeiosHead"><span>📅 Festas e eventos</span></div>${fs.length?fs.map(f=>`<div class="festaItem">🎉 <b>${esc(f.nome)}</b><small>costuma ser em ${f.meses.map(m=>MES_NOME[m-1]).join(" / ")}</small></div>`).join(""):""}<button type="button" class="addDica" id="verEventos">🔎 Ver eventos em ${esc(c.split(",")[0])} • ${MES_NOME[mesRef.getMonth()]}/${mesRef.getFullYear()}</button><div class="sourceNote">As datas mudam todo ano: confirme no site oficial antes de ir.</div>`:"";
+ $("festasBox").dataset.mes=`${MES_NOME[mesRef.getMonth()]} ${mesRef.getFullYear()}`;
+ const extras=passeiosExtra();
+ const lista=passeiosTodos?PASSEIOS_PADRAO:PASSEIOS_PADRAO.slice(0,6);
+ $("passeiosChips").innerHTML=lista.map(([ic,nome,termo])=>`<button type="button" data-passeio="${esc(termo)}">${ic} ${esc(nome)}</button>`).join("")
+  +extras.map((x,i)=>`<button type="button" class="minhaDica" data-passeio="${esc(x)}" data-dica-idx="${i}" title="Segure para apagar">⭐ ${esc(x)}</button>`).join("")
+  +`<button type="button" class="addDica verMais" id="verMaisPasseios">${passeiosTodos?"Menos ︿":"Mais ▾"}</button><button type="button" class="addDica" id="addDica">＋ Minha dica</button>`;
+}
+$("passeiosChips").addEventListener("click",e=>{
+ if(e.target.closest("#verMaisPasseios")){passeiosTodos=!passeiosTodos;renderPasseios();return}
+ if(e.target.closest("#addDica")){
+  const nome=(prompt("Qual passeio você quer adicionar?\nEx.: Boliche Strike, Thermas, Feira do Rolo…")||"").trim();
+  if(!nome)return;const l=passeiosExtra();if(!l.some(x=>x.toLowerCase()===nome.toLowerCase())){l.push(nome);localStorage.setItem(PASSEIOS_KEY,JSON.stringify(l))}
+  renderPasseios();return;
+ }
+ const b=e.target.closest("[data-passeio]");if(!b)return;
+ const c=cidadePasseio();
+ if(!c){$("cidadeBusca").focus();$("resultados").innerHTML=`<div class="empty">Digite a cidade (ex.: Olímpia, SP) e toque no passeio de novo.</div>`;return}
+ $("cidadeBusca").value=c;$("busca").value=b.dataset.passeio;$("categoriaBusca").value="";$("ratingRow").style.display="none";
+ renderPasseios();pesquisar();
+ $("resultados").scrollIntoView({behavior:"smooth",block:"start"});
+});
+/* segurar uma dica própria para apagar */
+let segurarDica=null;
+$("passeiosChips").addEventListener("pointerdown",e=>{const b=e.target.closest("[data-dica-idx]");if(!b)return;segurarDica=setTimeout(()=>{segurarDica="feito";const i=Number(b.dataset.dicaIdx),l=passeiosExtra();if(confirm(`Apagar a dica "${l[i]}"?`)){l.splice(i,1);localStorage.setItem(PASSEIOS_KEY,JSON.stringify(l));renderPasseios()}},650)});
+["pointerup","pointerleave","pointercancel"].forEach(ev=>$("passeiosChips").addEventListener(ev,()=>{if(segurarDica&&segurarDica!=="feito")clearTimeout(segurarDica);segurarDica=null}));
+$("cidadeBusca").addEventListener("input",renderPasseios);
+$("festasBox").addEventListener("click",e=>{if(!e.target.closest("#verEventos"))return;const c=cidadePasseio();window.open("https://www.google.com/search?q="+encodeURIComponent(`eventos festas em ${c} ${$("festasBox").dataset.mes}`),"_blank")});
+renderPasseios();
 $("menuFonte").onclick=()=>{$("menuPanel").style.display="none";$("googleApiKey").value=localStorage.getItem("controle_viagens_google_places_key")||"";$("modalFonte").classList.add("open")}; $("fecharFonte").onclick=()=>$("modalFonte").classList.remove("open"); $("salvarApiKey").onclick=()=>{localStorage.setItem("controle_viagens_google_places_key",$("googleApiKey").value.trim());$("modalFonte").classList.remove("open");alert("Fonte de avaliações salva neste aparelho.")};
 document.addEventListener("click",e=>{const m=e.target.closest("[data-open-map]");if(m)window.open(decodeURIComponent(m.dataset.openMap),"_blank")});
 load();
