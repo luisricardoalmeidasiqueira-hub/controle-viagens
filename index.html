@@ -382,6 +382,8 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .searchLine .ideaSaveBtn{height:36px!important;font-size:12.5px!important}
 .appFooter{font-size:10.5px}
 .fab{width:50px;height:50px;font-size:25px}
+.diaSemTxt{font-size:12px;font-weight:700;color:var(--accent);margin-top:4px;min-height:0}
+.diaSemTxt:empty{display:none}
 </style>
 
 </head>
@@ -555,8 +557,8 @@ input,textarea,select{font-size:14px;padding:9px 10px}
       <div class="field"><label>Hotel</label><input id="fHotel"></div>
     </div>
     <div class="grid">
-      <div class="field"><label>Data de ida <span class="required">*</span></label><input id="fData" type="date" required></div>
-      <div class="field"><label>Data de volta</label><input id="fDataVolta" type="date"></div>
+      <div class="field"><label>Data de ida <span class="required">*</span></label><input id="fData" type="date" required><div class="diaSemTxt" id="fDataSem"></div></div>
+      <div class="field"><label>Data de volta</label><input id="fDataVolta" type="date"><div class="diaSemTxt" id="fDataVoltaSem"></div></div>
     </div>
     <div class="grid">
       <div class="field"><label>Horário de saída</label><input id="fHoraSaida" type="time"></div>
@@ -696,7 +698,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="2.4";
+const APP_VERSAO="2.5";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -986,7 +988,7 @@ function renderProximaViagem(t){
  const tipo={viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"}[t.tipoViagem]||"Viagem";
  const ic={viagem:"🏖️",excursao:"🚌",carro:"🚗",moto:"🏍️",aviao:"✈️",onibus:"🚌",outro:"➕"}[t.tipoViagem]||"🧳";
  const fixada=!!t.proximaFixada;
- box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">📅 ${dataSem(t.data)}${t.dataVolta?" → "+dataSem(t.dataVolta):""}${t.horaSaida?" • 🕐 "+esc(t.horaSaida):""} • 📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div></div><div class="nextTripActions"><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>`;
+ box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta):""} • 📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div></div><div class="nextTripActions"><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>`;
 }
 /* Festas conhecidas: o mês costuma se repetir todo ano, mas as datas exatas mudam — sempre confirmar */
 const FESTAS=[
@@ -1082,7 +1084,7 @@ function card(t){
  return `<div class="trip ${t.status==="paga"?"paga":""} ${passou?"passou":""} ${aberta?"open":""}" data-trip-id="${t.id}">
   <button type="button" class="tripHead" data-trip-toggle="${t.id}" aria-expanded="${aberta}">
    <span class="tripIc">${TIPO_IC[t.tipoViagem]||"🧳"}</span>
-   <span class="tripMain"><strong>${esc(t.nome)}</strong><small>📅 ${dataSem(t.data)}${t.dataVolta?" → "+dataSem(t.dataVolta):""}${t.cidade?" • "+esc(t.cidade):""}${passou?" • já realizada":""}</small></span>
+   <span class="tripMain"><strong>${esc(t.nome)}</strong><small>📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta):""}${t.cidade?" • "+esc(t.cidade):""}${passou?" • já realizada":""}</small></span>
    <span class="tripSide"><span class="badge ${bcls}">${badge}</span>${falta>0?`<span class="tripFalta financeValues">${atrasada&&parc?`Venceu ${dateBR(vencidas[0].vencimento).slice(0,5)}`:proxParc?`Próx. ${dateBR(proxParc.vencimento).slice(0,5)}`:`Falta ${money(falta)}`}</span>`:""}</span>
    <span class="tripSeta" aria-hidden="true">▾</span>
   </button>
@@ -1595,5 +1597,15 @@ load();
 setTimeout(()=>{if(typeof aplicarFinanceiro==="function") aplicarFinanceiro()},0);
 </script>
 
+<script>
+/* Dia da semana embaixo das datas do formulário */
+(function(){
+ const NOMES=["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
+ function mostrar(campo,alvo){const v=document.getElementById(campo).value,el=document.getElementById(alvo);if(!el)return;if(!v){el.textContent="";return}const d=new Date(v+"T12:00:00");el.textContent=isNaN(d)?"":"📅 "+NOMES[d.getDay()]}
+ function tudo(){mostrar("fData","fDataSem");mostrar("fDataVolta","fDataVoltaSem")}
+ ["fData","fDataVolta"].forEach(id=>{const e=document.getElementById(id);e.addEventListener("change",tudo);e.addEventListener("input",tudo)});
+ const m=document.getElementById("modal");new MutationObserver(tudo).observe(m,{attributes:true,attributeFilter:["class"]});
+})();
+</script>
 </body>
 </html>
