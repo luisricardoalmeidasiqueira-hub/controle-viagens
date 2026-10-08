@@ -562,6 +562,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
     </div>
     <div class="grid">
       <div class="field"><label>Horário de saída</label><input id="fHoraSaida" type="time"></div>
+      <div class="field"><label>Horário de volta</label><input id="fHoraVolta" type="time"></div>
       <div class="field"><label>Local de saída</label><input id="fLocalSaida" placeholder="Ex.: Tatuí, SP"></div>
     </div>
     <div class="grid">
@@ -698,7 +699,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="2.5";
+const APP_VERSAO="2.7";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -809,7 +810,7 @@ function openModal(id=null){
  const t=id?viagens.find(x=>x.id===id):{};
  $("fNome").value=t.nome||"";$("fTipoViagem").value=t.tipoViagem||"viagem";$("fCidade").value=t.cidade||"";$("fHotel").value=t.hotel||"";
  $("fData").value=t.data||localDate();$("fDataVolta").value=t.dataVolta||"";
- $("fHoraSaida").value=t.horaSaida||"";$("fLocalSaida").value=t.localSaida||"";
+ $("fHoraSaida").value=t.horaSaida||"";$("fHoraVolta").value=t.horaVolta||"";$("fLocalSaida").value=t.localSaida||"";
  $("fInicio").value=t.dataInicioPagamento||"";$("fVenc").value=t.venc||"";
  $("fTotal").value=t.valorTotal!=null&&t.valorTotal!==""?fmtBR(t.valorTotal):"";$("fPago").value=t.valorPago!=null&&t.valorPago!==""?fmtBR(t.valorPago):"";
  $("fObs").value=t.obs||"";$("fGastos").value=t.gastos?fmtBR(t.gastos):"";$("fRoteiro").value=t.roteiro||"";$("fOrigemTransporte").value=t.origemTransporte||"";$("fDestinoTransporte").value=t.destinoTransporte||"";document.querySelectorAll('input[name="pagamento"]').forEach(x=>x.checked=(t.pagamentos||[]).includes(x.value));contarPagamentos("payDetViagem","pagamento",true);const modo=t.modoPagamento||((t.parcelas&&t.parcelas.length>1)?"parcelado":"avista");document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(x=>x.checked=x.value===modo);$("fEntrada").value=t.entrada?fmtBR(t.entrada):"";$("fDataEntrada").value=t.dataEntrada||"";$("fParcelas").value=t.numeroParcelas||((t.parcelas||[]).length||"");$("fPrimeiroVenc").value=t.primeiroVencimento||t.venc||"";parcelasForm=(t.parcelas||[]).map(p=>({...p}));abaAberta=-1;parcelasAtivas=false;toggleParcelamentoUI();calcFaltante();
@@ -901,7 +902,7 @@ $("formViagem").onsubmit=e=>{
  e.preventDefault();
  const total=Math.max(numBR($("fTotal").value),0),pago=Math.max(numBR($("fPago").value),0);
  const obj={id:editId||Date.now(),nome:$("fNome").value.trim(),tipoViagem:$("fTipoViagem").value,cidade:$("fCidade").value.trim(),hotel:$("fHotel").value.trim(),
- data:$("fData").value,dataVolta:$("fDataVolta").value,horaSaida:$("fHoraSaida").value,localSaida:$("fLocalSaida").value.trim(),
+ data:$("fData").value,dataVolta:$("fDataVolta").value,horaSaida:$("fHoraSaida").value,horaVolta:$("fHoraVolta").value,localSaida:$("fLocalSaida").value.trim(),
  dataInicioPagamento:$("fInicio").value,venc:$("fVenc").value,valorTotal:total,valorPago:pago,modoPagamento:document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value||"avista",numeroParcelas:Math.max(parseInt($("fParcelas").value)||0,0),primeiroVencimento:$("fPrimeiroVenc").value,obs:$("fObs").value.trim(),
  lembretes:[...$("fLembretes").selectedOptions].map(o=>o.value),gastos:Math.max(numBR($("fGastos").value),0),roteiro:$("fRoteiro").value.trim(),pagamentos:[...document.querySelectorAll('input[name="pagamento"]:checked')].map(x=>x.value),origemTransporte:$("fOrigemTransporte").value.trim(),destinoTransporte:$("fDestinoTransporte").value.trim(),status:pago>=total&&total>0?"paga":"pagar"};
  if(obj.modoPagamento==="parcelado"){if(obj.numeroParcelas<2){alert("Informe pelo menos 2 parcelas.");return}if(!obj.primeiroVencimento){alert("Informe o primeiro vencimento.");return}obj.entrada=entradaForm();obj.dataEntrada=obj.entrada?($("fDataEntrada").value||""):"";if(obj.entrada>obj.valorTotal){alert("A entrada não pode ser maior que o valor total.");return}obj.parcelas=gerarParcelas(Math.max(obj.valorTotal-obj.entrada,0),obj.numeroParcelas,obj.primeiroVencimento,parcelasForm);obj.valorPago=somaPagoViagem(obj);obj.status=obj.valorTotal>0&&faltanteViagem(obj)<=0?"paga":"pagar"}else{obj.parcelas=[]}if(obj.dataVolta&&obj.dataVolta<obj.data){alert("A data de volta não pode ser anterior à ida.");return}
@@ -988,7 +989,7 @@ function renderProximaViagem(t){
  const tipo={viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"}[t.tipoViagem]||"Viagem";
  const ic={viagem:"🏖️",excursao:"🚌",carro:"🚗",moto:"🏍️",aviao:"✈️",onibus:"🚌",outro:"➕"}[t.tipoViagem]||"🧳";
  const fixada=!!t.proximaFixada;
- box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta):""} • 📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div></div><div class="nextTripActions"><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>`;
+ box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta)+(t.horaVolta?" às "+esc(t.horaVolta):""):""} • 📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div></div><div class="nextTripActions"><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>`;
 }
 /* Festas conhecidas: o mês costuma se repetir todo ano, mas as datas exatas mudam — sempre confirmar */
 const FESTAS=[
@@ -1084,7 +1085,7 @@ function card(t){
  return `<div class="trip ${t.status==="paga"?"paga":""} ${passou?"passou":""} ${aberta?"open":""}" data-trip-id="${t.id}">
   <button type="button" class="tripHead" data-trip-toggle="${t.id}" aria-expanded="${aberta}">
    <span class="tripIc">${TIPO_IC[t.tipoViagem]||"🧳"}</span>
-   <span class="tripMain"><strong>${esc(t.nome)}</strong><small>📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta):""}${t.cidade?" • "+esc(t.cidade):""}${passou?" • já realizada":""}</small></span>
+   <span class="tripMain"><strong>${esc(t.nome)}</strong><small>📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta)+(t.horaVolta?" às "+esc(t.horaVolta):""):""}${t.cidade?" • "+esc(t.cidade):""}${passou?" • já realizada":""}</small></span>
    <span class="tripSide"><span class="badge ${bcls}">${badge}</span>${falta>0?`<span class="tripFalta financeValues">${atrasada&&parc?`Venceu ${dateBR(vencidas[0].vencimento).slice(0,5)}`:proxParc?`Próx. ${dateBR(proxParc.vencimento).slice(0,5)}`:`Falta ${money(falta)}`}</span>`:""}</span>
    <span class="tripSeta" aria-hidden="true">▾</span>
   </button>
@@ -1130,7 +1131,7 @@ async function entregarCalendario(nome,ics,ev){
 function gerarCalendario(id){
  const t=viagens.find(x=>x.id===id);if(!t)return;
  const start=t.data+(t.horaSaida?`T${t.horaSaida}:00`:"T09:00:00");
- const end=t.dataVolta?t.dataVolta+"T18:00:00":t.data+(t.horaSaida?`T${t.horaSaida}:00`:"T10:00:00");
+ const end=t.dataVolta?t.dataVolta+(t.horaVolta?`T${t.horaVolta}:00`:"T18:00:00"):t.data+(t.horaSaida?`T${t.horaSaida}:00`:"T10:00:00");
  const fmt=s=>s.replace(/[-:]/g,"").replace(".000","");
  let alarms="";
  (t.lembretes||["7","1","hora","embarque"]).forEach(v=>{let tr=v==="hora"?"PT1H":v==="embarque"?"PT0M":`P${v}D`;alarms+=`BEGIN:VALARM\nTRIGGER:-${tr}\nACTION:DISPLAY\nDESCRIPTION:Lembrete da viagem\nEND:VALARM\n`});
@@ -1529,7 +1530,7 @@ mostrarInfoBackup();
 /* Pede ao navegador para não apagar os dados sozinho (Android/Chrome/Opera) */
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 /* Lembrete gentil: se tem viagens e o último backup tem mais de 30 dias */
-setTimeout(()=>{const u=localStorage.getItem(BK_ULTIMO),dias=u?(new Date(localDate())-new Date(u))/864e5:999;if(viagens.length&&dias>30)avisar("💾 Dica: faça um backup em ⋮ → Fazer backup para não perder suas viagens.")},3500);
+/* Aviso automático de backup removido a pedido do usuário (o backup continua no menu ⋮) */
 (function mostrarVersao(){
  const txt="v"+APP_VERSAO;
  $("verTopo").textContent=txt;
