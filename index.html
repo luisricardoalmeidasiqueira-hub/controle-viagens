@@ -384,20 +384,17 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .fab{width:50px;height:50px;font-size:25px}
 .diaSemTxt{font-size:12px;font-weight:700;color:var(--accent);margin-top:4px;min-height:0}
 .diaSemTxt:empty{display:none}
-/* ===== Mapbox ===== */
-.mapBox{display:none;margin:4px 0 12px}
-.mapBox.open{display:block}
-.mapBox .mapCanvas{width:100%;height:300px;border-radius:14px;border:1px solid var(--line);overflow:hidden}
-.mapBar{display:flex;gap:8px;margin:0 0 8px;flex-wrap:wrap}
-.mapBar .btn{padding:9px 12px;font-size:14px}
-.mapNote{font-size:12px;color:var(--muted);margin-top:6px}
-.mapboxgl-popup-content{font-family:inherit;color:#243018;padding:10px 12px;max-width:220px}
-.mapboxgl-popup-content strong{display:block;margin-bottom:3px}
-.mapboxgl-popup-content a{color:#2E9E6B;font-weight:700}
+/* Mapbox (v2.8) */
+.mapaBtn{width:100%;margin:0 0 10px}
+.mapaSheet{display:flex;flex-direction:column;height:92vh}
+#mapaBox{flex:1;min-height:320px;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-top:8px}
+#mapaStatus:empty{display:none}
+.mapboxgl-popup-content{border-radius:12px;padding:10px 12px;font-family:inherit;max-width:240px}
+.mapaPop b{display:block;font-size:13px;color:#243018}
+.mapaPop small{display:block;font-size:11px;color:#68705A;margin:3px 0 6px}
+.mapaPop a{font-size:12px;font-weight:800;color:var(--accent);text-decoration:none}
 </style>
 
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.js"></script>
 </head>
 <body>
 
@@ -449,8 +446,6 @@ input,textarea,select{font-size:14px;padding:9px 10px}
     <div class="hotelChips" id="passeiosChips"></div>
     <div class="festasBox" id="festasBox"></div>
   </div>
-  <div class="mapBar"><button class="btn secondary" id="btnPerto" type="button">📍 Perto de mim</button><button class="btn secondary" id="btnMapaBusca" type="button">🗺️ Mostrar/ocultar mapa</button></div>
-  <div class="mapBox" id="boxMapaBusca"><div class="mapCanvas" id="mapaBusca"></div><div class="mapNote" id="mapaBuscaNota"></div></div>
   <div id="resultados" class="results">
     <div class="empty">Digite o que procura e a cidade para pesquisar.</div>
   </div>
@@ -496,8 +491,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <section class="card hiddenSection" id="secLugares">
   <h2>⭐ Meus lugares salvos</h2>
-  <div class="mapBar"><button class="btn secondary" id="btnMapaLugares" type="button">🗺️ Ver todos no mapa</button></div>
-  <div class="mapBox" id="boxMapaLugares"><div class="mapCanvas" id="mapaLugares"></div><div class="mapNote" id="mapaLugaresNota"></div></div>
+  <button class="btn secondary mapaBtn" type="button" id="btnMapaLugares">🗺️ Ver lugares no mapa</button>
   <div id="lugaresSalvos"></div>
 </section>
 
@@ -668,6 +662,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 </div>
 </div>
 
+<div class="modal" id="modalMapa"><div class="sheet mapaSheet"><button class="close" id="fecharMapa" aria-label="Fechar mapa">×</button><h2 id="mapaTitulo">🗺️ Mapa</h2><div id="mapaStatus" class="notice"></div><div id="mapaBox"></div></div></div>
 <div class="modal" id="modalPagamentos"><div class="sheet"><button class="close" id="fecharPagamentos">×</button><h2>💰 Pagamentos da viagem</h2><div id="pagamentoViagemTitulo" class="notice"></div><div id="pagamentoEditor"></div><div class="actions"><button class="btn secondary" type="button" id="fecharPagamentos2">Fechar</button></div></div></div>
 
 <div class="modal" id="modalLugar">
@@ -716,7 +711,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
 const APP_VERSAO="2.8";
-const APP_DATA_VERSAO="10/10/2026";
+const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
 const CIDADES=["Tatuí, SP","São Paulo, SP","Aparecida, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
@@ -1114,6 +1109,7 @@ function card(t){
     <button class="btn secondary" type="button" data-action="edit" data-id="${t.id}">✏️ Editar</button>
     <button class="btn secondary" type="button" data-action="pagamentos" data-id="${t.id}">💳 Pagamentos</button>
     <button class="btn secondary" type="button" data-action="calendar" data-id="${t.id}">📅 Agenda</button>
+    <button class="btn secondary" type="button" data-action="mapa" data-id="${t.id}">🗺️ Mapa</button>
     <button class="btn secondary" type="button" data-action="toggle" data-id="${t.id}">${t.status==="paga"?"↩️ Reabrir":"✅ Marcar paga"}</button>
     <button class="btn tripDel" type="button" data-action="delete" data-id="${t.id}">🗑️ Excluir viagem</button>
    </div>
@@ -1209,7 +1205,6 @@ function renderPlaces(){
    <button class="iconBtn" title="Compartilhar localização" aria-label="Compartilhar localização" data-place-action="share" data-id="${p.id}">📤</button>
    <button class="iconBtn trashBtn" title="Excluir local" aria-label="Excluir local" data-place-action="delete" data-id="${p.id}">🗑️</button>
  </div></div></div>`).join(""):`<div class="empty">Nenhum lugar salvo ainda. Favorite um local em 🔎 Encontrar lugares.</div>`;
- try{atualizarMapaLugares()}catch(e){}
 }
 function toggleLugarLock(id){const p=lugares.find(x=>x.id===id);if(!p)return;p.bloqueado=!p.bloqueado;savePlaces();renderPlaces()}
 function localizarLugar(id){const p=lugares.find(x=>x.id===id);if(!p)return;const url=p.lat&&p.lon?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.lat+","+p.lon)}`:`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco||p.nome+" "+p.cidade)}`;window.open(url,"_blank")}
@@ -1221,125 +1216,6 @@ function calLugar(id){
  const ics=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Controle de Viagens//PT-BR\nBEGIN:VEVENT\nUID:${p.id}@controleviagens\nDTSTART:${fmt(st)}\nDTEND:${fmt(st)}\nSUMMARY:${p.nome}${p.cidade?" - "+p.cidade:""}\nDESCRIPTION:${p.obs||"Visita programada"}\n${alarm}END:VEVENT\nEND:VCALENDAR`;
  entregarCalendario("lembrete-visita.ics",ics,{titulo:`${p.nome}${p.cidade?" - "+p.cidade:""}`,inicio:st,fim:st,local:p.endereco||p.cidade||"",detalhes:p.obs||"Visita programada"});
 }
-
-/* ===== MAPBOX ===== */
-const MAPBOX_TOKEN="pk.eyJ1IjoibHVpc3NpcXVlaXJhIiwiYSI6ImNtdWE3eWlkYzFhaWkyd29rdTE1azczOW0ifQ.obU3pPCEHP856-OvuFE19g";
-let mapas={},marcadoresMapa={},ultimosResultados=[],userLoc=null,usarPerto=false,marcadorUser=null;
-function mapboxOk(){try{return typeof mapboxgl!=="undefined"&&!!MAPBOX_TOKEN&&mapboxgl.supported()}catch(e){return false}}
-function temCoord(x){const a=parseFloat(x.lat),b=parseFloat(x.lon);return isFinite(a)&&isFinite(b)&&(a||b)}
-function mapaIniciar(chave,idCanvas){
- if(!mapboxOk())return null;
- if(mapas[chave]){setTimeout(()=>mapas[chave].resize(),50);return mapas[chave]}
- mapboxgl.accessToken=MAPBOX_TOKEN;
- const m=new mapboxgl.Map({container:idCanvas,style:"mapbox://styles/mapbox/streets-v12",center:[-47.85,-23.35],zoom:5});
- m.addControl(new mapboxgl.NavigationControl({showCompass:false}),"top-right");
- mapas[chave]=m;marcadoresMapa[chave]=[];
- return m;
-}
-function mapaPopup(nome,sub,lat,lon){
- const d=document.createElement("div");
- const s=document.createElement("strong");s.textContent=nome||"Lugar";d.appendChild(s);
- if(sub){const e=document.createElement("div");e.textContent=sub;e.style.fontSize="12px";e.style.marginBottom="5px";d.appendChild(e)}
- const a=document.createElement("a");a.href="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(lat+","+lon);a.target="_blank";a.rel="noopener";a.textContent="Abrir no Google Maps";d.appendChild(a);
- return d;
-}
-function mapaDesenhar(chave,itens){
- const m=mapas[chave];if(!m)return 0;
- (marcadoresMapa[chave]||[]).forEach(x=>x.remove());marcadoresMapa[chave]=[];
- const pts=itens.filter(temCoord);
- const b=new mapboxgl.LngLatBounds();
- pts.forEach(x=>{
-  const pos=[parseFloat(x.lon),parseFloat(x.lat)];
-  const mk=new mapboxgl.Marker({color:"#2E9E6B"}).setLngLat(pos).setPopup(new mapboxgl.Popup({offset:28}).setDOMContent(mapaPopup(x.nome||x.name,x.sub||x.address||"",x.lat,x.lon))).addTo(m);
-  marcadoresMapa[chave].push(mk);b.extend(pos);
- });
- if(userLoc&&chave==="busca")b.extend([userLoc.lon,userLoc.lat]);
- if(pts.length>1)m.fitBounds(b,{padding:50,maxZoom:15,duration:600});
- else if(pts.length===1)m.flyTo({center:[parseFloat(pts[0].lon),parseFloat(pts[0].lat)],zoom:15});
- return pts.length;
-}
-function mostrarMapaBusca(itens){
- if(!mapboxOk())return;
- $("boxMapaBusca").classList.add("open");
- const m=mapaIniciar("busca","mapaBusca");if(!m)return;
- const go=()=>{const n=mapaDesenhar("busca",itens);$("mapaBuscaNota").textContent=n?`${n} local(is) no mapa. Toque num pino para ver detalhes.`:"Os resultados desta busca não têm coordenadas para mostrar no mapa."};
- if(m.loaded())go();else m.once("load",go);
-}
-function atualizarMapaLugares(){
- const box=$("boxMapaLugares");if(!box||!box.classList.contains("open")||!mapas.lugares)return;
- const itens=lugares.filter(p=>!p.bloqueado).map(p=>({nome:p.nome,sub:[p.tipo,p.cidade].filter(Boolean).join(" • "),lat:p.lat,lon:p.lon}));
- const n=mapaDesenhar("lugares",itens);
- const sem=lugares.filter(p=>!p.bloqueado&&!temCoord(p)).length;
- $("mapaLugaresNota").textContent=n?`${n} lugar(es) no mapa.`+(sem?` ${sem} sem localização (salve de novo pela busca para aparecer).`:""):"Nenhum lugar salvo com localização ainda.";
-}
-$("btnMapaLugares").onclick=()=>{
- const box=$("boxMapaLugares");
- if(!mapboxOk()){alert("O mapa não pôde ser carregado. Verifique a internet.");return}
- const abrir=!box.classList.contains("open");
- box.classList.toggle("open",abrir);
- $("btnMapaLugares").textContent=abrir?"🗺️ Ocultar mapa":"🗺️ Ver todos no mapa";
- if(abrir){const m=mapaIniciar("lugares","mapaLugares");if(m){if(m.loaded())atualizarMapaLugares();else m.once("load",atualizarMapaLugares)}}
-};
-$("btnMapaBusca").onclick=()=>{
- const box=$("boxMapaBusca");
- if(!mapboxOk()){alert("O mapa não pôde ser carregado. Verifique a internet.");return}
- if(box.classList.contains("open")){box.classList.remove("open");return}
- mostrarMapaBusca(ultimosResultados);
-};
-function pegarLocalizacao(){
- return new Promise((ok,erro)=>{
-  if(!navigator.geolocation){erro(new Error("sem GPS"));return}
-  navigator.geolocation.getCurrentPosition(pos=>{userLoc={lat:pos.coords.latitude,lon:pos.coords.longitude};ok(userLoc)},e=>erro(e),{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
- });
-}
-$("btnPerto").onclick=async()=>{
- const bt=$("btnPerto");bt.disabled=true;const antes=bt.textContent;bt.textContent="📡 Localizando...";
- try{
-  await pegarLocalizacao();usarPerto=true;
-  $("cidadeBusca").value="";
-  if(mapboxOk()){
-   $("boxMapaBusca").classList.add("open");
-   const m=mapaIniciar("busca","mapaBusca");
-   const go=()=>{
-    if(marcadorUser)marcadorUser.remove();
-    marcadorUser=new mapboxgl.Marker({color:"#2563eb"}).setLngLat([userLoc.lon,userLoc.lat]).setPopup(new mapboxgl.Popup({offset:28}).setText("Você está aqui")).addTo(m);
-    m.flyTo({center:[userLoc.lon,userLoc.lat],zoom:14});
-    $("mapaBuscaNota").textContent="Pino azul = você. Escolha uma categoria ou digite o que procura para ver lugares perto de você.";
-   };
-   if(m.loaded())go();else m.once("load",go);
-  }
-  if($("categoriaBusca").value||$("busca").value.trim())pesquisar();
- }catch(e){alert("Não consegui pegar sua localização. Ative o GPS e permita o acesso à localização para este site.")}
- bt.disabled=false;bt.textContent=antes;
-};
-$("cidadeBusca").addEventListener("input",()=>{usarPerto=false});
-async function mapboxBuscar(termo,nomeCat,cidade,vinteQuatro){
- let prox="";
- if(usarPerto&&userLoc){prox=`&proximity=${userLoc.lon},${userLoc.lat}`}
- else if(cidade){
-  try{
-   const g=await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(cidade)}&country=br&language=pt&limit=1&types=place,locality&access_token=${MAPBOX_TOKEN}`);
-   const gj=await g.json();const c=gj.features?.[0]?.geometry?.coordinates;
-   if(c)prox=`&proximity=${c[0]},${c[1]}`;
-  }catch(e){}
- }
- const q=[termo,nomeCat,(usarPerto&&userLoc)?"":cidade,vinteQuatro?"24 horas":""].filter(Boolean).join(" ");
- const r=await fetch(`https://api.mapbox.com/search/searchbox/v1/forward?q=${encodeURIComponent(q)}&language=pt&country=br&limit=10${prox}&access_token=${MAPBOX_TOKEN}`);
- if(!r.ok)throw new Error("Mapbox indisponível");
- const j=await r.json();
- return (j.features||[]).map(f=>{const pr=f.properties||{},c=pr.coordinates||{},g=f.geometry?.coordinates||[];
-  return{name:pr.name||"Lugar",address:pr.full_address||[pr.address,pr.place_formatted].filter(Boolean).join(", ")||pr.place_formatted||"",lat:c.latitude??g[1]??"",lon:c.longitude??g[0]??"",rating:"",ratingCount:0,open24:false,maps:"",type:nomeCat||pr.poi_category?.[0]||"Ponto de interesse",city:cidade||pr.context?.place?.name||""}});
-}
-document.addEventListener("click",e=>{
- const b=e.target.closest("[data-focus-idx]");if(!b)return;
- const x=ultimosResultados[parseInt(b.dataset.focusIdx)];if(!x||!temCoord(x)){alert("Este resultado não tem localização para mostrar no mapa.");return}
- if(!mapboxOk()){alert("O mapa não pôde ser carregado. Verifique a internet.");return}
- $("boxMapaBusca").classList.add("open");
- const m=mapaIniciar("busca","mapaBusca");if(!m)return;
- const go=()=>{m.flyTo({center:[parseFloat(x.lon),parseFloat(x.lat)],zoom:16});const mk=(marcadoresMapa.busca||[]).find(k=>{const l=k.getLngLat();return Math.abs(l.lng-parseFloat(x.lon))<1e-6&&Math.abs(l.lat-parseFloat(x.lat))<1e-6});if(mk&&!mk.getPopup().isOpen())mk.togglePopup()};
- if(m.loaded())go();else m.once("load",go);
- $("boxMapaBusca").scrollIntoView({behavior:"smooth",block:"center"});
-});
 
 async function pesquisar(cat=""){
  const termo=$("busca").value.trim(); const cidade=normalizarCidade($("cidadeBusca").value); const categoria=$("categoriaBusca").value||cat||""; const vinteQuatro=$("filtro24").checked; const minRating=Number($("filtroRating").value||0); const apiKey=localStorage.getItem("controle_viagens_google_places_key")||"";
@@ -1356,18 +1232,14 @@ async function pesquisar(cat=""){
     const j=await r.json(); data=(j.places||[]).map(x=>({name:x.displayName?.text||"Lugar",address:x.formattedAddress||"",lat:x.location?.latitude||"",lon:x.location?.longitude||"",rating:x.rating||"",ratingCount:x.userRatingCount||0,open24:x.regularOpeningHours?.periods?.length===1&&!x.regularOpeningHours?.periods?.[0]?.close, maps:x.googleMapsUri||"",city:cidade,type:nomes[categoria]||categoria||"Ponto de interesse"})); source="Google Places";
    }catch(e){ data=[]; }
   }
-  if(!data.length&&mapboxOk()){
-   try{data=await mapboxBuscar(termo,nomes[categoria]||(categoria&&categoria!=="outros"?categoria:""),cidade,vinteQuatro);if(data.length)source="Mapbox"}catch(e){data=[]}
-  }
   if(!data.length){
    const nq=[q,vinteQuatro?"24 horas":""].filter(Boolean).join(" "); const url="https://nominatim.openstreetmap.org/search?format=json&limit=12&addressdetails=1&q="+encodeURIComponent(nq); const res=await fetch(url,{headers:{"Accept":"application/json","Accept-Language":"pt-BR"}}); const raw=await res.json(); data=raw.map(x=>({name:x.display_name.split(",")[0],type:nomes[categoria]||"Ponto de interesse",city:cidade,address:x.display_name,lat:x.lat,lon:x.lon,rating:"",ratingCount:0,open24:false,maps:""})); source="OpenStreetMap";
   }
   if(vinteQuatro && source==="Google Places") data=data.filter(x=>x.open24);
   if(minRating>0) data=data.filter(x=>Number(x.rating||0)>=minRating);
-  ultimosResultados=data;
   if(!data.length){$("resultados").innerHTML=`<div class="empty">Nenhum local encontrado com esses filtros. Tente reduzir a avaliação ou desligar 24h.</div>`;return}
-  $("resultados").innerHTML=data.map((place,idx)=>`<div class="place"><div class="placeHead"><div class="grow"><strong>${esc(place.name)}</strong><small>${esc(place.address)}</small>${place.rating?`<div class="webRating">🌐 ${Number(place.rating).toFixed(1).replace(".",",")} ⭐ ${place.ratingCount?`(${place.ratingCount} avaliações)`:""}</div>`:`<div class="sourceNote">🌐 Avaliação não disponível nesta fonte</div>`}${place.open24?`<div class="notice">🕐 Aberto 24 horas</div>`:""}</div></div><div class="iconActions">${temCoord(place)&&mapboxOk()?`<button class="iconBtn" title="Ver no mapa" aria-label="Ver no mapa" data-focus-idx="${idx}">🗺️</button>`:""}<button class="iconBtn favoriteBtn" title="Favoritar local" aria-label="Favoritar local" data-save-place='${encodeURIComponent(JSON.stringify(place))}'>⭐</button><button class="iconBtn" title="Compartilhar localização" aria-label="Compartilhar localização" data-share-place='${encodeURIComponent(JSON.stringify(place))}'>📤</button>${place.maps?`<button class="iconBtn" title="Abrir no Google Maps" data-open-map="${encodeURIComponent(place.maps)}">📍</button>`:""}</div><div class="sourceNote">Fonte: ${esc(source)}</div></div>`).join("");
-  mostrarMapaBusca(data);
+  window.__ultimosResultados=data;
+  $("resultados").innerHTML=(data.some(x=>x.lat&&x.lon)?`<button class="btn secondary mapaBtn" type="button" data-mapa-resultados="1">🗺️ Ver resultados no mapa</button>`:"")+data.map(place=>`<div class="place"><div class="placeHead"><div class="grow"><strong>${esc(place.name)}</strong><small>${esc(place.address)}</small>${place.rating?`<div class="webRating">🌐 ${Number(place.rating).toFixed(1).replace(".",",")} ⭐ ${place.ratingCount?`(${place.ratingCount} avaliações)`:""}</div>`:`<div class="sourceNote">🌐 Avaliação não disponível nesta fonte</div>`}${place.open24?`<div class="notice">🕐 Aberto 24 horas</div>`:""}</div></div><div class="iconActions"><button class="iconBtn favoriteBtn" title="Favoritar local" aria-label="Favoritar local" data-save-place='${encodeURIComponent(JSON.stringify(place))}'>⭐</button><button class="iconBtn" title="Compartilhar localização" aria-label="Compartilhar localização" data-share-place='${encodeURIComponent(JSON.stringify(place))}'>📤</button>${place.maps?`<button class="iconBtn" title="Abrir no Google Maps" data-open-map="${encodeURIComponent(place.maps)}">📍</button>`:""}</div><div class="sourceNote">Fonte: ${esc(source)}</div></div>`).join("");
  }catch(err){$("resultados").innerHTML=`<div class="empty">Não foi possível pesquisar agora. Verifique a internet e tente novamente.</div>`}
 }
 $("btnBusca").onclick=()=>pesquisar(); $("busca").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();pesquisar()}}); $("categoriaBusca").addEventListener("change",()=>{const c=$("categoriaBusca").value; const show=["hotel","restaurante","pizzaria","padaria","lanchonete","cafe"].includes(c); $("ratingRow").style.display=show?"flex":"none"; if(c==="outros")$("busca").focus(); else pesquisar()}); $("filtro24").addEventListener("change",()=>{if($("categoriaBusca").value||$("busca").value.trim())pesquisar()}); $("filtroRating").addEventListener("change",()=>{if($("categoriaBusca").value||$("busca").value.trim())pesquisar()});
@@ -1475,6 +1347,7 @@ document.addEventListener("click",e=>{
    if(action==="edit") openModal(id);
    else if(action==="toggle") togglePago(id);
    else if(action==="calendar") gerarCalendario(id);
+   else if(action==="mapa") mapaDaViagem(id);
    else if(action==="delete") deleteTrip(id);
    else if(action==="pagamentos") abrirPagamentos(id);
    return;
@@ -1748,6 +1621,91 @@ setTimeout(()=>{if(typeof aplicarFinanceiro==="function") aplicarFinanceiro()},0
  ["fData","fDataVolta"].forEach(id=>{const e=document.getElementById(id);e.addEventListener("change",tudo);e.addEventListener("input",tudo)});
  const m=document.getElementById("modal");new MutationObserver(tudo).observe(m,{attributes:true,attributeFilter:["class"]});
 })();
+</script>
+<script>
+/* ===== Mapbox (v2.8): mapa dos resultados, dos lugares salvos e de cada viagem ===== */
+const MAPBOX_TOKEN="pk.eyJ1IjoibHVpc3NpcXVlaXJhIiwiYSI6ImNtdWE3eWlkYzFhaWkyd29rdTE1azczOW0ifQ.obU3pPCEHP856-OvuFE19g";
+const MAPBOX_VER="3.3.0";
+let __mapa=null,__mapaMarcadores=[],__mapboxCarregando=null;
+function carregarMapbox(){
+ if(window.mapboxgl)return Promise.resolve();
+ if(__mapboxCarregando)return __mapboxCarregando;
+ __mapboxCarregando=new Promise((ok,erro)=>{
+  const css=document.createElement("link");css.rel="stylesheet";css.href=`https://api.mapbox.com/mapbox-gl-js/v${MAPBOX_VER}/mapbox-gl.css`;document.head.appendChild(css);
+  const js=document.createElement("script");js.src=`https://api.mapbox.com/mapbox-gl-js/v${MAPBOX_VER}/mapbox-gl.js`;
+  js.onload=()=>ok();js.onerror=()=>{__mapboxCarregando=null;erro(new Error("Mapbox não carregou"))};
+  document.head.appendChild(js);
+ });
+ return __mapboxCarregando;
+}
+function escMapa(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function corDoApp(){return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()||"#2E9E6B"}
+async function geocodificar(q){
+ if(!q)return null;
+ try{
+  const r=await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?access_token=${MAPBOX_TOKEN}&language=pt&country=br&limit=1`);
+  if(!r.ok)return null;const j=await r.json();const f=j.features&&j.features[0];
+  return f?{lon:f.center[0],lat:f.center[1],endereco:f.place_name||""}:null;
+ }catch(e){return null}
+}
+async function abrirMapa(titulo,pontos){
+ $("mapaTitulo").textContent=titulo;
+ $("mapaStatus").textContent="🗺️ Carregando mapa…";
+ $("modalMapa").classList.add("open");
+ try{await carregarMapbox()}catch(e){$("mapaStatus").textContent="Não foi possível carregar o mapa. Verifique a internet e tente de novo.";return}
+ const validos=(pontos||[]).filter(p=>p&&isFinite(Number(p.lat))&&isFinite(Number(p.lon))&&Number(p.lat)!==0);
+ if(!validos.length){$("mapaStatus").textContent="Nenhum local com endereço no mapa ainda.";}
+ else $("mapaStatus").textContent=validos.length>1?`📍 ${validos.length} locais no mapa`:"";
+ mapboxgl.accessToken=MAPBOX_TOKEN;
+ if(!__mapa){
+  __mapa=new mapboxgl.Map({container:"mapaBox",style:"mapbox://styles/mapbox/streets-v12",center:[-47.857,-23.355],zoom:11,language:"pt"});
+  __mapa.addControl(new mapboxgl.NavigationControl({showCompass:false}),"top-right");
+  __mapa.addControl(new mapboxgl.GeolocateControl({positionOptions:{enableHighAccuracy:true},trackUserLocation:false,showUserLocation:true}),"top-right");
+ }
+ __mapaMarcadores.forEach(m=>m.remove());__mapaMarcadores=[];
+ const cor=corDoApp(),limites=new mapboxgl.LngLatBounds();
+ validos.forEach(p=>{
+  const lat=Number(p.lat),lon=Number(p.lon);
+  const gmaps=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lat+","+lon)}`;
+  const pop=new mapboxgl.Popup({offset:24,closeButton:false}).setHTML(`<div class="mapaPop"><b>${escMapa(p.nome||"Local")}</b>${p.info?`<small>${escMapa(p.info)}</small>`:""}<a href="${gmaps}" target="_blank" rel="noopener">📍 Abrir no Google Maps</a></div>`);
+  __mapaMarcadores.push(new mapboxgl.Marker({color:p.cor||cor}).setLngLat([lon,lat]).setPopup(pop).addTo(__mapa));
+  limites.extend([lon,lat]);
+ });
+ setTimeout(()=>{
+  __mapa.resize();
+  if(validos.length===1)__mapa.jumpTo({center:[Number(validos[0].lon),Number(validos[0].lat)],zoom:14});
+  else if(validos.length>1)__mapa.fitBounds(limites,{padding:50,maxZoom:15,duration:0});
+  if(validos.length===1&&__mapaMarcadores[0])__mapaMarcadores[0].togglePopup();
+ },250);
+}
+$("fecharMapa").onclick=()=>$("modalMapa").classList.remove("open");
+/* Resultados da busca */
+document.addEventListener("click",e=>{
+ if(!e.target.closest("[data-mapa-resultados]"))return;
+ const d=window.__ultimosResultados||[];
+ abrirMapa("🗺️ Resultados da busca",d.map(x=>({lat:x.lat,lon:x.lon,nome:x.name,info:x.address})));
+});
+/* Meus lugares salvos */
+$("btnMapaLugares").onclick=async()=>{
+ const lista=(typeof lugares!=="undefined"?lugares:[]);
+ if(!lista.length){alert("Nenhum lugar salvo ainda.");return}
+ const pontos=[];
+ for(const p of lista){
+  let lat=p.lat,lon=p.lon;
+  if(!(lat&&lon)){const g=await geocodificar([p.endereco||p.nome,p.cidade].filter(Boolean).join(", "));if(g){lat=g.lat;lon=g.lon}}
+  if(lat&&lon)pontos.push({lat,lon,nome:"⭐ "+p.nome,info:p.bloqueado?"🔒 Informações protegidas":(p.endereco||p.cidade||"")});
+ }
+ abrirMapa("⭐ Meus lugares salvos",pontos);
+};
+/* Mapa de cada viagem: hotel (ou a cidade, se não tiver hotel) */
+async function mapaDaViagem(id){
+ const t=(viagens||[]).find(x=>x.id===id);if(!t)return;
+ $("mapaTitulo").textContent="🗺️ "+(t.nome||"Viagem");$("mapaStatus").textContent="🔎 Procurando o local…";$("modalMapa").classList.add("open");
+ const pontos=[];
+ if(t.hotel){const g=await geocodificar([t.hotel,t.cidade].filter(Boolean).join(", "));if(g)pontos.push({lat:g.lat,lon:g.lon,nome:"🏨 "+t.hotel,info:g.endereco})}
+ if(!pontos.length&&t.cidade){const g=await geocodificar(t.cidade);if(g)pontos.push({lat:g.lat,lon:g.lon,nome:"📍 "+t.cidade,info:t.hotel?"Hotel não encontrado no mapa — mostrando a cidade":g.endereco})}
+ abrirMapa("🗺️ "+(t.nome||"Viagem"),pontos);
+}
 </script>
 </body>
 </html>
