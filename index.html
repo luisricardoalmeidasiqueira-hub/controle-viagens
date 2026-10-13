@@ -393,6 +393,32 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .mapaPop b{display:block;font-size:13px;color:#243018}
 .mapaPop small{display:block;font-size:11px;color:#68705A;margin:3px 0 6px}
 .mapaPop a{font-size:12px;font-weight:800;color:var(--accent);text-decoration:none}
+/* v2.9: post + pessoas */
+.importBox{border:1.5px dashed var(--accent);border-radius:13px;background:var(--panel2);padding:11px;margin-bottom:12px}
+.importBox b{font-size:14px;color:var(--accent)}
+.importBox .actions .btn{cursor:pointer;margin:0}
+#postStatus{margin-top:8px}#postStatus:empty{display:none}
+.postPrecos{display:flex;flex-wrap:wrap;gap:6px}
+.postPrecos .chip{font-size:12px;padding:7px 10px}
+.postPrecos .chip.ativo{border-color:var(--accent);background:var(--accent);color:#fff}
+.postPrecos .notice{width:100%}
+.acompRow{border:1px solid var(--line);border-radius:11px;background:#fff;padding:8px;margin:2px 0 8px}
+.acompVals{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-top:6px}
+.acompVals label{font-size:11px;color:var(--muted);display:block}
+.acompVals input{margin-top:3px}
+.acompVals .trashBtn{width:38px;height:38px;font-size:15px}
+.acompBox{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:9px 10px;margin:9px 0}
+.acompTop{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;margin-bottom:4px}
+.acompTop span{font-size:12px;font-weight:800;color:var(--accent)}
+.acompItem{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+.acompInfo{min-width:0;flex:1}
+.acompNomeTxt{font-weight:800;font-size:13px}
+.acompInfo small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.acompBarra{height:5px;border-radius:9px;background:#fff;margin-top:5px;overflow:hidden}
+.acompBarra i{display:block;height:100%;background:var(--accent);border-radius:9px}
+.acompLado{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
+.acompLado .smallBtn{padding:5px 8px;font-size:11px}
+.postFotoBtn{display:block;text-align:center;cursor:pointer;padding:12px;font-size:14px;margin:0}
 </style>
 
 </head>
@@ -550,6 +576,14 @@ input,textarea,select{font-size:14px;padding:9px 10px}
   <button class="close" id="fechar">×</button>
   <h2 id="modalTitulo">Nova viagem</h2>
   <form id="formViagem">
+    <div class="importBox">
+      <b>✨ Preencher pelo post da viagem</b>
+      <div class="notice" style="margin:3px 0 8px">Tire a foto ou escolha o print do anúncio. O app lê e preenche sozinho: nome, cidade, hotel, datas, horário, valor e o que está incluso. Você só escolhe a forma de pagamento.</div>
+      <label class="btn full postFotoBtn">📷 Tirar foto ou escolher o post<input type="file" id="fPostImg" accept="image/*" hidden></label><button type="button" class="btn secondary" id="btnColarPost" style="display:none;margin-top:6px;width:100%">✏️ Ver e corrigir o texto lido</button>
+      <div id="postColarBox" style="display:none;margin-top:8px"><textarea id="fPostTexto" placeholder="Cole aqui o texto do post (no iPhone: segure o dedo no texto da foto → Copiar)"></textarea><button type="button" class="btn full" id="btnLerTexto" style="margin-top:6px">✨ Preencher com este texto</button></div>
+      <div id="postStatus" class="notice"></div>
+      <div id="postPrecos" class="postPrecos"></div>
+    </div>
     <div class="field"><label>Nome da viagem <span class="required">*</span></label><input id="fNome" required></div>
     <div class="field"><label>🧳 Tipo de viagem</label>
       <select id="fTipoViagem" class="typeSelect">
@@ -653,6 +687,14 @@ input,textarea,select{font-size:14px;padding:9px 10px}
       </details>
     </div>
     
+    <div class="field">
+      <details class="payDetails" id="acompDet">
+        <summary>👥 Pessoas que vão comigo (opcional) <span class="payCount" id="acompCount"></span><span class="paySeta">▾</span></summary>
+        <div id="acompLista"></div>
+        <button type="button" class="btn secondary full" id="btnAddAcomp" style="margin:4px 0 8px">➕ Adicionar pessoa</button>
+        <div class="notice" style="margin:0 0 10px">Para quem você reservou junto e vai te pagar. Fica só para o seu controle.</div>
+      </details>
+    </div>
     <div class="field"><label>Observações</label><textarea id="fObs"></textarea></div>
     <div class="actions">
       <button class="btn secondary" type="button" id="cancelar">Cancelar</button>
@@ -710,7 +752,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="2.8";
+const APP_VERSAO="3.0";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -826,6 +868,7 @@ function openModal(id=null){
  $("fTotal").value=t.valorTotal!=null&&t.valorTotal!==""?fmtBR(t.valorTotal):"";$("fPago").value=t.valorPago!=null&&t.valorPago!==""?fmtBR(t.valorPago):"";
  $("fObs").value=t.obs||"";$("fGastos").value=t.gastos?fmtBR(t.gastos):"";$("fRoteiro").value=t.roteiro||"";$("fOrigemTransporte").value=t.origemTransporte||"";$("fDestinoTransporte").value=t.destinoTransporte||"";document.querySelectorAll('input[name="pagamento"]').forEach(x=>x.checked=(t.pagamentos||[]).includes(x.value));contarPagamentos("payDetViagem","pagamento",true);const modo=t.modoPagamento||((t.parcelas&&t.parcelas.length>1)?"parcelado":"avista");document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(x=>x.checked=x.value===modo);$("fEntrada").value=t.entrada?fmtBR(t.entrada):"";$("fDataEntrada").value=t.dataEntrada||"";$("fParcelas").value=t.numeroParcelas||((t.parcelas||[]).length||"");$("fPrimeiroVenc").value=t.primeiroVencimento||t.venc||"";parcelasForm=(t.parcelas||[]).map(p=>({...p}));abaAberta=-1;parcelasAtivas=false;toggleParcelamentoUI();calcFaltante();
  [...$("fLembretes").options].forEach(o=>o.selected=(t.lembretes||["7","1","hora","embarque"]).includes(o.value));
+ if(window.carregarAcompForm)carregarAcompForm(t);if(window.limparImportPost)limparImportPost();
  $("modal").classList.add("open");
 }
 function closeModal(){$("modal").classList.remove("open");editId=null;ideiaEmEdicao=null}
@@ -917,6 +960,7 @@ $("formViagem").onsubmit=e=>{
  dataInicioPagamento:$("fInicio").value,venc:$("fVenc").value,valorTotal:total,valorPago:pago,modoPagamento:document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value||"avista",numeroParcelas:Math.max(parseInt($("fParcelas").value)||0,0),primeiroVencimento:$("fPrimeiroVenc").value,obs:$("fObs").value.trim(),
  lembretes:[...$("fLembretes").selectedOptions].map(o=>o.value),gastos:Math.max(numBR($("fGastos").value),0),roteiro:$("fRoteiro").value.trim(),pagamentos:[...document.querySelectorAll('input[name="pagamento"]:checked')].map(x=>x.value),origemTransporte:$("fOrigemTransporte").value.trim(),destinoTransporte:$("fDestinoTransporte").value.trim(),status:pago>=total&&total>0?"paga":"pagar"};
  if(obj.modoPagamento==="parcelado"){if(obj.numeroParcelas<2){alert("Informe pelo menos 2 parcelas.");return}if(!obj.primeiroVencimento){alert("Informe o primeiro vencimento.");return}obj.entrada=entradaForm();obj.dataEntrada=obj.entrada?($("fDataEntrada").value||""):"";if(obj.entrada>obj.valorTotal){alert("A entrada não pode ser maior que o valor total.");return}obj.parcelas=gerarParcelas(Math.max(obj.valorTotal-obj.entrada,0),obj.numeroParcelas,obj.primeiroVencimento,parcelasForm);obj.valorPago=somaPagoViagem(obj);obj.status=obj.valorTotal>0&&faltanteViagem(obj)<=0?"paga":"pagar"}else{obj.parcelas=[]}if(obj.dataVolta&&obj.dataVolta<obj.data){alert("A data de volta não pode ser anterior à ida.");return}
+ if(window.lerAcompForm)obj.acompanhantes=lerAcompForm();
  if(editId) viagens=viagens.map(x=>x.id===editId?obj:x);else viagens.push(obj);
  save();const ideiaOrigem=ideiaEmEdicao;closeModal();if(ideiaOrigem){ideias=ideias.filter(x=>x.id!==ideiaOrigem);saveIdeias();renderIdeias()}render();
 };
@@ -1103,6 +1147,7 @@ function card(t){
   <div class="tripBody">
    ${t.hotel||t.tipoViagem?`<div class="sub">${t.hotel?"🏨 "+esc(t.hotel):""}${t.hotel&&t.tipoViagem?" • ":""}${t.tipoViagem?"🧳 "+esc(TIPO_NOME[t.tipoViagem]||t.tipoViagem):""}</div>`:""}
    <div class="info">${t.horaSaida?"🚗 Saída: "+esc(t.horaSaida)+(t.localSaida?" • "+esc(t.localSaida):"")+"<br>":""}${t.dataInicioPagamento?"💳 Começou a pagar: "+dateBR(t.dataInicioPagamento)+"<br>":""}${parc?(proxParc?`📆 Próxima parcela: ${proxParc.numero}ª • ${dataSem(proxParc.vencimento)} • ${money(proxParc.valor)}${atrasada?" 🔴 atrasada":""}<br>`:""):(t.venc?"📆 Vencimento: "+dataSem(t.venc)+"<br>":"")}<span class="financeValues financeLink" data-action="pagamentos" data-id="${t.id}" role="button" tabindex="0" title="Abrir pagamentos">💰 Total: ${money(t.valorTotal)} • Pago: ${money(t.valorPago)} • Falta: ${money(falta)}${t.modoPagamento==="parcelado"&&t.parcelas?.length?` • 💳 ${entradaDe(t)?"entrada "+money(entradaDe(t))+" + ":""}${t.parcelas.length}x mensal`:""}${t.gastos?`<br>💸 Gastos adicionais: ${money(t.gastos)}`:""}</span></div>
+   ${window.acompCard?acompCard(t):""}
    ${festasNaViagem(t).map(f=>`<div class="festaAviso">🎉 No período da viagem costuma ter: <b>${esc(f.nome)}</b>. Confirme as datas.</div>`).join("")}
    ${t.roteiro?`<div class="obs">🗺️ ${esc(t.roteiro)}</div>`:""}${t.obs?`<div class="obs">📝 ${esc(t.obs)}</div>`:""}
    <div class="tripBtns">
@@ -1707,5 +1752,127 @@ async function mapaDaViagem(id){
  abrirMapa("🗺️ "+(t.nome||"Viagem"),pontos);
 }
 </script>
+<script>
+/* ===== v2.9: ✨ preencher pelo post da viagem + 👥 pessoas que vão comigo ===== */
+const MESES_NOME={jan:1,janeiro:1,fev:2,fevereiro:2,mar:3,marco:3,abr:4,abril:4,mai:5,maio:5,jun:6,junho:6,jul:7,julho:7,ago:8,agosto:8,set:9,setembro:9,out:10,outubro:10,nov:11,novembro:11,dez:12,dezembro:12};
+function semAcento(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"")}
+function isoData(d,m,a){const p=n=>String(n).padStart(2,"0");return `${a}-${p(m)}-${p(d)}`}
+function tituloBonito(s){const peq=["de","da","do","das","dos","e","a","o"];return String(s).toLowerCase().replace(/\s+/g," ").trim().split(" ").map((w,i)=>i&&peq.includes(w)?w:w.charAt(0).toUpperCase()+w.slice(1)).join(" ")}
+function lerPost(texto){
+ const r={};const T=String(texto||"").replace(/\r/g,"").replace(/[ \t]+/g," ");const N=semAcento(T);
+ const linhas=T.split("\n").map(l=>l.trim()).filter(Boolean),linhasN=linhas.map(semAcento);
+ const anoM=N.match(/\b(20\d{2})\b/);let ano=anoM?Number(anoM[1]):new Date().getFullYear();
+ /* datas: "18 À 22 DE NOVEMBRO DE 2026" */
+ let m=N.match(/(\d{1,2})\s*(?:a|ao|ate|-|–|e)\s*(\d{1,2})\s*de\s*([a-zç]+)(?:\s*(?:de)?\s*(20\d{2}))?/i);
+ if(m&&MESES_NOME[m[3].toLowerCase()]){const mes=MESES_NOME[m[3].toLowerCase()];if(m[4])ano=Number(m[4]);r.data=isoData(m[1],mes,ano);let mv=mes,av=ano;if(Number(m[2])<Number(m[1])){mv=mes%12+1;if(mes===12)av++}r.dataVolta=isoData(m[2],mv,av)}
+ if(!r.data){m=N.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s*(?:a|ate|-|–|ao)\s*(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/i);if(m){const a1=m[3]?(m[3].length===2?2000+Number(m[3]):Number(m[3])):ano,a2=m[6]?(m[6].length===2?2000+Number(m[6]):Number(m[6])):a1;r.data=isoData(m[1],m[2],a1);r.dataVolta=isoData(m[4],m[5],a2)}}
+ /* saída e volta com horário */
+ m=N.match(/saida\s*:?\s*(?:dia\s*)?(?:(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?)?\s*(?:as|a|-)?\s*(\d{1,2})\s*(?:h|:)\s*(\d{2})?/i);
+ if(m){if(m[1]&&!r.data)r.data=isoData(m[1],m[2],ano);r.horaSaida=String(m[3]).padStart(2,"0")+":"+(m[4]||"00")}
+ m=N.match(/(?:retorno|volta|chegada)\s*:?\s*(?:dia\s*)?(?:(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?)?\s*(?:as|a|-)?\s*(\d{1,2})\s*(?:h|:)\s*(\d{2})?/i);
+ if(m){if(m[1]&&!r.dataVolta)r.dataVolta=isoData(m[1],m[2],ano);r.horaVolta=String(m[3]).padStart(2,"0")+":"+(m[4]||"00")}
+ /* hotel */
+ const hm=[...T.matchAll(/hotel\s+([A-ZÀ-Úa-zà-ú'’][A-ZÀ-Úa-zà-ú'’\s]{2,40}?)(?=[;,.\n(]|$)/gi)].map(x=>x[1].trim()).find(h=>!/^(a|à|ao|com|proximo|próximo|perto|de|da|do|e)\b/i.test(h));
+ if(hm)r.hotel=tituloBonito(hm).replace(/\bCamboriu\b/,"Camboriú");
+ /* valores */
+ const precos=[];
+ for(const x of T.matchAll(/R\$\s*([\d.]+,\d{2}|\d+)\s*([^\n]*)/gi)){
+  const antes=semAcento(T.slice(Math.max(0,x.index-90),x.index)).toLowerCase(),rotulo=x[2].replace(/^[\s→>\-–:=]+/,"").trim();
+  const valor=numBR(x[1]);if(!valor)continue;
+  if(/reserva|sinal|entrada|confirmad/.test(antes.split("\n").slice(-2).join(" ")+" "+semAcento(rotulo).toLowerCase())){r.reserva=valor;continue}
+  precos.push({valor,rotulo:rotulo.slice(0,40)});
+ }
+ r.precos=precos;if(precos.length)r.valorTotal=precos[0].valor;
+ /* cidade conhecida no texto */
+ const NN=N.toLowerCase();
+ const cid=(typeof cidades==="function"?cidades():[]).map(c=>({c,b:semAcento(c.split(",")[0]).toLowerCase()})).filter(o=>o.b.length>3&&NN.includes(o.b)).sort((a,b)=>b.b.length-a.b.length)[0];
+ if(cid)r.cidade=cid.c;
+ /* nome: linha com "+" (título) ou a linha mais "gritada" */
+ let ti=linhas.findIndex(l=>/\+/.test(l)&&/[A-Za-zÀ-ú]{3}/.test(l)&&!/R\$/.test(l));
+ if(ti>=0){let nome=linhas[ti];if(/\+\s*$/.test(nome)&&linhas[ti+1])nome+=" "+linhas[ti+1];if(/^\s*\+/.test(linhas[ti+1]||""))nome+=" "+linhas[ti+1];r.nome=tituloBonito(nome.replace(/\s*\+\s*/g," + ")).replace(/\bBalneario\b/,"Balneário").replace(/\bCamboriu\b/,"Camboriú")}
+ else if(r.cidade)r.nome=r.cidade.split(",")[0];
+ /* tipo */
+ if(/aereo|voo|aeroporto|passagem aerea/i.test(N))r.tipoViagem="aviao";else if(/excursao|servico de bordo|transporte|onibus|rodoviaria/i.test(N))r.tipoViagem="excursao";
+ /* observações: inclusos, contato, crianças */
+ const obs=[];const iInc=linhasN.findIndex(l=>/^inclus/i.test(l));
+ if(iInc>=0){const itens=[];for(let i=iInc+1;i<linhas.length&&itens.length<10;i++){const l=linhas[i];if(/^[.•\-*·]\s*/.test(l))itens.push(l.replace(/^[.•\-*·]\s*/,"").replace(/[;.]$/,""));else if(itens.length)break}if(itens.length)obs.push("✅ Incluso: "+itens.join("; "))}
+ const crian=T.match(/free[^\n]*crian[^\n]*/i)||T.match(/crian[çc]as?[^\n]*(?:gr[aá]tis|free)[^\n]*/i);if(crian)obs.push("👶 "+crian[0].replace(/\s*[→>-]+\s*/," → ").trim());
+ if(r.reserva)obs.push("🔖 Reserva confirmada com "+money(r.reserva));
+ const tel=T.match(/\(?\d{2}\)?\s*9\s?\d{4}[.\-\s]?\d{4}(?:\s*\/\s*9\s?\d{4}[.\-\s]?\d{4})?/);if(tel)obs.push("📞 Contato: "+tel[0].trim());
+ if(/valor por pessoa/i.test(N))obs.push("💬 Valores por pessoa");
+ r.obs=obs.join("\n");
+ return r;
+}
+function preencherPeloPost(r){
+ const feitos=[];const set=(id,v,rot)=>{if(v==null||v==="")return;const el=$(id);if(!el)return;el.value=v;el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));if(rot)feitos.push(rot)};
+ set("fNome",r.nome,"nome");
+ if(r.tipoViagem)set("fTipoViagem",r.tipoViagem,"tipo");
+ set("fCidade",r.cidade,"cidade");set("fHotel",r.hotel,"hotel");
+ set("fData",r.data,"data de ida");set("fDataVolta",r.dataVolta,"data de volta");
+ set("fHoraSaida",r.horaSaida,"horário de saída");set("fHoraVolta",r.horaVolta,"horário de volta");
+ if(r.valorTotal)set("fTotal",fmtBR(r.valorTotal),"valor");
+ if(r.obs){const o=$("fObs");o.value=(o.value?o.value+"\n":"")+r.obs;feitos.push("observações")}
+ const box=$("postPrecos");
+ if(r.precos&&r.precos.length>1){
+  box.innerHTML=`<div class="notice" style="margin:6px 0 4px">Escolha o seu valor:</div>`+r.precos.map((p,i)=>`<button type="button" class="chip${i===0?" ativo":""}" data-post-preco="${p.valor}">${money(p.valor)}${p.rotulo?" • "+esc(p.rotulo):""}</button>`).join("");
+ }else box.innerHTML="";
+ $("postStatus").innerHTML=feitos.length?`✅ Pronto! Preenchi: ${feitos.join(", ")}.<br>Confira tudo e escolha a <b>forma de pagamento</b> (à vista ou parcelado).`:"Não consegui achar as informações nesse post. Tente colar o texto.";
+ if(typeof calcFaltante==="function")calcFaltante();
+ if(typeof sincronizarParcelas==="function")try{sincronizarParcelas()}catch(e){}
+}
+function limparImportPost(){$("btnColarPost").style.display="none";$("postStatus").innerHTML="";$("postPrecos").innerHTML="";$("fPostTexto").value="";$("postColarBox").style.display="none";$("fPostImg").value=""}
+$("postPrecos").addEventListener("click",e=>{const b=e.target.closest("[data-post-preco]");if(!b)return;$("postPrecos").querySelectorAll(".chip").forEach(c=>c.classList.remove("ativo"));b.classList.add("ativo");const el=$("fTotal");el.value=fmtBR(Number(b.dataset.postPreco));el.dispatchEvent(new Event("input",{bubbles:true}));if(typeof calcFaltante==="function")calcFaltante()});
+$("btnColarPost").onclick=async()=>{const bx=$("postColarBox");bx.style.display=bx.style.display==="none"?"block":"none";if(bx.style.display==="block"){try{const t=await navigator.clipboard.readText();if(t&&!$("fPostTexto").value)$("fPostTexto").value=t}catch(e){}$("fPostTexto").focus()}};
+$("btnLerTexto").onclick=()=>{const t=$("fPostTexto").value.trim();if(!t){$("postStatus").textContent="Cole o texto do post primeiro.";return}preencherPeloPost(lerPost(t))};
+/* Leitura da imagem (OCR) — carrega o leitor só quando usar */
+let __tess=null;
+function carregarTesseract(){if(window.Tesseract)return Promise.resolve();if(__tess)return __tess;__tess=new Promise((ok,erro)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";s.onload=ok;s.onerror=()=>{__tess=null;erro()};document.head.appendChild(s)});return __tess}
+function prepararImagem(file){return new Promise((ok,erro)=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const f=Math.min(2,2000/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*f);c.height=Math.round(img.height*f);const g=c.getContext("2d");g.drawImage(img,0,0,c.width,c.height);/* cinza + contraste para letras brancas em fundo colorido */const d=g.getImageData(0,0,c.width,c.height),px=d.data;for(let i=0;i<px.length;i+=4){let y=.299*px[i]+.587*px[i+1]+.114*px[i+2];y=y<110?255-y*.4:y;px[i]=px[i+1]=px[i+2]=y}g.putImageData(d,0,0);ok(c)};img.onerror=erro;img.src=fr.result};fr.onerror=erro;fr.readAsDataURL(file)})}
+$("fPostImg").addEventListener("change",async e=>{
+ const f=e.target.files[0];if(!f)return;const st=$("postStatus");
+ st.textContent="📷 Preparando a leitura do post… (a 1ª vez demora um pouco)";
+ try{await carregarTesseract()}catch(err){st.innerHTML="Não consegui carregar o leitor de imagem. Ele precisa de internet — confira a conexão e tente de novo.";return}
+ try{
+  const [orig,trat]=await Promise.all([new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.readAsDataURL(f)}),prepararImagem(f)]);
+  const log=m=>{if(m.status==="recognizing text")st.textContent=`🔎 Lendo o post… ${Math.round((m.progress||0)*100)}%`;else if(/load/i.test(m.status||""))st.textContent="📥 Baixando o leitor de português…"};
+  const a=await Tesseract.recognize(orig,"por",{logger:log});
+  const b=await Tesseract.recognize(trat,"por",{logger:log});
+  const texto=a.data.text+"\n"+b.data.text;
+  $("fPostTexto").value=a.data.text.trim();
+  preencherPeloPost(lerPost(texto));
+  $("btnColarPost").style.display="block";
+ }catch(err){st.innerHTML="Não consegui ler essa imagem. Tente outra foto mais nítida, bem de frente e sem reflexo."}
+ e.target.value="";
+});
+
+/* ===== 👥 Pessoas que vão comigo ===== */
+let acompForm=[];
+function carregarAcompForm(t){acompForm=(t&&t.acompanhantes||[]).map(p=>({...p,historico:[...(p.historico||[])]}));renderAcompForm();$("acompDet").open=acompForm.length>0}
+function renderAcompForm(){
+ $("acompCount").textContent=acompForm.length?String(acompForm.length):"";
+ $("acompLista").innerHTML=acompForm.map((p,i)=>`<div class="acompRow"><input class="acompNome" data-ac-i="${i}" data-ac-k="nome" placeholder="Nome (ex.: Adriana)" value="${esc(p.nome||"")}"><div class="acompVals"><label>Valor da parte<input type="text" inputmode="decimal" placeholder="0,00" data-ac-i="${i}" data-ac-k="valor" value="${p.valor?fmtBR(p.valor):""}"></label><label>Já me pagou<input type="text" inputmode="decimal" placeholder="0,00" data-ac-i="${i}" data-ac-k="pago" value="${p.pago?fmtBR(p.pago):""}"></label><button type="button" class="iconBtn trashBtn" data-ac-del="${i}" aria-label="Tirar pessoa" title="Tirar pessoa">🗑️</button></div></div>`).join("");
+}
+function lerAcompForm(){return acompForm.map(p=>({nome:String(p.nome||"").trim(),valor:Math.max(numBR(p.valor),0),pago:Math.max(numBR(p.pago),0),historico:p.historico||[]})).filter(p=>p.nome)}
+$("acompLista").addEventListener("input",e=>{const el=e.target.closest("[data-ac-i]");if(!el)return;acompForm[Number(el.dataset.acI)][el.dataset.acK]=el.value;$("acompCount").textContent=acompForm.length?String(acompForm.length):""});
+$("acompLista").addEventListener("click",e=>{const d=e.target.closest("[data-ac-del]");if(!d)return;const p=acompForm[Number(d.dataset.acDel)];if(p&&p.nome&&!confirm(`Tirar ${p.nome} desta viagem?`))return;acompForm.splice(Number(d.dataset.acDel),1);renderAcompForm()});
+$("btnAddAcomp").onclick=()=>{acompForm.push({nome:"",valor:numBR($("fTotal").value)||0,pago:0,historico:[]});renderAcompForm();const ins=$("acompLista").querySelectorAll(".acompNome");ins[ins.length-1]?.focus()};
+function acompCard(t){
+ const L=(t.acompanhantes||[]).filter(p=>p.nome);if(!L.length)return "";
+ const falta=p=>Math.max((Number(p.valor)||0)-(Number(p.pago)||0),0);
+ const totalFalta=L.reduce((s,p)=>s+falta(p),0);
+ return `<div class="acompBox"><div class="acompTop"><b>👥 Pessoas que vão comigo</b>${totalFalta>0?`<span class="financeValues">A receber: ${money(totalFalta)}</span>`:`<span>✅ Tudo recebido</span>`}</div>${L.map((p,i)=>{const f=falta(p),pct=p.valor?Math.min(100,Math.round((Number(p.pago)||0)/p.valor*100)):0;return `<div class="acompItem"><div class="acompInfo"><span class="acompNomeTxt">👤 ${esc(p.nome)}</span><small class="financeValues">Pagou ${money(p.pago)} de ${money(p.valor)}</small><div class="acompBarra"><i style="width:${pct}%"></i></div></div><div class="acompLado">${f>0?`<span class="badge late financeValues">Falta ${money(f)}</span><button type="button" class="smallBtn" data-acomp-receber="${t.id}" data-acomp-i="${(t.acompanhantes||[]).indexOf(p)}">➕ Recebi</button>`:`<span class="badge pay">✅ Quitado</span>`}</div></div>`}).join("")}</div>`;
+}
+document.addEventListener("click",e=>{
+ const b=e.target.closest("[data-acomp-receber]");if(!b)return;
+ const t=viagens.find(x=>x.id===Number(b.dataset.acompReceber));const p=t?.acompanhantes?.[Number(b.dataset.acompI)];if(!p)return;
+ const falta=Math.max((Number(p.valor)||0)-(Number(p.pago)||0),0);
+ const v=prompt(`Quanto ${p.nome} te pagou agora?\n(Falta ${money(falta)})`,fmtBR(falta));if(v==null)return;
+ const n=numBR(v);if(!(n>0)){alert("Valor inválido.");return}
+ p.pago=Math.round(((Number(p.pago)||0)+n)*100)/100;(p.historico=p.historico||[]).push({data:localDate(),valor:n});
+ save();render();
+});
+render();
+</script>
 </body>
+
 </html>
