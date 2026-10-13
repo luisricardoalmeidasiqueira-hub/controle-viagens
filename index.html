@@ -419,6 +419,19 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .acompLado{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
 .acompLado .smallBtn{padding:5px 8px;font-size:11px}
 .postFotoBtn{display:block;text-align:center;cursor:pointer;padding:12px;font-size:14px;margin:0}
+/* v3.4: cardápio */
+.menuItem{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text);padding:8px 10px;margin-top:6px;font-size:13px}
+.menuItem b{white-space:nowrap}
+.menuItem.on{border-color:var(--accent);background:var(--panel2);box-shadow:inset 0 0 0 1px var(--accent)}
+.menuFiltro{display:flex;gap:6px;margin-top:8px}
+.menuFiltro input{flex:1}
+.contaBox{border:1.5px solid var(--accent);border-radius:12px;background:var(--panel2);padding:10px;margin-top:10px;font-size:13px}
+.contaBox .contaTot{font-size:17px;font-weight:900;color:var(--accent)}
+.contaLinha{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:6px}
+.contaLinha input{width:70px;padding:6px 8px}
+.tipicos{border:1px dashed var(--line);border-radius:11px;padding:9px 10px;margin:0 0 10px;font-size:13px;background:var(--panel2)}
+.tipicos b{color:var(--accent)}
+#cStatus:empty{display:none}
 </style>
 
 </head>
@@ -477,6 +490,30 @@ input,textarea,select{font-size:14px;padding:9px 10px}
   </div>
 </section>
 
+
+<section class="card compactCard" id="secComida">
+  <button class="collapseBtn" id="btnComida" type="button">🍽️ Cardápio e o que comer <span id="setaComida">︾</span></button>
+  <div id="comidaConteudo" style="display:none;margin-top:10px">
+    <div class="grid">
+      <div class="field"><label>Restaurante (opcional)</label><input id="cRest" placeholder="Ex.: Restaurante do Zé"></div>
+      <div class="field"><label>Cidade</label><input id="cCidade" list="listaCidades" placeholder="Ex.: Peruíbe, SP"></div>
+    </div>
+    <div id="cTipicos"></div>
+    <label class="btn full postFotoBtn">📷 Ler cardápio com a câmera<input type="file" id="cFoto" accept="image/*" hidden></label>
+    <div id="cStatus" class="notice"></div>
+    <div id="cItens"></div>
+    <div id="cConta" style="display:none"></div>
+    <div class="sectionMini"><label>🌐 O que pedir aqui? (recomendações da internet)</label>
+      <div class="recommendGrid" style="margin-top:6px">
+        <button class="recommendBtn" type="button" data-rec-comida="google">🔎 O que pedir</button>
+        <button class="recommendBtn" type="button" data-rec-comida="maps">⭐ Avaliações</button>
+        <button class="recommendBtn" type="button" data-rec-comida="trip">🦉 TripAdvisor</button>
+        <button class="recommendBtn" type="button" data-rec-comida="ifood">🛵 Cardápio no iFood</button>
+      </div>
+      <div class="notice">Abre a pesquisa já com o restaurante e a cidade. Cardápio com QR Code: aponte a câmera do celular para o código.</div>
+    </div>
+  </div>
+</section>
 
 <section class="card compactCard" id="secAjuda">
   <button class="collapseBtn" id="btnAjuda">🚨 Ajuda rápida <span>︾</span></button>
@@ -752,7 +789,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="3.3";
+const APP_VERSAO="3.4";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1936,6 +1973,75 @@ document.addEventListener("click",e=>{
  save();render();
 });
 render();
+</script>
+<script>
+/* ===== v3.4: 🍽️ Cardápio e o que comer ===== */
+const PRATOS_TIPICOS={"balneario camboriu":"Frutos do mar, sequência de camarão, tainha e pastel de camarão.","penha":"Frutos do mar, sequência de camarão e marisco (Penha é capital do marisco).","florianopolis":"Ostras, sequência de camarão, tainha e pirão.","peruibe":"Peixe frito, camarão e pastel de feira na praia.","santos":"Peixes, frutos do mar e o famoso sanduíche de Santos.","ubatuba":"Azul-marinho (peixe com banana verde) e frutos do mar.","paraty":"Peixe com banana, cachaça artesanal e frutos do mar.","campos do jordao":"Fondue, truta, chocolate quente e cervejas artesanais.","monte verde":"Fondue, truta e chocolates.","holambra":"Comida holandesa: poffertjes, apfelstrudel e pratos com batata.","aparecida":"Pastel, frango assado e doces de Aparecida.","olimpia":"Comida caipira e sorvetes.","gramado":"Fondue, café colonial e chocolate.","canela":"Café colonial, fondue e chocolate.","foz do iguacu":"Pintado, costela fogo de chão e chipa paraguaia.","pocos de caldas":"Doces, queijos mineiros e comida mineira.","caldas novas":"Pamonha, pequi e comida goiana.","ouro preto":"Tutu, feijão tropeiro e pão de queijo.","tiradentes":"Comida mineira de fogão a lenha e doces.","porto seguro":"Moqueca baiana, acarajé e cocada.","salvador":"Acarajé, moqueca e abará.","maceio":"Sururu, tapioca e peixe.","fortaleza":"Caranguejo, baião de dois e tapioca.","rio de janeiro":"Feijoada, biscoito de polvilho e pastel.","curitiba":"Barreado (no litoral), pinhão e carne de onça.","morretes":"Barreado com banana e farinha.","aguas de lindoia":"Comida caipira, doces e queijos.","serra negra":"Queijos, vinhos e linguiça artesanal.","socorro":"Comida caipira e doces.","brotas":"Comida caipira e pratos de fazenda."};
+let cardapio=[],cardSel=new Set();
+function cidadeComida(){const t=[...(viagens||[])].filter(x=>x.data>=localDate()).sort((a,b)=>a.data.localeCompare(b.data))[0];return t?.cidade||""}
+function mostrarTipicos(){const c=semAcento(($("cCidade").value||"").split(",")[0]).toLowerCase().trim();const k=Object.keys(PRATOS_TIPICOS).find(x=>c&&(c===x||c.includes(x)||x.includes(c)&&c.length>3));$("cTipicos").innerHTML=k?`<div class="tipicos">🍲 <b>O que comer em ${esc(($("cCidade").value||"").split(",")[0])}:</b> ${PRATOS_TIPICOS[k]}</div>`:""}
+$("btnComida").onclick=()=>{const c=$("comidaConteudo"),abrir=c.style.display==="none";c.style.display=abrir?"block":"none";$("setaComida").textContent=abrir?"︿":"︾";if(abrir&&!$("cCidade").value){$("cCidade").value=cidadeComida()}mostrarTipicos()};
+$("cCidade").addEventListener("input",mostrarTipicos);$("cCidade").addEventListener("change",mostrarTipicos);
+document.addEventListener("click",e=>{
+ const b=e.target.closest("[data-rec-comida]");if(!b)return;
+ const r=$("cRest").value.trim(),c=$("cCidade").value.trim();
+ if(!r&&!c){alert("Digite o restaurante ou a cidade.");$("cRest").focus();return}
+ const q=encodeURIComponent,base=[r,c].filter(Boolean).join(" ");
+ const url={google:"https://www.google.com/search?q="+q((r?"o que pedir no "+base:"o que comer em "+c)+" melhores pratos"),maps:"https://www.google.com/maps/search/?api=1&query="+q(r?base:"restaurantes "+c),trip:"https://www.tripadvisor.com.br/Search?q="+q(base),ifood:"https://www.ifood.com.br/busca?q="+q(r||"restaurantes")}[b.dataset.recComida];
+ window.open(url,"_blank");
+});
+function lerCardapio(texto){
+ const out=[],vistos=new Set();const L=String(texto).split("\n").map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean);
+ for(let i=0;i<L.length;i++){
+  let l=L[i];let m=l.match(/^(.*?)[\s.…_:\-–—]*(?:R\s?[$S5]\s*)?(\d{1,4}[,.]\d{2})\s*$/i);
+  if(m&&m[1].replace(/[^A-Za-zÀ-ú]/g,"").length<3&&i>0&&!/\d[,.]\d{2}/.test(L[i-1]))m=[l,L[i-1],m[2]];
+  if(!m){const m2=l.match(/^(?:R\s?[$S5]\s*)(\d{1,4}[,.]\d{2})\s+(.{3,})$/i);if(m2)m=[l,m2[2],m2[1]]}
+  if(!m)continue;
+  const nome=m[1].replace(/^[\s.•\-–—*·|]+|[\s.…_:\-–—|]+$/g,"").replace(/\.{2,}/g," ").trim();
+  const valor=numBR(m[2].replace(".",","));
+  if(nome.replace(/[^A-Za-zÀ-ú]/g,"").length<3||!(valor>0)||valor>5000)continue;
+  const k=semAcento(nome).toLowerCase().replace(/[^a-z]/g,"")+valor;if(vistos.has(k))continue;vistos.add(k);
+  out.push({nome:nome.length>60?nome.slice(0,60)+"…":nome,valor});
+ }
+ return out;
+}
+function renderCardapio(filtro=""){
+ const f=semAcento(filtro).toLowerCase();
+ if(!cardapio.length){$("cItens").innerHTML="";$("cConta").style.display="none";return}
+ const lista=cardapio.map((x,i)=>({...x,i})).filter(x=>!f||semAcento(x.nome).toLowerCase().includes(f));
+ $("cItens").innerHTML=`<div class="menuFiltro"><input id="cBusca" placeholder="🔎 Procurar no cardápio" value="${esc(filtro)}"><select id="cOrdem" style="width:auto"><option value="">Ordem do cardápio</option><option value="barato" ${ordemCard==="barato"?"selected":""}>Mais barato</option><option value="caro" ${ordemCard==="caro"?"selected":""}>Mais caro</option></select></div>`+lista.sort((a,b)=>ordemCard==="barato"?a.valor-b.valor:ordemCard==="caro"?b.valor-a.valor:a.i-b.i).map(x=>`<button type="button" class="menuItem ${cardSel.has(x.i)?"on":""}" data-menu-i="${x.i}"><span>${cardSel.has(x.i)?"✅ ":""}${esc(x.nome)}</span><b>${money(x.valor)}</b></button>`).join("")+`<div class="notice">Toque nos itens que vão pedir para somar a conta.</div>`;
+ renderConta();
+}
+let ordemCard="";
+function renderConta(){
+ const box=$("cConta");if(!cardSel.size){box.style.display="none";return}
+ const tot=[...cardSel].reduce((s,i)=>s+(cardapio[i]?.valor||0),0);
+ const pessoas=Math.max(parseInt(box.dataset.p||"1")||1,1),gorj=box.dataset.g==="1";
+ const final=gorj?tot*1.1:tot;
+ box.style.display="block";
+ box.innerHTML=`<div class="contaBox"><div class="contaLinha"><span>🧾 Conta (${cardSel.size===1?"1 item":cardSel.size+" itens"})</span><span class="contaTot">${money(final)}</span></div><div class="contaLinha"><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="cGorj" ${gorj?"checked":""} style="width:auto"> Com 10% do garçom</label><span>${gorj?money(tot*.1):""}</span></div><div class="contaLinha"><span>👥 Dividir por</span><input id="cPessoas" type="number" min="1" max="30" value="${pessoas}"></div>${pessoas>1?`<div class="contaLinha"><b>Cada um paga</b><b>${money(final/pessoas)}</b></div>`:""}<button type="button" class="smallBtn" id="cLimpar" style="margin-top:8px">↩️ Limpar conta</button></div>`;
+}
+$("cItens").addEventListener("click",e=>{const b=e.target.closest("[data-menu-i]");if(!b)return;const i=Number(b.dataset.menuI);cardSel.has(i)?cardSel.delete(i):cardSel.add(i);renderCardapio($("cBusca")?.value||"")});
+$("cItens").addEventListener("input",e=>{if(e.target.id==="cBusca"){const v=e.target.value;renderCardapio(v);const el=$("cBusca");el.focus();el.setSelectionRange(v.length,v.length)}});
+$("cItens").addEventListener("change",e=>{if(e.target.id==="cOrdem"){ordemCard=e.target.value;renderCardapio($("cBusca").value)}});
+$("cConta").addEventListener("change",e=>{const box=$("cConta");if(e.target.id==="cGorj")box.dataset.g=e.target.checked?"1":"0";if(e.target.id==="cPessoas")box.dataset.p=e.target.value;setTimeout(renderConta,0)});
+$("cConta").addEventListener("click",e=>{if(e.target.id==="cLimpar"){cardSel.clear();const f=$("cBusca")?.value||"";renderCardapio(f)}});
+$("cFoto").addEventListener("change",async e=>{
+ const f=e.target.files[0];if(!f)return;const st=$("cStatus");
+ st.textContent="📷 Preparando a leitura do cardápio… (a 1ª vez demora um pouco)";
+ try{await carregarTesseract()}catch(err){st.textContent="Não consegui carregar o leitor de imagem. Ele precisa de internet.";return}
+ try{
+  const orig=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.readAsDataURL(f)});
+  const w=await Tesseract.createWorker("por",1,{logger:m=>{if(m.status==="recognizing text")st.textContent=`🔎 Lendo o cardápio… ${Math.round((m.progress||0)*100)}%`}});
+  const a=await w.recognize(orig);await w.setParameters({tessedit_pageseg_mode:"6"});const b=await w.recognize(orig);await w.terminate();
+  const novos=lerCardapio(a.data.text+"\n"+b.data.text);
+  if(!novos.length){st.textContent="Não achei pratos com preço nessa foto. Tente chegar mais perto, com boa luz e o cardápio reto.";return}
+  cardapio=cardapio.concat(novos.filter(n=>!cardapio.some(c=>c.nome===n.nome&&c.valor===n.valor)));
+  st.textContent=`✅ Li ${novos.length} ${novos.length===1?"item":"itens"} do cardápio. Pode tirar foto das outras páginas que eu junto.`;
+  renderCardapio("");
+ }catch(err){st.textContent="Não consegui ler essa foto. Tente de novo com mais luz e o cardápio reto."}
+ e.target.value="";
+});
 </script>
 </body>
 
