@@ -432,6 +432,10 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .tipicos{border:1px dashed var(--line);border-radius:11px;padding:9px 10px;margin:0 0 10px;font-size:13px;background:var(--panel2)}
 .tipicos b{color:var(--accent)}
 #cStatus:empty{display:none}
+/* v3.5: valores escondidos com asteriscos */
+.financeHidden{filter:none!important;user-select:none}
+.finLock{border:1px solid var(--line);background:var(--panel2);border-radius:8px;width:28px;height:26px;padding:0;font-size:13px;margin-right:6px;vertical-align:middle;display:inline-grid;place-items:center}
+.finLock.aberto{background:#fff}
 </style>
 
 </head>
@@ -789,7 +793,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="3.4";
+const APP_VERSAO="3.5";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1183,7 +1187,7 @@ function card(t){
   </button>
   <div class="tripBody">
    ${t.hotel||t.tipoViagem?`<div class="sub">${t.hotel?"🏨 "+esc(t.hotel):""}${t.hotel&&t.tipoViagem?" • ":""}${t.tipoViagem?"🧳 "+esc(TIPO_NOME[t.tipoViagem]||t.tipoViagem):""}</div>`:""}
-   <div class="info">${t.horaSaida?"🚗 Saída: "+esc(t.horaSaida)+(t.localSaida?" • "+esc(t.localSaida):"")+"<br>":""}${t.dataInicioPagamento?"💳 Começou a pagar: "+dateBR(t.dataInicioPagamento)+"<br>":""}${parc?(proxParc?`📆 Próxima parcela: ${proxParc.numero}ª • ${dataSem(proxParc.vencimento)} • ${money(proxParc.valor)}${atrasada?" 🔴 atrasada":""}<br>`:""):(t.venc?"📆 Vencimento: "+dataSem(t.venc)+"<br>":"")}<span class="financeValues financeLink" data-action="pagamentos" data-id="${t.id}" role="button" tabindex="0" title="Abrir pagamentos">💰 Total: ${money(t.valorTotal)} • Pago: ${money(t.valorPago)} • Falta: ${money(falta)}${t.modoPagamento==="parcelado"&&t.parcelas?.length?` • 💳 ${entradaDe(t)?"entrada "+money(entradaDe(t))+" + ":""}${t.parcelas.length}x mensal`:""}${t.gastos?`<br>💸 Gastos adicionais: ${money(t.gastos)}`:""}</span></div>
+   <div class="info">${t.horaSaida?"🚗 Saída: "+esc(t.horaSaida)+(t.localSaida?" • "+esc(t.localSaida):"")+"<br>":""}${t.dataInicioPagamento?"💳 Começou a pagar: "+dateBR(t.dataInicioPagamento)+"<br>":""}${parc?(proxParc?`📆 Próxima parcela: ${proxParc.numero}ª • ${dataSem(proxParc.vencimento)} • ${money(proxParc.valor)}${atrasada?" 🔴 atrasada":""}<br>`:""):(t.venc?"📆 Vencimento: "+dataSem(t.venc)+"<br>":"")}<button type="button" class="finLock" data-fin-toggle="1" aria-label="Mostrar ou esconder valores">🔒</button><span class="financeValues financeLink" data-action="pagamentos" data-id="${t.id}" role="button" tabindex="0" title="Abrir pagamentos">💰 Total: ${money(t.valorTotal)} • Pago: ${money(t.valorPago)} • Falta: ${money(falta)}${t.modoPagamento==="parcelado"&&t.parcelas?.length?` • 💳 ${entradaDe(t)?"entrada "+money(entradaDe(t))+" + ":""}${t.parcelas.length}x mensal`:""}${t.gastos?`<br>💸 Gastos adicionais: ${money(t.gastos)}`:""}</span></div>
    ${window.acompCard?acompCard(t):""}
    ${festasNaViagem(t).map(f=>`<div class="festaAviso">🎉 No período da viagem costuma ter: <b>${esc(f.nome)}</b>. Confirme as datas.</div>`).join("")}
    ${t.roteiro?`<div class="obs">🗺️ ${esc(t.roteiro)}</div>`:""}${t.obs?`<div class="obs">📝 ${esc(t.obs)}</div>`:""}
@@ -2042,6 +2046,26 @@ $("cFoto").addEventListener("change",async e=>{
  }catch(err){st.textContent="Não consegui ler essa foto. Tente de novo com mais luz e o cardápio reto."}
  e.target.value="";
 });
+</script>
+<script>
+/* ===== v3.5: valores da viagem escondidos (R$ •••••) com cadeado 🔒/🔓 ===== */
+const VAL_KEY="controle_viagens_valores_visiveis";
+financeiroVisivel=localStorage.getItem(VAL_KEY)==="1";
+const MASCARA=/R\$(?:\s|&nbsp;| )*-?[\d.]+,\d{2}/g;
+aplicarFinanceiro=function(){
+ document.querySelectorAll(".financeValues").forEach(el=>{
+  if(el.dataset.orig===undefined||el.innerHTML!==el.dataset.shown)el.dataset.orig=el.innerHTML;
+  el.innerHTML=financeiroVisivel?el.dataset.orig:el.dataset.orig.replace(MASCARA,"R$ •••••");
+  el.dataset.shown=el.innerHTML;el.classList.toggle("financeHidden",!financeiroVisivel);
+ });
+ ["totalGeral","faltanteGeral"].forEach(id=>{const el=$(id);if(!el)return;if(el.dataset.orig==null||el.textContent!=="R$ •••••")el.dataset.orig=el.textContent;el.textContent=financeiroVisivel?el.dataset.orig:"R$ •••••";el.classList.remove("financeHidden")});
+ document.querySelectorAll("[data-fin-toggle]").forEach(b=>{b.textContent=financeiroVisivel?"🔓":"🔒";b.classList.toggle("aberto",financeiroVisivel);b.title=financeiroVisivel?"Esconder valores":"Mostrar valores"});
+ if($("btnFinanceiro"))$("btnFinanceiro").textContent=financeiroVisivel?"🔒 Ocultar":"🔓 Mostrar";
+};
+function alternarValores(){financeiroVisivel=!financeiroVisivel;try{localStorage.setItem(VAL_KEY,financeiroVisivel?"1":"0")}catch(e){}aplicarFinanceiro()}
+$("btnFinanceiro").onclick=alternarValores;
+document.addEventListener("click",e=>{if(e.target.closest("[data-fin-toggle]")){e.preventDefault();e.stopPropagation();alternarValores()}},true);
+render();
 </script>
 </body>
 
