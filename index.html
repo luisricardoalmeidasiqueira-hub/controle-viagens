@@ -436,6 +436,13 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .financeHidden{filter:none!important;user-select:none}
 .finLock{border:1px solid var(--line);background:var(--panel2);border-radius:8px;width:28px;height:26px;padding:0;font-size:13px;margin-right:6px;vertical-align:middle;display:inline-grid;place-items:center}
 .finLock.aberto{background:#fff}
+/* v3.6: trocar cidade e fechar resultados */
+.trocaCidade{border:1px dashed var(--accent);background:transparent;color:var(--accent);border-radius:999px;padding:3px 10px;font-weight:800;font-size:12px;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trocaCidade small{font-size:12px;color:var(--accent)}
+.resBar{position:sticky;top:calc(6px + env(safe-area-inset-top));z-index:5;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--accent);color:#fff;border-radius:12px;padding:8px 8px 8px 12px;margin:4px 0 8px;box-shadow:0 4px 14px #0003}
+.resBar span{font-size:13px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resBar button{flex:none;border:0;background:#fff;color:var(--accent);font-weight:900;border-radius:9px;padding:7px 11px;font-size:13px}
+#passeiosChips button.ativoPasseio{background:var(--accent);color:#fff;border-color:var(--accent)}
 </style>
 
 </head>
@@ -483,9 +490,9 @@ input,textarea,select{font-size:14px;padding:9px 10px}
     <option value="">Categoria</option><option value="hotel">🏨 Hotéis</option><option value="restaurante">🍽️ Restaurantes</option><option value="padaria">🥖 Padarias</option><option value="mcdonalds">🍔 McDonald's</option><option value="habibs">🌯 Habib's</option><option value="pizzaria">🍕 Pizzarias</option><option value="lanchonete">🍟 Lanchonetes</option><option value="turismo">📸 Pontos turísticos</option><option value="praia">🏖️ Praias</option><option value="compras">🛍️ Compras</option><option value="posto">⛽ Postos</option><option value="farmacia">💊 Farmácias</option><option value="estacionamento">🅿️ Estacionamentos</option><option value="cafe">☕ Cafés</option><option value="outros">➕ Outros</option>
   </select></div>
   <div class="ratingRow" id="ratingRow" style="display:none"><label>⭐ Avaliação</label><select id="filtroRating"><option value="0">Qualquer avaliação</option><option value="3">⭐ 3,0+</option><option value="3.5">⭐ 3,5+</option><option value="4">⭐ 4,0+</option><option value="4.5">⭐ 4,5+</option></select></div>
-  <div class="field"><label>Cidade</label><input id="cidadeBusca" list="listaCidades" placeholder="Digite a cidade"><datalist id="listaCidades"></datalist></div>
+  <div class="field"><label>Cidade</label><div class="searchLine"><input id="cidadeBusca" list="listaCidades" placeholder="Digite a cidade (ex.: Peruíbe, SP)" autocomplete="off"><button type="button" class="btn secondary searchSmall" id="limparCidadeBusca" title="Apagar cidade" aria-label="Apagar cidade">✕</button></div><datalist id="listaCidades"></datalist></div>
   <div class="passeiosBox">
-    <div class="passeiosHead"><span>🎡 Passeios na cidade</span><small id="passeioCidade"></small></div>
+    <div class="passeiosHead"><span>🎡 Passeios na cidade</span><button type="button" class="trocaCidade" id="trocarCidadePasseio" title="Trocar a cidade"><small id="passeioCidade"></small> ✏️</button></div>
     <div class="hotelChips" id="passeiosChips"></div>
     <div class="festasBox" id="festasBox"></div>
   </div>
@@ -793,7 +800,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="3.5";
+const APP_VERSAO="3.6";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2066,6 +2073,47 @@ function alternarValores(){financeiroVisivel=!financeiroVisivel;try{localStorage
 $("btnFinanceiro").onclick=alternarValores;
 document.addEventListener("click",e=>{if(e.target.closest("[data-fin-toggle]")){e.preventDefault();e.stopPropagation();alternarValores()}},true);
 render();
+</script>
+<script>
+/* ===== v3.6: trocar a cidade dos passeios + botão ✕ Fechar nos resultados ===== */
+const RES_VAZIO=`<div class="empty">Digite o que procura e a cidade para pesquisar.</div>`;
+let passeioAtivo="";
+function marcarPasseioAtivo(){document.querySelectorAll("#passeiosChips [data-passeio]").forEach(b=>b.classList.toggle("ativoPasseio",!!passeioAtivo&&b.dataset.passeio===passeioAtivo))}
+function fecharResultados(){
+ $("resultados").innerHTML=RES_VAZIO;passeioAtivo="";$("busca").value="";marcarPasseioAtivo();
+ document.querySelector(".passeiosBox")?.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function colocarBarraResultados(){
+ const box=$("resultados");if(!box||box.querySelector(".resBar"))return;
+ const termo=$("busca").value.trim()||($("categoriaBusca").selectedOptions[0]?.text||"").replace(/^Categoria$/,"");
+ if(!termo&&!box.querySelector(".place"))return;
+ const cid=$("cidadeBusca").value.trim();
+ box.insertAdjacentHTML("afterbegin",`<div class="resBar"><span>🔎 ${esc(termo?termo.charAt(0).toUpperCase()+termo.slice(1):"Resultados")}${cid?" • "+esc(cid):""}</span><button type="button" data-fechar-res="1">✕ Fechar</button></div>`);
+}
+/* toda pesquisa ganha a barra com ✕ Fechar */
+const __pesquisarOriginal=pesquisar;
+pesquisar=async function(...a){const r=await __pesquisarOriginal.apply(this,a);colocarBarraResultados();return r};
+document.addEventListener("click",e=>{if(e.target.closest("[data-fechar-res]")){e.preventDefault();fecharResultados()}});
+/* tocar no mesmo passeio de novo fecha; tocar em outro troca */
+$("passeiosChips").addEventListener("click",e=>{
+ const b=e.target.closest("[data-passeio]");if(!b)return;
+ if(passeioAtivo===b.dataset.passeio&&$("resultados").querySelector(".resBar")){e.stopImmediatePropagation();fecharResultados();return}
+ passeioAtivo=b.dataset.passeio;setTimeout(marcarPasseioAtivo,0);
+},true);
+const __renderPasseiosOriginal=renderPasseios;
+renderPasseios=function(...a){const r=__renderPasseiosOriginal.apply(this,a);marcarPasseioAtivo();return r};
+/* ✏️ trocar a cidade direto nos passeios */
+$("trocarCidadePasseio").onclick=()=>{
+ const atual=$("cidadeBusca").value.trim()||cidadePasseio();
+ const nova=prompt("Em qual cidade você quer ver os passeios?\nEx.: Balneário Camboriú, SC",atual);
+ if(nova==null)return;
+ $("cidadeBusca").value=nova.trim();if(typeof aplicarCidadeResolvida==="function")aplicarCidadeResolvida("cidadeBusca");
+ renderPasseios();
+ if(passeioAtivo&&nova.trim()){$("busca").value=passeioAtivo;pesquisar()}
+ else if(!nova.trim())fecharResultados();
+};
+$("limparCidadeBusca").onclick=()=>{$("cidadeBusca").value="";renderPasseios();$("cidadeBusca").focus()};
+renderPasseios();
 </script>
 </body>
 
