@@ -752,7 +752,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="3.0";
+const APP_VERSAO="3.3";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1759,44 +1759,103 @@ function semAcento(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"
 function isoData(d,m,a){const p=n=>String(n).padStart(2,"0");return `${a}-${p(m)}-${p(d)}`}
 function tituloBonito(s){const peq=["de","da","do","das","dos","e","a","o"];return String(s).toLowerCase().replace(/\s+/g," ").trim().split(" ").map((w,i)=>i&&peq.includes(w)?w:w.charAt(0).toUpperCase()+w.slice(1)).join(" ")}
 function lerPost(texto){
- const r={};const T=String(texto||"").replace(/\r/g,"").replace(/[ \t]+/g," ");const N=semAcento(T);
+ const r={};let T=String(texto||"").replace(/\r/g,"").replace(/[ \t]+/g," ");let N=semAcento(T);
  const linhas=T.split("\n").map(l=>l.trim()).filter(Boolean),linhasN=linhas.map(semAcento);
+ /* conserta números quebrados pela leitura: "30/1 0/2026", "120, 50" */
+ const N0=N;N=N.replace(/(\d{1,2}\/\d)\s(\d\/\d{2,4})/g,"$1$2").replace(/(\d{1,2})\s(\d\/\d{1,2}\/\d{2,4})/g,"$1$2");
+ T=T.replace(/(\d{1,2}\/\d)\s(\d\/\d{2,4})/g,"$1$2").replace(/(\d{2,5}),\s(\d{2})\b/g,"$1,$2");
  const anoM=N.match(/\b(20\d{2})\b/);let ano=anoM?Number(anoM[1]):new Date().getFullYear();
  /* datas: "18 À 22 DE NOVEMBRO DE 2026" */
  let m=N.match(/(\d{1,2})\s*(?:a|ao|ate|-|–|e)\s*(\d{1,2})\s*de\s*([a-zç]+)(?:\s*(?:de)?\s*(20\d{2}))?/i);
  if(m&&MESES_NOME[m[3].toLowerCase()]){const mes=MESES_NOME[m[3].toLowerCase()];if(m[4])ano=Number(m[4]);r.data=isoData(m[1],mes,ano);let mv=mes,av=ano;if(Number(m[2])<Number(m[1])){mv=mes%12+1;if(mes===12)av++}r.dataVolta=isoData(m[2],mv,av)}
+ if(!r.data){m=N.match(/\b([0-3]\d)([0-3]\d)\s*de\s*([a-zç]+)/i);if(m&&MESES_NOME[m[3].toLowerCase()]&&Number(m[1])<Number(m[2])&&Number(m[2])<=31){const mes=MESES_NOME[m[3].toLowerCase()];r.data=isoData(m[1],mes,ano);r.dataVolta=isoData(m[2],mes,ano)}}
  if(!r.data){m=N.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s*(?:a|ate|-|–|ao)\s*(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/i);if(m){const a1=m[3]?(m[3].length===2?2000+Number(m[3]):Number(m[3])):ano,a2=m[6]?(m[6].length===2?2000+Number(m[6]):Number(m[6])):a1;r.data=isoData(m[1],m[2],a1);r.dataVolta=isoData(m[4],m[5],a2)}}
  /* saída e volta com horário */
- m=N.match(/saida\s*:?\s*(?:dia\s*)?(?:(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?)?\s*(?:as|a|-)?\s*(\d{1,2})\s*(?:h|:)\s*(\d{2})?/i);
- if(m){if(m[1]&&!r.data)r.data=isoData(m[1],m[2],ano);r.horaSaida=String(m[3]).padStart(2,"0")+":"+(m[4]||"00")}
- m=N.match(/(?:retorno|volta|chegada)\s*:?\s*(?:dia\s*)?(?:(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?)?\s*(?:as|a|-)?\s*(\d{1,2})\s*(?:h|:)\s*(\d{2})?/i);
- if(m){if(m[1]&&!r.dataVolta)r.dataVolta=isoData(m[1],m[2],ano);r.horaVolta=String(m[3]).padStart(2,"0")+":"+(m[4]||"00")}
- /* hotel */
- const hm=[...T.matchAll(/hotel\s+([A-ZÀ-Úa-zà-ú'’][A-ZÀ-Úa-zà-ú'’\s]{2,40}?)(?=[;,.\n(]|$)/gi)].map(x=>x[1].trim()).find(h=>!/^(a|à|ao|com|proximo|próximo|perto|de|da|do|e)\b/i.test(h));
- if(hm)r.hotel=tituloBonito(hm).replace(/\bCamboriu\b/,"Camboriú");
- /* valores */
- const precos=[];
- for(const x of T.matchAll(/R\$\s*([\d.]+,\d{2}|\d+)\s*([^\n]*)/gi)){
-  const antes=semAcento(T.slice(Math.max(0,x.index-90),x.index)).toLowerCase(),rotulo=x[2].replace(/^[\s→>\-–:=]+/,"").trim();
-  const valor=numBR(x[1]);if(!valor)continue;
-  if(/reserva|sinal|entrada|confirmad/.test(antes.split("\n").slice(-2).join(" ")+" "+semAcento(rotulo).toLowerCase())){r.reserva=valor;continue}
+ const anoDe=y=>y?(y.length===2?2000+Number(y):Number(y)):ano;
+ m=N.match(/saida\s*:?\s*(?:dia\s*)?(?:(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?)?\s*(?:as|a|-)?\s*(\d{1,2})\s*(?:h|:)\s*(\d{2})?/i);
+ if(m){if(m[1])r.data=isoData(m[1],m[2],anoDe(m[3]));r.horaSaida=String(m[4]).padStart(2,"0")+":"+(m[5]||"00")}
+ m=N.match(/(?:retorno|volta|chegada)\s*:?\s*(?:dia\s*)?(?:(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?)?\s*(?:as|a|-)?\s*(\d{1,2})\s*(?:h|:)\s*(\d{2})?/i);
+ if(m){if(m[1])r.dataVolta=isoData(m[1],m[2],anoDe(m[3]));r.horaVolta=String(m[4]).padStart(2,"0")+":"+(m[5]||"00")}
+ {const ls=T.match(/sa[ií]da\s+(?:na|no|da|do|em|pela|pelo)\s+([^\n;,.]{3,40})/i)||T.match(/(?:local de (?:sa[ií]da|embarque)|embarque)\s*:?\s*(?:na|no|em)?\s*([^\n;,.]{3,40})/i);if(ls)r.localSaida=tituloBonito(ls[1].trim()).replace(/Rodoviaria/,"Rodoviária")}
+ {const ds=[...N.matchAll(/\b(\d{1,2})\/(\d{1,2})\/(20\d{2}|\d{2})\b/g)].map(x=>isoData(x[1],x[2],anoDe(x[3]))).filter((v,i,a)=>a.indexOf(v)===i);
+  if(ds.length>=2&&/saida|ida|partida/i.test(N)&&/retorno|volta/i.test(N)){if(!/saida\s*:?\s*(?:dia\s*)?\d/i.test(N))r.data=ds[0];if(!/(?:retorno|volta)\s*:?\s*(?:dia\s*)?\d/i.test(N)&&ds[1]>ds[0])r.dataVolta=ds[1]}
+  else if(ds.length&&!r.data)r.data=ds[0];}
+ /* horários soltos: "ÀS 20H30", "ÀS 11H DA MANHÃ" */
+ {const hs=[...N.matchAll(/\bas\s*(\d{1,2})\s*h\s*(\d{2})?/gi)].map(x=>String(x[1]).padStart(2,"0")+":"+(x[2]||"00")).filter(h=>Number(h.slice(0,2))<24);
+  if(!r.horaSaida&&hs[0])r.horaSaida=hs[0];if(!r.horaVolta&&hs[1]&&hs[1]!==r.horaSaida)r.horaVolta=hs[1];}
+ if(!r.localSaida){const lr=T.match(/(?:da|na|saindo da)\s+(rodovi[aá]ria(?:\s+(?:de|da|do|e)\s+[A-Za-zÀ-ú]{3,20})?)/i);if(lr)r.localSaida=tituloBonito(lr[1].replace(/\s+e\s+/i," de ")).replace(/Rodoviaria/,"Rodoviária").replace(/\bTatui\b/,"Tatuí")}
+ {const fer=N.match(/feriado\s+(?:de|da|do)\s+([a-z ]{4,25})/i);if(fer)r.feriado=tituloBonito("Feriado de "+fer[1].trim().split(/\s{2,}|\n/)[0])}
+ /* hotel / pousada / resort */
+ const PAL_HOT=/\b(hotel(?:\s+fazenda)?|pousada|resort|hostel|chal[eé]s?|flat|hospedagem\s+(?:no|na|em))\s+([A-ZÀ-Úa-zà-ú0-9'’&][A-ZÀ-Úa-zà-ú0-9'’&\s]{1,45})/gi;
+ const ruimHotel=/^(a|à|ao|com|proximo|próximo|perto|de|da|do|e|em|no|na|incluso|inclusa|incluido|é|fica|localizado|metros|100|200|300)\b/i;
+ for(const x of T.matchAll(PAL_HOT)){
+  let h=x[2].split(/[\n;,.(|•\-–—]/)[0].replace(/\s+(com|a|à|ao|perto|pr[oó]ximo|localizado|fica|em frente|de frente|no centro)\b.*$/i,"").trim();
+  const est=(x[1]+" "+h).match(/(\d)\s*estrelas?/i);if(est)r.estrelas=Number(est[1]);
+  if(/^(hotel\s*)?\d\s*estrelas?\b/i.test(h)||/^\d\s*estrelas?/i.test(h))continue;
+  if(!h||ruimHotel.test(h)||h.length<3)continue;
+  const pre=/hospedagem/i.test(x[1])?"":(/pousada/i.test(x[1])?"Pousada ":/resort/i.test(x[1])?"":/fazenda/i.test(x[1])?"Hotel Fazenda ":"");
+  r.hotel=(pre+tituloBonito(h)).trim();break;
+ }
+ /* valores (sem repetir) */
+ const precos=[],vistos=new Set();
+ let fimAnt=0;for(const x of T.matchAll(/(?:^|[^A-Za-z])R\s?[$S5]\s*([\d.]+,\d{2}|\d{2,5})[ \t]*([^\n]*)/gi)){const iniSeg=Math.max(fimAnt,x.index-40);fimAnt=x.index+x[0].length-x[2].length;
+  const antes=semAcento(T.slice(Math.max(0,x.index-90),x.index)).toLowerCase();
+  let rotulo=x[2].replace(/^[\s→>\-–—=:|_.~»›]+/,"").replace(/[\s|_~]+$/,"").replace(/\s{2,}/g," ").trim();
+  rotulo=rotulo.split(/\s+R\s?[$S5]\s*\d/)[0];if(/^R\s?[$S5]/i.test(rotulo))rotulo="";
+  const valor=numBR(x[1]);if(!valor||valor<20)continue;
+  if(/reserva|sinal|entrada|confirmad|mediante/.test(antes.split("\n").filter(l=>l.trim()).slice(-2).join(" ")+" "+semAcento(rotulo).toLowerCase())){r.reserva=valor;continue}
+  if(vistos.has(valor))continue;vistos.add(valor);
+  const perto=semAcento(T.slice(iniSeg,x.index+x[0].length-x[2].length)).toLowerCase(),px=perto.match(/(\d{1,2})\s*x\b/);
+  if(px&&Number(px[1])>1&&Number(px[1])<=24){const n=Number(px[1]),tot=Math.round(valor*n*100)/100;precos.push({valor:tot,rotulo:`${n}x de ${money(valor)}${rotulo?" • "+rotulo.slice(0,25):""}`,parcelas:n,parcela:valor});continue}
   precos.push({valor,rotulo:rotulo.slice(0,40)});
  }
+ if(!precos.length){for(const x of T.matchAll(/(?:^|[^\d\/.,])(\d{1,3}(?:\.\d{3})*,\d{2})(?![\d\/])/g)){const v=numBR(x[1]);if(v<20||vistos.has(v))continue;vistos.add(v);const perto=semAcento(T.slice(Math.max(0,x.index-35),x.index+x[0].length+4)).toLowerCase(),px=perto.match(/(\d{1,2})\s*x/);if(px&&Number(px[1])>1&&Number(px[1])<=24){const n=Number(px[1]);precos.push({valor:Math.round(v*n*100)/100,rotulo:`${n}x de ${money(v)}`,parcelas:n,parcela:v})}else precos.push({valor:v,rotulo:""})}}
  r.precos=precos;if(precos.length)r.valorTotal=precos[0].valor;
- /* cidade conhecida no texto */
- const NN=N.toLowerCase();
- const cid=(typeof cidades==="function"?cidades():[]).map(c=>({c,b:semAcento(c.split(",")[0]).toLowerCase()})).filter(o=>o.b.length>3&&NN.includes(o.b)).sort((a,b)=>b.b.length-a.b.length)[0];
- if(cid)r.cidade=cid.c;
- /* nome: linha com "+" (título) ou a linha mais "gritada" */
- let ti=linhas.findIndex(l=>/\+/.test(l)&&/[A-Za-zÀ-ú]{3}/.test(l)&&!/R\$/.test(l));
- if(ti>=0){let nome=linhas[ti];if(/\+\s*$/.test(nome)&&linhas[ti+1])nome+=" "+linhas[ti+1];if(/^\s*\+/.test(linhas[ti+1]||""))nome+=" "+linhas[ti+1];r.nome=tituloBonito(nome.replace(/\s*\+\s*/g," + ")).replace(/\bBalneario\b/,"Balneário").replace(/\bCamboriu\b/,"Camboriú")}
- else if(r.cidade)r.nome=r.cidade.split(",")[0];
+ /* cidade/destino conhecido no texto */
+ const NN=N.toLowerCase().replace(/\s+/g," ").replace(/(rodoviaria|terminal|saida|saindo|embarque)\s+(?:de|da|do|e|em)\s+[a-z]+/g,"$1");
+ const DEST=["Campos do Jordão, SP","Holambra, SP","Olímpia, SP","Aparecida, SP","Águas de Lindóia, SP","Serra Negra, SP","Socorro, SP","Brotas, SP","Ubatuba, SP","Caraguatatuba, SP","Ilhabela, SP","São Sebastião, SP","Guarujá, SP","Bertioga, SP","Peruíbe, SP","Itanhaém, SP","Praia Grande, SP","Santos, SP","Embu das Artes, SP","São Roque, SP","Águas de São Pedro, SP","Barra Bonita, SP","Ilha Comprida, SP","Cananéia, SP","Iporanga, SP","Eldorado, SP","Monte Verde, MG","Poços de Caldas, MG","Caxambu, MG","São Lourenço, MG","Ouro Preto, MG","Tiradentes, MG","Capitólio, MG","Paraty, RJ","Angra dos Reis, RJ","Arraial do Cabo, RJ","Búzios, RJ","Cabo Frio, RJ","Petrópolis, RJ","Rio de Janeiro, RJ","Penha, SC","Bombinhas, SC","Itapema, SC","Balneário Camboriú, SC","Blumenau, SC","Pomerode, SC","Florianópolis, SC","Urubici, SC","Gramado, RS","Canela, RS","Bento Gonçalves, RS","Foz do Iguaçu, PR","Curitiba, PR","Morretes, PR","Caldas Novas, GO","Bonito, MS","Porto Seguro, BA","Maragogi, AL","Maceió, AL","Porto de Galinhas, PE","Natal, RN","Fortaleza, CE","Jericoacoara, CE","Beto Carrero, SC","Thermas dos Laranjais, SP","Hopi Hari, SP","Wet'n Wild, SP"];
+ const todos=[...new Set([...(typeof cidades==="function"?cidades():[]),...DEST])];
+ const achadas=todos.map(c=>({c,b:semAcento(c.split(",")[0]).toLowerCase()})).filter(o=>o.b.length>3&&NN.includes(o.b)).sort((a,b)=>NN.indexOf(a.b)-NN.indexOf(b.b));
+ const UFS="AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO";
+ const cuf=T.match(new RegExp("([A-Za-zÀ-ú'’][A-Za-zÀ-ú'’ ]{2,30}?)\\s*[/\\-–]\\s*("+UFS+")\\b"));
+ if(cuf){let c=cuf[1].replace(/^(?:.*\b(?:janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b\s*(?:de\s*)?)/i,"").replace(/^(de|da|do)\s+/i,"").trim();
+  if(c.length>=3){const k=semAcento(c).toLowerCase(),conh=achadas.find(o=>o.b===k);r.cidadeUF=conh?conh.c:tituloBonito(c)+", "+cuf[2].toUpperCase()}}
+ const ehParque=c=>/beto carrero|thermas|hopi hari|wet/i.test(c);
+ const cidReal=achadas.find(o=>!ehParque(o.c));
+ if(!achadas.length||achadas.every(o=>ehParque(o.c))){const APEL={"balneario":"Balneário Camboriú, SC","camboriu":"Balneário Camboriú, SC","floripa":"Florianópolis, SC","foz":"Foz do Iguaçu, PR","campos do jordao":"Campos do Jordão, SP","pocos":"Poços de Caldas, MG","aguas de lindoia":"Águas de Lindóia, SP","caldas":"Caldas Novas, GO"};for(const k in APEL){if(new RegExp("\\b"+k+"\\b").test(NN)){achadas.unshift({c:APEL[k],b:semAcento(APEL[k].split(",")[0]).toLowerCase(),apelido:k});break}}}
+ const cidReal2=achadas.find(o=>!ehParque(o.c));
+ if(r.cidadeUF)r.cidade=r.cidadeUF;
+ else if(cidReal2)r.cidade=cidReal2.c;
+ else if(cidReal)r.cidade=/^Beto Carrero/.test(cidReal.c)?"Penha, SC":cidReal.c;
+ else if(achadas.length)r.cidade={"beto carrero":"Penha, SC","thermas dos laranjais":"Olímpia, SP","hopi hari":"Vinhedo, SP","wet'n wild":"Itupeva, SP"}[achadas[0].b]||"";
+ /* nome da viagem: título do post */
+ const PARE=/inclus|valor|fale|conosco|whats|saida|retorno|reserva|pessoa|quarto|crianca|free|gratis|parcel|pix|cartao|hotel a|metros|proximo|restaurante|shopping|mercado|cafe|diaria|transporte|servico|passaporte|vagas|telefone|contato|informac|novembro|dezembro|janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|^de 20/i;
+ const pontua=(l,i)=>{const ln=semAcento(l).toLowerCase();if(l.length<4||l.length>70||PARE.test(ln)||/r\s?\$|\d{2}\/\d{2}|\(\d{2}\)/i.test(l))return -1;const letras=l.replace(/[^A-Za-zÀ-ú]/g,"");if(letras.length<4)return -1;const up=letras.replace(/[^A-ZÀ-Ú]/g,"").length/letras.length;let p=up*3;if(/\+|&|\be\b/.test(l))p+=1.5;if(achadas.some(o=>ln.includes(o.b)))p+=4;p-=i*0.03;return p};
+ let melhor=-1,mi=-1;linhas.forEach((l,i)=>{const p=pontua(l,i);if(p>melhor){melhor=p;mi=i}});
+ if(mi>=0&&melhor>=2.5){let nome=linhas[mi];
+  for(const d of[1,2]){const prox=linhas[mi+d]||"";if(pontua(prox,mi+d)>=2.5&&(/\+\s*$/.test(nome)||/^\s*\+/.test(prox)||/^(e|de|do|da)\b/i.test(prox)))nome+=" "+prox;else break}
+  r.nome=tituloBonito(nome.replace(/\s*\+\s*/g," + ").replace(/[|_~*]+/g,"")).replace(/^[+\s]+|[+\s]+$/g,"");
+  r.nome=r.nome.normalize("NFC");for(const o of achadas){const nm=o.c.split(",")[0],k=semAcento(r.nome).toLowerCase().indexOf(o.b);if(k>=0)r.nome=r.nome.slice(0,k)+nm+r.nome.slice(k+o.b.length)}
+ }
+ if(r.nome)r.nome=r.nome.replace(/\s*\/\s*[A-Za-z]{2}\s*$/,"").trim();
+ if(r.cidadeUF&&(!r.nome||/novembro|dezembro|janeiro/i.test(semAcento(r.nome))))r.nome=r.cidadeUF.split(",")[0];
+ {const extras=linhas.map(l=>l.match(/^\W{0,3}\+\s*([A-Za-zÀ-ú][A-Za-zÀ-ú' ]{2,30})/)).filter(Boolean).map(m=>tituloBonito(m[1].trim()));
+  const cn=r.cidade?r.cidade.split(",")[0]:"";
+  const nomeN=semAcento(r.nome||"").toLowerCase().replace(/[^a-z ]/g,"").trim();
+  if(cn&&(!r.nome||(nomeN&&semAcento(cn).toLowerCase().startsWith(nomeN.split(" ")[0])&&nomeN.length<semAcento(cn).length)))r.nome=cn;
+  if(cn&&r.nome&&!semAcento(r.nome).toLowerCase().includes(semAcento(cn).toLowerCase())&&(ehParque(r.nome)||extras.some(e=>semAcento(e).toLowerCase()===semAcento(r.nome).toLowerCase())))r.nome=cn+" + "+r.nome;
+  if(r.nome)for(const e of extras){if(!semAcento(r.nome).toLowerCase().includes(semAcento(e).toLowerCase()))r.nome+=" + "+e}}
+ if(!r.nome&&achadas.length)r.nome=achadas.map(o=>o.c.split(",")[0]).filter((v,i,a)=>a.indexOf(v)===i).slice(0,3).join(" + ");
  /* tipo */
  if(/aereo|voo|aeroporto|passagem aerea/i.test(N))r.tipoViagem="aviao";else if(/excursao|servico de bordo|transporte|onibus|rodoviaria/i.test(N))r.tipoViagem="excursao";
  /* observações: inclusos, contato, crianças */
  const obs=[];const iInc=linhasN.findIndex(l=>/^inclus/i.test(l));
- if(iInc>=0){const itens=[];for(let i=iInc+1;i<linhas.length&&itens.length<10;i++){const l=linhas[i];if(/^[.•\-*·]\s*/.test(l))itens.push(l.replace(/^[.•\-*·]\s*/,"").replace(/[;.]$/,""));else if(itens.length)break}if(itens.length)obs.push("✅ Incluso: "+itens.join("; "))}
+ if(iInc>=0){const itens=[];for(let i=iInc+1;i<linhas.length&&itens.length<10;i++){const l=linhas[i];if(/valor por pessoa|^valores/i.test(semAcento(l)))continue;if(/^[.•\-*·:]\s*/.test(l))itens.push(l.replace(/^[.•\-*·:]\s*/,"").split(/\s*R\s?[$S5]\s*\d/)[0].replace(/[;.:\s]+$/,""));else if(itens.length)break}const it2=itens.filter(i=>i&&i.length>2);if(it2.length)obs.push("✅ Incluso: "+it2.join("; "))}
  const crian=T.match(/free[^\n]*crian[^\n]*/i)||T.match(/crian[çc]as?[^\n]*(?:gr[aá]tis|free)[^\n]*/i);if(crian)obs.push("👶 "+crian[0].replace(/\s*[→>-]+\s*/," → ").trim());
+ if(r.feriado)obs.push("🎉 "+r.feriado);
+ if(r.estrelas)obs.push(`🏨 Hotel ${r.estrelas} estrelas`);
+ {const pc=(r.precos||[]).find(p=>p.parcelas);if(pc)obs.push(`💳 Parcelado em ${pc.parcelas}x de ${money(pc.parcela)}`);}
+ if(/a partir de \d+ anos pagam normal/i.test(N))obs.push("👦 A partir de "+N.match(/a partir de (\d+) anos/i)[1]+" anos paga normal");
  if(r.reserva)obs.push("🔖 Reserva confirmada com "+money(r.reserva));
  const tel=T.match(/\(?\d{2}\)?\s*9\s?\d{4}[.\-\s]?\d{4}(?:\s*\/\s*9\s?\d{4}[.\-\s]?\d{4})?/);if(tel)obs.push("📞 Contato: "+tel[0].trim());
  if(/valor por pessoa/i.test(N))obs.push("💬 Valores por pessoa");
@@ -1809,7 +1868,7 @@ function preencherPeloPost(r){
  if(r.tipoViagem)set("fTipoViagem",r.tipoViagem,"tipo");
  set("fCidade",r.cidade,"cidade");set("fHotel",r.hotel,"hotel");
  set("fData",r.data,"data de ida");set("fDataVolta",r.dataVolta,"data de volta");
- set("fHoraSaida",r.horaSaida,"horário de saída");set("fHoraVolta",r.horaVolta,"horário de volta");
+ set("fHoraSaida",r.horaSaida,"horário de saída");set("fLocalSaida",r.localSaida,"local de saída");set("fHoraVolta",r.horaVolta,"horário de volta");
  if(r.valorTotal)set("fTotal",fmtBR(r.valorTotal),"valor");
  if(r.obs){const o=$("fObs");o.value=(o.value?o.value+"\n":"")+r.obs;feitos.push("observações")}
  const box=$("postPrecos");
@@ -1827,7 +1886,7 @@ $("btnLerTexto").onclick=()=>{const t=$("fPostTexto").value.trim();if(!t){$("pos
 /* Leitura da imagem (OCR) — carrega o leitor só quando usar */
 let __tess=null;
 function carregarTesseract(){if(window.Tesseract)return Promise.resolve();if(__tess)return __tess;__tess=new Promise((ok,erro)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";s.onload=ok;s.onerror=()=>{__tess=null;erro()};document.head.appendChild(s)});return __tess}
-function prepararImagem(file){return new Promise((ok,erro)=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const f=Math.min(2,2000/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*f);c.height=Math.round(img.height*f);const g=c.getContext("2d");g.drawImage(img,0,0,c.width,c.height);/* cinza + contraste para letras brancas em fundo colorido */const d=g.getImageData(0,0,c.width,c.height),px=d.data;for(let i=0;i<px.length;i+=4){let y=.299*px[i]+.587*px[i+1]+.114*px[i+2];y=y<110?255-y*.4:y;px[i]=px[i+1]=px[i+2]=y}g.putImageData(d,0,0);ok(c)};img.onerror=erro;img.src=fr.result};fr.onerror=erro;fr.readAsDataURL(file)})}
+function prepararImagem(file){return new Promise((ok,erro)=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const f=Math.min(2,2000/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*f);c.height=Math.round(img.height*f);const g=c.getContext("2d");g.drawImage(img,0,0,c.width,c.height);/* cinza + contraste para letras brancas em fundo colorido */const d=g.getImageData(0,0,c.width,c.height),px=d.data;for(let i=0;i<px.length;i+=4){let y=.299*px[i]+.587*px[i+1]+.114*px[i+2];y=y<128?Math.max(0,y-25):Math.min(255,y+25);px[i]=px[i+1]=px[i+2]=y}g.putImageData(d,0,0);ok(c)};img.onerror=erro;img.src=fr.result};fr.onerror=erro;fr.readAsDataURL(file)})}
 $("fPostImg").addEventListener("change",async e=>{
  const f=e.target.files[0];if(!f)return;const st=$("postStatus");
  st.textContent="📷 Preparando a leitura do post… (a 1ª vez demora um pouco)";
@@ -1835,9 +1894,14 @@ $("fPostImg").addEventListener("change",async e=>{
  try{
   const [orig,trat]=await Promise.all([new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.readAsDataURL(f)}),prepararImagem(f)]);
   const log=m=>{if(m.status==="recognizing text")st.textContent=`🔎 Lendo o post… ${Math.round((m.progress||0)*100)}%`;else if(/load/i.test(m.status||""))st.textContent="📥 Baixando o leitor de português…"};
-  const a=await Tesseract.recognize(orig,"por",{logger:log});
-  const b=await Tesseract.recognize(trat,"por",{logger:log});
-  const texto=a.data.text+"\n"+b.data.text;
+  const w=await Tesseract.createWorker("por",1,{logger:log});
+  const a=await w.recognize(orig);
+  /* "texto espalhado": acha letras soltas em posts cheios de foto e enfeite */
+  await w.setParameters({tessedit_pageseg_mode:"11"});
+  const b=await w.recognize(orig);
+  const c=await w.recognize(trat);
+  await w.terminate();
+  const texto=a.data.text+"\n"+b.data.text+"\n"+c.data.text;
   $("fPostTexto").value=a.data.text.trim();
   preencherPeloPost(lerPost(texto));
   $("btnColarPost").style.display="block";
