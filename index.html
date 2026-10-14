@@ -443,6 +443,10 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .resBar span{font-size:13px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .resBar button{flex:none;border:0;background:#fff;color:var(--accent);font-weight:900;border-radius:9px;padding:7px 11px;font-size:13px}
 #passeiosChips button.ativoPasseio{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* v3.7: lista de cidades salvas (roleta do celular) */
+.trocaWrap{position:relative;display:inline-block;max-width:62%}
+.trocaWrap .trocaCidade{max-width:100%}
+.trocaWrap select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer;padding:0;border:0}
 </style>
 
 </head>
@@ -492,7 +496,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
   <div class="ratingRow" id="ratingRow" style="display:none"><label>⭐ Avaliação</label><select id="filtroRating"><option value="0">Qualquer avaliação</option><option value="3">⭐ 3,0+</option><option value="3.5">⭐ 3,5+</option><option value="4">⭐ 4,0+</option><option value="4.5">⭐ 4,5+</option></select></div>
   <div class="field"><label>Cidade</label><div class="searchLine"><input id="cidadeBusca" list="listaCidades" placeholder="Digite a cidade (ex.: Peruíbe, SP)" autocomplete="off"><button type="button" class="btn secondary searchSmall" id="limparCidadeBusca" title="Apagar cidade" aria-label="Apagar cidade">✕</button></div><datalist id="listaCidades"></datalist></div>
   <div class="passeiosBox">
-    <div class="passeiosHead"><span>🎡 Passeios na cidade</span><button type="button" class="trocaCidade" id="trocarCidadePasseio" title="Trocar a cidade"><small id="passeioCidade"></small> ✏️</button></div>
+    <div class="passeiosHead"><span>🎡 Passeios na cidade</span><span class="trocaWrap"><button type="button" class="trocaCidade" id="trocarCidadePasseio" title="Trocar a cidade" tabindex="-1"><small id="passeioCidade"></small> ▾</button><select id="selCidadePasseio" aria-label="Escolher cidade dos passeios"></select></span></div>
     <div class="hotelChips" id="passeiosChips"></div>
     <div class="festasBox" id="festasBox"></div>
   </div>
@@ -800,7 +804,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="3.6";
+const APP_VERSAO="3.7";
 const APP_DATA_VERSAO="06/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2113,6 +2117,40 @@ $("trocarCidadePasseio").onclick=()=>{
  else if(!nova.trim())fecharResultados();
 };
 $("limparCidadeBusca").onclick=()=>{$("cidadeBusca").value="";renderPasseios();$("cidadeBusca").focus()};
+renderPasseios();
+</script>
+<script>
+/* ===== v3.7: cidades salvas em ordem alfabética, escolhidas pela roleta ▾ ===== */
+const CID_SALVAS_KEY="controle_viagens_cidades_salvas";
+if(typeof BK_CHAVES!=="undefined"&&!BK_CHAVES.includes(CID_SALVAS_KEY))BK_CHAVES.push(CID_SALVAS_KEY);
+function cidadesSalvas(){try{return JSON.parse(localStorage.getItem(CID_SALVAS_KEY)||"[]")}catch(e){return[]}}
+function salvarCidade(c){c=String(c||"").trim().replace(/\s+/g," ");if(c.length<3)return;const l=cidadesSalvas();if(!l.some(x=>semAcento(x).toLowerCase()===semAcento(c).toLowerCase())){l.push(c);try{localStorage.setItem(CID_SALVAS_KEY,JSON.stringify(l))}catch(e){}}}
+function listaCidadesPasseio(){
+ const todas=[...cidadesSalvas(),...(viagens||[]).map(t=>t.cidade).filter(Boolean)];
+ const vistos=new Set(),out=[];for(const c of todas){const k=semAcento(c).toLowerCase().trim();if(k&&!vistos.has(k)){vistos.add(k);out.push(c.trim())}}
+ return out.sort((a,b)=>a.localeCompare(b,"pt-BR",{sensitivity:"base"}));
+}
+function montarSeletorCidade(){
+ const sel=$("selCidadePasseio");if(!sel)return;
+ const atual=cidadePasseio(),lista=listaCidadesPasseio();
+ sel.innerHTML=`<option value="" disabled>Escolha a cidade</option>`+lista.map(c=>{const ehViagem=(viagens||[]).some(t=>t.cidade&&semAcento(t.cidade).toLowerCase().trim()===semAcento(c).toLowerCase());return `<option value="${esc(c)}"${semAcento(c).toLowerCase()===semAcento(atual).toLowerCase()?" selected":""}>${ehViagem?"🧳":"📍"} ${esc(c)}</option>`}).join("")+`<option value="__nova">➕ Outra cidade…</option>`+(cidadesSalvas().length?`<option value="__apagar">🗑️ Apagar cidade salva…</option>`:"");
+ if(!lista.some(c=>semAcento(c).toLowerCase()===semAcento(atual).toLowerCase()))sel.value="";
+}
+function usarCidadePasseio(c){
+ $("cidadeBusca").value=c;if(typeof aplicarCidadeResolvida==="function")aplicarCidadeResolvida("cidadeBusca");
+ salvarCidade($("cidadeBusca").value);renderPasseios();
+ if(passeioAtivo){$("busca").value=passeioAtivo;pesquisar()}
+}
+$("selCidadePasseio").addEventListener("change",e=>{
+ const v=e.target.value;
+ if(v==="__nova"){const nova=(prompt("Qual cidade você quer adicionar?\nEx.: Olímpia, SP")||"").trim();if(nova)usarCidadePasseio(nova);else montarSeletorCidade();return}
+ if(v==="__apagar"){const l=cidadesSalvas().sort((a,b)=>a.localeCompare(b,"pt-BR"));const qual=(prompt("Digite o nome da cidade que quer apagar da lista:\n\n"+l.map(c=>"• "+c).join("\n"))||"").trim();if(qual){const k=semAcento(qual).toLowerCase();const n=l.filter(c=>!semAcento(c).toLowerCase().startsWith(k));if(n.length===l.length)alert("Não achei essa cidade na lista.");else{try{localStorage.setItem(CID_SALVAS_KEY,JSON.stringify(n))}catch(e){}}}montarSeletorCidade();return}
+ if(v)usarCidadePasseio(v);
+});
+/* cidade digitada no campo Cidade também vai para a lista */
+$("cidadeBusca").addEventListener("change",()=>{salvarCidade($("cidadeBusca").value);montarSeletorCidade()});
+const __renderPasseios37=renderPasseios;
+renderPasseios=function(...a){const r=__renderPasseios37.apply(this,a);montarSeletorCidade();return r};
 renderPasseios();
 </script>
 </body>
