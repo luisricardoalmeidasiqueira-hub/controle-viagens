@@ -447,6 +447,9 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .trocaWrap{position:relative;display:inline-block;max-width:62%}
 .trocaWrap .trocaCidade{max-width:100%}
 .trocaWrap select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer;padding:0;border:0}
+/* v3.9: escolher cidade salva no cardápio */
+.selCidWrap{position:relative;display:inline-block;flex:none}
+.selCidWrap select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;padding:0;border:0;cursor:pointer}
 </style>
 
 </head>
@@ -512,7 +515,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
   <div id="comidaConteudo" style="display:none;margin-top:10px">
     <div class="grid">
       <div class="field"><label>Restaurante (opcional)</label><input id="cRest" placeholder="Ex.: Restaurante do Zé"></div>
-      <div class="field"><label>Cidade</label><div class="searchLine"><input id="cCidade" list="listaCidades" placeholder="Ex.: Peruíbe, SP"><label class="btn searchSmall" title="Câmera" aria-label="Tirar foto do cardápio" style="cursor:pointer">📷<input type="file" id="cFoto" accept="image/*" capture="environment" hidden></label></div></div>
+      <div class="field"><label>Cidade</label><div class="searchLine"><input id="cCidade" list="listaCidades" placeholder="Ex.: Peruíbe, SP" autocomplete="off"><span class="selCidWrap"><button type="button" class="btn secondary searchSmall" tabindex="-1" aria-hidden="true">▾</button><select id="cSelCidade" aria-label="Escolher cidade salva"></select></span><label class="btn searchSmall" title="Câmera" aria-label="Tirar foto do cardápio" style="cursor:pointer">📷<input type="file" id="cFoto" accept="image/*" capture="environment" hidden></label></div></div>
     </div>
     <div id="cTipicos"></div>
         <div id="cStatus" class="notice"></div>
@@ -804,7 +807,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="3.8";
+const APP_VERSAO="3.9";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1666,6 +1669,7 @@ if(!BK_CHAVES.includes(PASSEIOS_KEY))BK_CHAVES.push(PASSEIOS_KEY);
 function passeiosExtra(){return lerJSON(PASSEIOS_KEY,[])}
 function cidadePasseio(){
  const digitada=$("cidadeBusca").value.trim();if(digitada)return digitada;
+ try{if(localStorage.getItem("controle_viagens_sem_cidade_padrao")==="1")return ""}catch(e){}
  const hoje=localDate(),prox=[...viagens].filter(t=>t.cidade&&(t.dataVolta||t.data)>=hoje).sort((a,b)=>a.data.localeCompare(b.data))[0];
  return prox?.cidade||"";
 }
@@ -2017,7 +2021,7 @@ const PRATOS_TIPICOS={"balneario camboriu":"Frutos do mar, sequência de camarã
 let cardapio=[],cardSel=new Set();
 function cidadeComida(){const t=[...(viagens||[])].filter(x=>x.data>=localDate()).sort((a,b)=>a.data.localeCompare(b.data))[0];return t?.cidade||""}
 function mostrarTipicos(){const c=semAcento(($("cCidade").value||"").split(",")[0]).toLowerCase().trim();const k=Object.keys(PRATOS_TIPICOS).find(x=>c&&(c===x||c.includes(x)||x.includes(c)&&c.length>3));$("cTipicos").innerHTML=k?`<div class="tipicos">🍲 <b>O que comer em ${esc(($("cCidade").value||"").split(",")[0])}:</b> ${PRATOS_TIPICOS[k]}</div>`:""}
-$("btnComida").onclick=()=>{const c=$("comidaConteudo"),abrir=c.style.display==="none";c.style.display=abrir?"block":"none";$("setaComida").textContent=abrir?"︿":"︾";if(abrir&&!$("cCidade").value){$("cCidade").value=cidadeComida()}mostrarTipicos()};
+$("btnComida").onclick=()=>{const c=$("comidaConteudo"),abrir=c.style.display==="none";c.style.display=abrir?"block":"none";$("setaComida").textContent=abrir?"︿":"︾";if(abrir&&typeof montarSelCidadeComida==="function")montarSelCidadeComida();mostrarTipicos()};
 $("cCidade").addEventListener("input",mostrarTipicos);$("cCidade").addEventListener("change",mostrarTipicos);
 document.addEventListener("click",e=>{
  const b=e.target.closest("[data-rec-comida]");if(!b)return;
@@ -2173,6 +2177,26 @@ $("selCidadePasseio").addEventListener("change",e=>{
 $("cidadeBusca").addEventListener("change",()=>{salvarCidade($("cidadeBusca").value);montarSeletorCidade()});
 const __renderPasseios37=renderPasseios;
 renderPasseios=function(...a){const r=__renderPasseios37.apply(this,a);montarSeletorCidade();return r};
+renderPasseios();
+</script>
+<script>
+/* ===== v3.9: cidade não volta sozinha depois de apagada + roleta de cidades no cardápio ===== */
+function semCidadePadrao(on){try{localStorage.setItem("controle_viagens_sem_cidade_padrao",on?"1":"0")}catch(e){}}
+$("limparCidadeBusca").addEventListener("click",()=>{semCidadePadrao(true);renderPasseios()});
+$("cidadeBusca").addEventListener("input",()=>{if(!$("cidadeBusca").value.trim()){semCidadePadrao(true);renderPasseios()}});
+function montarSelCidadeComida(){
+ const sel=$("cSelCidade");if(!sel)return;
+ const lista=typeof listaCidadesPasseio==="function"?listaCidadesPasseio():[];
+ sel.innerHTML=`<option value="" selected disabled>Escolha a cidade</option>`+lista.map(c=>`<option value="${esc(c)}">📍 ${esc(c)}</option>`).join("")+`<option value="__limpar">✕ Deixar em branco</option>`;
+}
+$("cSelCidade").addEventListener("change",e=>{
+ const v=e.target.value;$("cCidade").value=v==="__limpar"?"":v;
+ if(v!=="__limpar"&&typeof salvarCidade==="function")salvarCidade(v);
+ mostrarTipicos();montarSelCidadeComida();
+});
+$("cCidade").addEventListener("change",()=>{const v=$("cCidade").value.trim();if(v&&typeof salvarCidade==="function")salvarCidade(v);montarSelCidadeComida()});
+$("cSelCidade").addEventListener("focus",montarSelCidadeComida);
+montarSelCidadeComida();
 renderPasseios();
 </script>
 </body>
