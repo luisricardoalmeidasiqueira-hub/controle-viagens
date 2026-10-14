@@ -478,8 +478,9 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 <section class="card ideasCard" id="secIdeias">
   <div class="ideasHead"><h2>💡 Ideias de viagem</h2><span class="ideasCount" id="ideiasQtd">0</span></div>
   <div class="field"><label>Destino ou local indicado</label>
-    <div class="searchLine"><input id="ideiaDestino" placeholder="Ex.: Gramado, RS" autocomplete="off"><button class="btn searchSmall" id="ideiaBuscar" type="button" title="Buscar destino" aria-label="Buscar destino">🔍</button></div>
+    <div class="searchLine"><input id="ideiaDestino" placeholder="Ex.: Gramado, RS" autocomplete="off"><label class="btn searchSmall" id="ideiaFotoBtn" title="Câmera" aria-label="Tirar foto da indicação" style="cursor:pointer">📷<input type="file" id="ideiaFoto" accept="image/*" capture="environment" hidden></label><button class="btn searchSmall" id="ideiaBuscar" type="button" title="Buscar destino" aria-label="Buscar destino">🔍</button></div>
     <div id="ideiaSugestoes" class="ideaSuggest"></div>
+    <div id="ideiaStatus" class="notice" style="display:none"></div>
   </div>
   <div class="field"><label>Observação (opcional)</label>
     <div class="searchLine"><input id="ideiaObs" placeholder="Quem indicou, o que fazer lá…"><button class="btn ideaSaveBtn" id="ideiaSalvar" type="button" title="Salvar ideia" aria-label="Salvar ideia">Salvar</button></div>
@@ -511,11 +512,10 @@ input,textarea,select{font-size:14px;padding:9px 10px}
   <div id="comidaConteudo" style="display:none;margin-top:10px">
     <div class="grid">
       <div class="field"><label>Restaurante (opcional)</label><input id="cRest" placeholder="Ex.: Restaurante do Zé"></div>
-      <div class="field"><label>Cidade</label><input id="cCidade" list="listaCidades" placeholder="Ex.: Peruíbe, SP"></div>
+      <div class="field"><label>Cidade</label><div class="searchLine"><input id="cCidade" list="listaCidades" placeholder="Ex.: Peruíbe, SP"><label class="btn searchSmall" title="Câmera" aria-label="Tirar foto do cardápio" style="cursor:pointer">📷<input type="file" id="cFoto" accept="image/*" capture="environment" hidden></label></div></div>
     </div>
     <div id="cTipicos"></div>
-    <label class="btn full postFotoBtn">📷 Ler cardápio com a câmera<input type="file" id="cFoto" accept="image/*" hidden></label>
-    <div id="cStatus" class="notice"></div>
+        <div id="cStatus" class="notice"></div>
     <div id="cItens"></div>
     <div id="cConta" style="display:none"></div>
     <div class="sectionMini"><label>🌐 O que pedir aqui? (recomendações da internet)</label>
@@ -525,7 +525,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
         <button class="recommendBtn" type="button" data-rec-comida="trip">🦉 TripAdvisor</button>
         <button class="recommendBtn" type="button" data-rec-comida="ifood">🛵 Cardápio no iFood</button>
       </div>
-      <div class="notice">Abre a pesquisa já com o restaurante e a cidade. Cardápio com QR Code: aponte a câmera do celular para o código.</div>
+      <div class="notice">Abre a pesquisa já com o restaurante e a cidade.</div>
     </div>
   </div>
 </section>
@@ -804,15 +804,15 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="3.7";
-const APP_DATA_VERSAO="06/10/2026";
+const APP_VERSAO="3.8";
+const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
 const CIDADES=["Tatuí, SP","São Paulo, SP","Aparecida, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
 let viagens=[],lugares=[],editId=null,placeTemp=null,editLugarId=null;
 let parcelasForm=[],abaAberta=-1,parcelasAtivas=false;
 const IDEIAS_KEY="controle_viagens_ideias";
-let ideias=[],ideiaSel=null,ideiaEmEdicao=null,sugestoesIdeia=[];
+let ideiaFotoDados={};let ideias=[],ideiaSel=null,ideiaEmEdicao=null,sugestoesIdeia=[];
 
 const $=id=>document.getElementById(id);
 /* Dinheiro no formato brasileiro: 1.234,56 */
@@ -1050,6 +1050,7 @@ function abrirIdeiaComoViagem(id){
  ideiaEmEdicao=id;
  $("modalTitulo").textContent="Nova viagem (a partir da ideia)";
  $("fNome").value=i.destino;$("fCidade").value=i.cidade||i.destino;$("fObs").value=i.obs||"";
+ if(i.hotel)$("fHotel").value=i.hotel;if(i.data)$("fData").value=i.data;if(i.dataVolta)$("fDataVolta").value=i.dataVolta;if(i.valorTotal){$("fTotal").value=fmtBR(i.valorTotal);$("fTotal").dispatchEvent(new Event("input",{bubbles:true}))}
 }
 $("ideiaBuscar").onclick=buscarDestinoIdeia;
 $("ideiaDestino").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();buscarDestinoIdeia()}});
@@ -1062,7 +1063,7 @@ $("ideiaSugestoes").addEventListener("click",e=>{
 $("ideiaSalvar").onclick=()=>{
  const destino=$("ideiaDestino").value.trim();
  if(!destino){$("ideiaDestino").focus();$("ideiaSugestoes").innerHTML=`<div class="empty">Digite um destino para salvar.</div>`;return}
- ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate()});
+ ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:ideiaFotoDados.valorTotal||""});ideiaFotoDados={};$("ideiaStatus").style.display="none";
  saveIdeias();$("ideiaDestino").value="";$("ideiaObs").value="";$("ideiaSugestoes").innerHTML="";ideiaSel=null;renderIdeias();
 };
 $("listaIdeias").addEventListener("click",e=>{
@@ -1958,6 +1959,27 @@ $("fPostImg").addEventListener("change",async e=>{
   preencherPeloPost(lerPost(texto));
   $("btnColarPost").style.display="block";
  }catch(err){st.innerHTML="Não consegui ler essa imagem. Tente outra foto mais nítida, bem de frente e sem reflexo."}
+ e.target.value="";
+});
+
+/* ===== v3.8: câmera nas ideias de viagem ===== */
+$("ideiaFoto").addEventListener("change",async e=>{
+ const f=e.target.files[0];if(!f)return;const st=$("ideiaStatus");st.style.display="block";
+ st.textContent="📷 Preparando a leitura… (a 1ª vez demora um pouco)";
+ try{await carregarTesseract()}catch(err){st.textContent="Não consegui carregar o leitor de imagem. Ele precisa de internet.";e.target.value="";return}
+ try{
+  const [orig,trat]=await Promise.all([new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.readAsDataURL(f)}),prepararImagem(f)]);
+  const w=await Tesseract.createWorker("por",1,{logger:m=>{if(m.status==="recognizing text")st.textContent=`🔎 Lendo… ${Math.round((m.progress||0)*100)}%`}});
+  const a=await w.recognize(orig);await w.setParameters({tessedit_pageseg_mode:"11"});const b=await w.recognize(orig);const c=await w.recognize(trat);await w.terminate();
+  const r=lerPost(a.data.text+"\n"+b.data.text+"\n"+c.data.text);
+  const destino=r.nome||r.cidade||"";
+  if(!destino){st.textContent="Não consegui achar o destino. Tente chegar mais perto, com boa luz e sem reflexo.";e.target.value="";return}
+  ideiaSel=null;ideiaFotoDados={cidade:r.cidade||"",data:r.data||"",dataVolta:r.dataVolta||"",hotel:r.hotel||"",valorTotal:r.valorTotal||""};
+  $("ideiaDestino").value=destino;
+  const linhas=[];if(r.cidade&&r.cidade!==destino)linhas.push("📍 "+r.cidade);if(r.data)linhas.push("📅 "+dateBR(r.data)+(r.dataVolta?" a "+dateBR(r.dataVolta):""));if(r.hotel)linhas.push("🏨 "+r.hotel);if(r.valorTotal)linhas.push("💰 "+money(r.valorTotal));if(r.obs)linhas.push(r.obs.replace(/\n+/g," • "));
+  $("ideiaObs").value=linhas.join(" • ");
+  st.textContent="✅ Li a indicação. Confira e toque em Salvar.";
+ }catch(err){st.textContent="Não consegui ler essa foto. Tente de novo com mais luz e bem de frente."}
  e.target.value="";
 });
 
