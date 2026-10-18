@@ -594,6 +594,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
   <button data-menu="secResumo">📊 Resumo <span>›</span></button>
   <button id="menuTransporte">🚕 Transporte <span>›</span></button>
   <button id="menuRecomendacoes">📎 Recomendações da internet <span>›</span></button><button id="menuFonte">🌐 Fonte de avaliações <span>›</span></button>
+  <button id="menuIA">🤖 Leitura de fotos com IA <span id="iaDot" style="color:#d1d5db">●</span></button>
   <button data-menu="secAjuda">🚨 Ajuda rápida <span>›</span></button>
   <button id="menuCompartilhar" style="display:none">📤 Compartilhar este app <span>›</span></button>
   <div class="menuDivider"></div>
@@ -804,7 +805,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="4.0";
+const APP_VERSAO="4.1";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2180,6 +2181,96 @@ $("cidadeBusca").addEventListener("change",()=>{salvarCidade($("cidadeBusca").va
 const __renderPasseios37=renderPasseios;
 renderPasseios=function(...a){const r=__renderPasseios37.apply(this,a);montarSeletorCidade();return r};
 renderPasseios();
+</script>
+
+<script>
+/* ===== v4.1: 🤖 Leitura das fotos com IA (Google Gemini) — mesma IA do Controle de Leituras.
+   A chave fica SÓ neste celular (não vai no arquivo nem no backup). Se a IA falhar ou estiver desligada, usa o leitor antigo (Tesseract). ===== */
+(function(){
+const IAKEY="controle_viagens_ia";let iaChave="",iaModelo="",iaErro="";
+try{iaChave=localStorage.getItem(IAKEY)||"";iaModelo=localStorage.getItem(IAKEY+"_m")||""}catch(e){}
+const IA_MODELOS=["gemini-flash-latest","gemini-2.5-flash","gemini-2.0-flash","gemini-flash-lite-latest","gemini-2.5-flash-lite"];
+const iaSalvar=()=>{try{iaChave?localStorage.setItem(IAKEY,iaChave):localStorage.removeItem(IAKEY);iaModelo?localStorage.setItem(IAKEY+"_m",iaModelo):localStorage.removeItem(IAKEY+"_m")}catch(e){}};
+const fotoB64=file=>new Promise((ok,er)=>{const im=new Image();im.onload=()=>{const M=1600,k=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(im.src);ok(c.toDataURL("image/jpeg",.85).split(",")[1])};im.onerror=er;im.src=URL.createObjectURL(file)});
+const motivo=(st,t)=>st>=500?"o Google está sobrecarregado agora (tente de novo daqui a pouco)":st===429?"o limite grátis da chave acabou por agora (tente mais tarde)":(st===400||st===401||st===403)&&/key|chave|API_KEY|permission|PERMISSION/i.test(t)?"a chave não foi aceita pelo Google":"erro "+st;
+async function chamar(parts){
+ const ms=iaModelo?[iaModelo,...IA_MODELOS.filter(m=>m!==iaModelo)]:IA_MODELOS;let ult="nenhum modelo respondeu",ocup=null;
+ for(let volta=0;volta<2;volta++){if(volta){if(!ocup)break;await new Promise(ok=>setTimeout(ok,2500))}
+  for(const m of ms){
+   const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":iaChave},body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:0,responseMimeType:"application/json"}})});
+   if(r.status===404){ult="modelo "+m+" não existe";continue}
+   if(r.status===429||r.status>=500){ocup=motivo(r.status,await r.text());continue}
+   if(!r.ok){const t=await r.text();throw new Error(motivo(r.status,t))}
+   const j=await r.json(),t=((((j.candidates||[])[0]||{}).content||{}).parts||[]).map(x=>x.text||"").join("");
+   if(iaModelo!==m){iaModelo=m;iaSalvar()}
+   return JSON.parse(t.replace(/^\s*```(?:json)?/,"").replace(/```\s*$/,""));
+  }}
+ throw new Error(ocup||ult);
+}
+async function ler(file,instr){const b64=await fotoB64(file);const j=await chamar([{text:instr},{inline_data:{mime_type:"image/jpeg",data:b64}}]);iaErro="";desenhar();return j}
+function desenhar(){const d=document.getElementById("iaDot");if(d)d.style.color=iaChave?(iaErro?"#ef4444":"#22c55e"):"#d1d5db"}
+async function testar(){try{await chamar([{text:'Responda só JSON: {"ok":true}'}]);iaErro="";desenhar();alert("🟢 Chave funcionando!\n\nAgora as fotos do post, das ideias de viagem e do cardápio são lidas com IA.\nSem internet ou se a IA falhar, o app usa o leitor antigo.\n\nModelo: "+iaModelo)}catch(err){iaErro=String(err.message||err);desenhar();alert("🔴 Não deu certo: "+iaErro+"."+(/sobrecarregado|limite/.test(iaErro)?"":"\n\nConfira se a chave está certa (é a do Google AI Studio)."))}}
+function abrir(){
+ const v=prompt("🤖 Leitura das fotos com IA (Google Gemini)\n\nCole aqui a sua chave do Google AI Studio.\nEla fica guardada SÓ neste celular (não vai no arquivo nem no backup).\n\nDeixe em branco e toque OK para desligar."+(iaErro?"\n\n🔴 Último problema: "+iaErro:""),iaChave);
+ if(v===null)return;iaChave=v.trim().replace(/\s+/g,"");iaErro="";if(!iaChave)iaModelo="";iaSalvar();desenhar();
+ if(iaChave)testar();else alert("⚪ Leitura com IA desligada. As fotos voltam a usar só o leitor antigo.");
+}
+const mi=document.getElementById("menuIA");if(mi)mi.addEventListener("click",()=>{const mp=document.getElementById("menuPanel");if(mp)mp.style.display="none";abrir()});
+desenhar();
+
+const IA_POST='Esta é uma foto/print de um post de divulgação de viagem, excursão, pacote ou hotel (em português do Brasil). Extraia os dados e responda SÓ JSON neste formato (use "" quando não achar; NÃO invente nada): {"nome":"nome do passeio/pacote/parque, curto","tipoViagem":"viagem|excursao|carro|moto|aviao|onibus|outro","cidade":"Cidade, UF (ex.: Gramado, RS)","hotel":"nome do hotel/pousada","data":"AAAA-MM-DD (ida)","dataVolta":"AAAA-MM-DD","horaSaida":"HH:MM","localSaida":"local de saída/embarque","horaVolta":"HH:MM","precos":[{"valor":1234.50,"rotulo":"texto curto, ex.: por pessoa, apto duplo, 10x de 123,45 (neste caso valor = total)"}],"obs":"outras informações úteis (o que inclui, documentos, observações), curto"}. Datas sem ano: use o próximo ano em que a data ainda não passou (hoje é '+new Date().toISOString().slice(0,10)+'). Para excursão de ônibus use "excursao".';
+const IA_CARDAPIO='Esta é uma foto de um cardápio de restaurante (português do Brasil). Leia TODOS os pratos/bebidas que têm preço visível. Responda SÓ JSON: {"itens":[{"nome":"nome do prato","valor":45.9}]}. valor é número em reais (use ponto decimal). Se um prato tem vários tamanhos, crie um item por tamanho, ex.: "Frango à parmegiana (individual)". Se não achar nenhum, {"itens":[]}.';
+
+const TIPOS=["viagem","excursao","carro","moto","aviao","onibus","outro"];
+const num=x=>{if(typeof x==="number")return x;const n=parseFloat(String(x||"").replace(/[^\d,.-]/g,"").replace(/\.(?=\d{3}\b)/g,"").replace(",","."));return isNaN(n)?0:n};
+const dataOk=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||"")?x:"";
+const horaOk=x=>/^\d{1,2}:\d{2}$/.test(x||"")?x.padStart(5,"0"):"";
+
+function falhou(err,st){iaErro=String(err&&err.message||err);desenhar();if(st)st.textContent="🤖 A IA não conseguiu agora ("+iaErro+"). Usando o leitor antigo…"}
+
+async function lerPostIA(file){
+ const st=document.getElementById("postStatus");st.textContent="🤖 A IA está lendo o post…";
+ const j=await ler(file,IA_POST);
+ const precos=(Array.isArray(j.precos)?j.precos:[]).map(p=>({valor:num(p.valor),rotulo:String(p.rotulo||"").slice(0,40)})).filter(p=>p.valor>0);
+ const r={nome:j.nome||"",tipoViagem:TIPOS.includes(j.tipoViagem)?j.tipoViagem:"",cidade:j.cidade||"",hotel:j.hotel||"",data:dataOk(j.data),dataVolta:dataOk(j.dataVolta),horaSaida:horaOk(j.horaSaida),localSaida:j.localSaida||"",horaVolta:horaOk(j.horaVolta),precos,valorTotal:precos.length?precos[0].valor:0,obs:j.obs||""};
+ preencherPeloPost(r);document.getElementById("btnColarPost").style.display="none";
+}
+async function lerIdeiaIA(file){
+ const st=document.getElementById("ideiaStatus");st.style.display="block";st.textContent="🤖 A IA está lendo a foto…";
+ const j=await ler(file,IA_POST);
+ const precos=(Array.isArray(j.precos)?j.precos:[]).map(p=>num(p.valor)).filter(v=>v>0);
+ const r={nome:j.nome||"",cidade:j.cidade||"",hotel:j.hotel||"",data:dataOk(j.data),dataVolta:dataOk(j.dataVolta),valorTotal:precos[0]||0,obs:j.obs||""};
+ const destino=r.cidade||r.nome||"";
+ if(!destino){st.textContent="A IA não achou o destino nessa foto. Tente chegar mais perto, com boa luz e sem reflexo.";return}
+ ideiaSel=null;ideiaFotoDados={cidade:r.cidade,data:r.data,dataVolta:r.dataVolta,hotel:r.hotel,valorTotal:r.valorTotal||""};
+ document.getElementById("ideiaDestino").value=destino;
+ const linhas=[];if(r.nome&&r.nome!==destino)linhas.push("🏞️ "+r.nome);if(r.data)linhas.push("📅 "+dateBR(r.data)+(r.dataVolta?" a "+dateBR(r.dataVolta):""));if(r.hotel)linhas.push("🏨 "+r.hotel);if(r.valorTotal)linhas.push("💰 "+money(r.valorTotal));if(r.obs)linhas.push(String(r.obs).replace(/\n+/g," • "));
+ document.getElementById("ideiaObs").value=linhas.join(" • ");
+ st.textContent="✅ Li a indicação com IA. Confira e toque em Salvar.";
+}
+async function lerCardapioIA(file){
+ const st=document.getElementById("cStatus");st.textContent="🤖 A IA está lendo o cardápio…";
+ const j=await ler(file,IA_CARDAPIO);
+ const novos=(Array.isArray(j.itens)?j.itens:[]).map(x=>({nome:String(x.nome||"").trim().slice(0,60),valor:num(x.valor)})).filter(x=>x.nome.length>=2&&x.valor>0&&x.valor<=5000);
+ if(!novos.length){st.textContent="A IA não achou pratos com preço nessa foto. Tente chegar mais perto, com boa luz e o cardápio reto.";return}
+ cardapio=cardapio.concat(novos.filter(n=>!cardapio.some(c=>c.nome===n.nome&&c.valor===n.valor)));
+ st.textContent="✅ A IA leu "+novos.length+" "+(novos.length===1?"item":"itens")+" do cardápio. Pode tirar foto das outras páginas que eu junto.";
+ renderCardapio("");
+}
+const MAPA={fPostImg:lerPostIA,cFoto:lerCardapioIA,ideiaFoto:lerIdeiaIA,ideiaGaleria:lerIdeiaIA};
+/* intercepta (fase de captura) ANTES do leitor antigo; se a IA falhar, solta o evento pro leitor antigo */
+document.addEventListener("change",async e=>{
+ const t=e.target;if(!t||!t.id||!MAPA[t.id]||!iaChave||navigator.onLine===false)return;
+ if(t.__iaPula){t.__iaPula=false;return}
+ const f=t.files&&t.files[0];if(!f)return;
+ e.stopImmediatePropagation();
+ try{await MAPA[t.id](f);t.value=""}
+ catch(err){
+  const st=document.getElementById(t.id==="fPostImg"?"postStatus":t.id==="cFoto"?"cStatus":"ideiaStatus");
+  falhou(err,st);t.__iaPula=true;t.dispatchEvent(new Event("change",{bubbles:true}));
+ }
+},true);
+})();
 </script>
 </body>
 
