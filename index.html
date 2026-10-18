@@ -449,6 +449,12 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .trocaWrap select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer;padding:0;border:0}
 </style>
 
+<style>
+/* v4.3: botões da viagem só com ícone + legenda */
+.tripBtns{display:flex!important;flex-wrap:wrap;justify-content:space-between;gap:6px!important}
+.tripBtns .btn.ic{width:44px;height:44px;min-width:0;padding:0!important;font-size:20px!important;line-height:1;display:grid;place-items:center;grid-column:auto!important}
+.tripLegend{margin-top:7px;font-size:11px;line-height:1.5;color:var(--muted,#6b7280);text-align:center}
+</style>
 </head>
 <body>
 
@@ -481,6 +487,12 @@ input,textarea,select{font-size:14px;padding:9px 10px}
     <div class="searchLine"><input id="ideiaDestino" placeholder="Ex.: Gramado, RS" autocomplete="off"><label class="btn searchSmall" id="ideiaGaleriaBtn" title="Foto ou print da galeria" aria-label="Escolher foto ou print da galeria" style="cursor:pointer">🖼️<input type="file" id="ideiaGaleria" accept="image/*" hidden></label><label class="btn searchSmall" id="ideiaFotoBtn" title="Câmera" aria-label="Tirar foto da indicação" style="cursor:pointer">📷<input type="file" id="ideiaFoto" accept="image/*" capture="environment" hidden></label><button class="btn searchSmall" id="ideiaBuscar" type="button" title="Buscar destino" aria-label="Buscar destino">🔍</button></div>
     <div id="ideiaSugestoes" class="ideaSuggest"></div>
     <div id="ideiaStatus" class="notice" style="display:none"></div>
+  </div>
+  <div class="field"><label>Quem organiza (opcional)</label>
+    <input id="ideiaOrg" placeholder="Ex.: JC Excursões, Sony Martins" autocomplete="off">
+  </div>
+  <div class="field"><label>Valor (opcional)</label>
+    <input id="ideiaValor" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off">
   </div>
   <div class="field"><label>Observação (opcional)</label>
     <div class="searchLine"><input id="ideiaObs" placeholder="Quem indicou, o que fazer lá…"><button class="btn ideaSaveBtn" id="ideiaSalvar" type="button" title="Salvar ideia" aria-label="Salvar ideia">Salvar</button></div>
@@ -805,7 +817,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="4.1";
+const APP_VERSAO="4.3";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1023,7 +1035,7 @@ function saveIdeias(){localStorage.setItem(IDEIAS_KEY,JSON.stringify(ideias))}
 function loadIdeias(){try{ideias=JSON.parse(localStorage.getItem(IDEIAS_KEY)||"[]")}catch{ideias=[]}renderIdeias()}
 function renderIdeias(){
  $("ideiasQtd").textContent=ideias.length;
- $("listaIdeias").innerHTML=ideias.length?ideias.map(i=>`<div class="ideaItem"><div class="ideaInfo"><strong>📍 ${esc(i.destino)}</strong>${i.obs?`<small>${esc(i.obs)}</small>`:""}<small>Salva em ${dateBR(i.criado)}</small></div><div class="ideaActions"><button class="nextTripAction" type="button" data-idea-edit="${i.id}" title="Editar: abrir como nova viagem" aria-label="Editar ideia">✏️</button><button class="nextTripAction danger" type="button" data-idea-del="${i.id}" title="Apagar ideia" aria-label="Apagar ideia">🗑️</button></div></div>`).join(""):`<div class="empty">Nenhuma ideia salva. Digite um destino e toque em Salvar.</div>`;
+ $("listaIdeias").innerHTML=ideias.length?ideias.map(i=>`<div class="ideaItem"><div class="ideaInfo"><strong>📍 ${esc(i.destino)}</strong>${i.org?`<small>🚌 Organiza: <b>${esc(i.org)}</b></small>`:""}${i.valorTotal?`<small>💰 ${money(i.valorTotal)}</small>`:""}${i.obs?`<small>${esc(i.obs)}</small>`:""}<small>Salva em ${dateBR(i.criado)}</small></div><div class="ideaActions"><button class="nextTripAction" type="button" data-idea-edit="${i.id}" title="Editar: abrir como nova viagem" aria-label="Editar ideia">✏️</button><button class="nextTripAction danger" type="button" data-idea-del="${i.id}" title="Apagar ideia" aria-label="Apagar ideia">🗑️</button></div></div>`).join(""):`<div class="empty">Nenhuma ideia salva. Digite um destino e toque em Salvar.</div>`;
 }
 function montarSugestaoIdeia(x){
  const a=x.address||{},nome=x.name||String(x.display_name||"").split(",")[0];
@@ -1050,7 +1062,7 @@ function abrirIdeiaComoViagem(id){
  openModal();
  ideiaEmEdicao=id;
  $("modalTitulo").textContent="Nova viagem (a partir da ideia)";
- $("fNome").value=i.destino;$("fCidade").value=i.cidade||i.destino;$("fObs").value=i.obs||"";
+ $("fNome").value=i.destino;$("fCidade").value=i.cidade||i.destino;$("fObs").value=(i.org?"Organiza: "+i.org+(i.obs?"\n":""):"")+(i.obs||"");
  if(i.hotel)$("fHotel").value=i.hotel;if(i.data)$("fData").value=i.data;if(i.dataVolta)$("fDataVolta").value=i.dataVolta;if(i.valorTotal){$("fTotal").value=fmtBR(i.valorTotal);$("fTotal").dispatchEvent(new Event("input",{bubbles:true}))}
 }
 $("ideiaBuscar").onclick=buscarDestinoIdeia;
@@ -1064,8 +1076,8 @@ $("ideiaSugestoes").addEventListener("click",e=>{
 $("ideiaSalvar").onclick=()=>{
  const destino=$("ideiaDestino").value.trim();
  if(!destino){$("ideiaDestino").focus();$("ideiaSugestoes").innerHTML=`<div class="empty">Digite um destino para salvar.</div>`;return}
- ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:ideiaFotoDados.valorTotal||""});ideiaFotoDados={};$("ideiaStatus").style.display="none";
- saveIdeias();$("ideiaDestino").value="";$("ideiaObs").value="";$("ideiaSugestoes").innerHTML="";ideiaSel=null;renderIdeias();
+ ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:($("ideiaValor").value.trim()?numBR($("ideiaValor").value):(ideiaFotoDados.valorTotal||"")),org:$("ideiaOrg").value.trim()});ideiaFotoDados={};$("ideiaStatus").style.display="none";
+ saveIdeias();$("ideiaDestino").value="";$("ideiaObs").value="";$("ideiaOrg").value="";$("ideiaValor").value="";$("ideiaSugestoes").innerHTML="";ideiaSel=null;renderIdeias();
 };
 $("listaIdeias").addEventListener("click",e=>{
  const ed=e.target.closest("[data-idea-edit]"),del=e.target.closest("[data-idea-del]");
@@ -1205,13 +1217,15 @@ function card(t){
    ${festasNaViagem(t).map(f=>`<div class="festaAviso">🎉 No período da viagem costuma ter: <b>${esc(f.nome)}</b>. Confirme as datas.</div>`).join("")}
    ${t.roteiro?`<div class="obs">🗺️ ${esc(t.roteiro)}</div>`:""}${t.obs?`<div class="obs">📝 ${esc(t.obs)}</div>`:""}
    <div class="tripBtns">
-    <button class="btn secondary" type="button" data-action="edit" data-id="${t.id}">✏️ Editar</button>
-    <button class="btn secondary" type="button" data-action="pagamentos" data-id="${t.id}">💳 Pagamentos</button>
-    <button class="btn secondary" type="button" data-action="calendar" data-id="${t.id}">📅 Agenda</button>
-    <button class="btn secondary" type="button" data-action="mapa" data-id="${t.id}">🗺️ Mapa</button>
-    <button class="btn secondary" type="button" data-action="toggle" data-id="${t.id}">${t.status==="paga"?"↩️ Reabrir":"✅ Marcar paga"}</button>
-    <button class="btn tripDel" type="button" data-action="delete" data-id="${t.id}">🗑️ Excluir viagem</button>
+    <button class="btn secondary ic" type="button" data-action="edit" data-id="${t.id}" title="Editar" aria-label="Editar">✏️</button>
+    <button class="btn secondary ic" type="button" data-action="pagamentos" data-id="${t.id}" title="Pagamentos" aria-label="Pagamentos">💳</button>
+    <button class="btn secondary ic" type="button" data-action="calendar" data-id="${t.id}" title="Agenda" aria-label="Agenda">📅</button>
+    <button class="btn secondary ic" type="button" data-action="mapa" data-id="${t.id}" title="Mapa" aria-label="Mapa">🗺️</button>
+    <button class="btn secondary ic" type="button" data-action="share" data-id="${t.id}" title="Compartilhar" aria-label="Compartilhar">📤</button>
+    <button class="btn secondary ic" type="button" data-action="toggle" data-id="${t.id}" title="${t.status==="paga"?"Reabrir":"Marcar paga"}" aria-label="${t.status==="paga"?"Reabrir":"Marcar paga"}">${t.status==="paga"?"↩️":"✅"}</button>
+    <button class="btn tripDel ic" type="button" data-action="delete" data-id="${t.id}" title="Excluir viagem" aria-label="Excluir viagem">🗑️</button>
    </div>
+   <div class="tripLegend">✏️ Editar · 💳 Pagamentos · 📅 Agenda · 🗺️ Mapa · 📤 Compartilhar · ${t.status==="paga"?"↩️ Reabrir":"✅ Marcar paga"} · 🗑️ Excluir</div>
   </div>
  </div>`;
 }
@@ -2218,7 +2232,7 @@ function abrir(){
 const mi=document.getElementById("menuIA");if(mi)mi.addEventListener("click",()=>{const mp=document.getElementById("menuPanel");if(mp)mp.style.display="none";abrir()});
 desenhar();
 
-const IA_POST='Esta é uma foto/print de um post de divulgação de viagem, excursão, pacote ou hotel (em português do Brasil). Extraia os dados e responda SÓ JSON neste formato (use "" quando não achar; NÃO invente nada): {"nome":"nome do passeio/pacote/parque, curto","tipoViagem":"viagem|excursao|carro|moto|aviao|onibus|outro","cidade":"Cidade, UF (ex.: Gramado, RS)","hotel":"nome do hotel/pousada","data":"AAAA-MM-DD (ida)","dataVolta":"AAAA-MM-DD","horaSaida":"HH:MM","localSaida":"local de saída/embarque","horaVolta":"HH:MM","precos":[{"valor":1234.50,"rotulo":"texto curto, ex.: por pessoa, apto duplo, 10x de 123,45 (neste caso valor = total)"}],"obs":"outras informações úteis (o que inclui, documentos, observações), curto"}. Datas sem ano: use o próximo ano em que a data ainda não passou (hoje é '+new Date().toISOString().slice(0,10)+'). Para excursão de ônibus use "excursao".';
+const IA_POST='Esta é uma foto/print de um post de divulgação de viagem, excursão, pacote ou hotel (em português do Brasil). Extraia os dados e responda SÓ JSON neste formato (use "" quando não achar; NÃO invente nada): {"nome":"nome do passeio/pacote/parque, curto","tipoViagem":"viagem|excursao|carro|moto|aviao|onibus|outro","cidade":"Cidade, UF (ex.: Gramado, RS)","hotel":"nome do hotel/pousada","data":"AAAA-MM-DD (ida)","dataVolta":"AAAA-MM-DD","horaSaida":"HH:MM","localSaida":"local de saída/embarque","horaVolta":"HH:MM","precos":[{"valor":1234.50,"rotulo":"texto curto, ex.: por pessoa, apto duplo, 10x de 123,45 (neste caso valor = total)"}],"organizador":"nome de quem organiza/vende o pacote (agência, empresa ou pessoa; vem no topo do post, no @ do Instagram, logo ou assinatura; ex.: JC Excursões, Sony Martins). Escreva legível, sem @, com maiúsculas normais. NÃO use telefone","obs":"outras informações úteis (o que inclui, documentos, observações), curto"}. Datas sem ano: use o próximo ano em que a data ainda não passou (hoje é '+new Date().toISOString().slice(0,10)+'). Para excursão de ônibus use "excursao".';
 const IA_CARDAPIO='Esta é uma foto de um cardápio de restaurante (português do Brasil). Leia TODOS os pratos/bebidas que têm preço visível. Responda SÓ JSON: {"itens":[{"nome":"nome do prato","valor":45.9}]}. valor é número em reais (use ponto decimal). Se um prato tem vários tamanhos, crie um item por tamanho, ex.: "Frango à parmegiana (individual)". Se não achar nenhum, {"itens":[]}.';
 
 const TIPOS=["viagem","excursao","carro","moto","aviao","onibus","outro"];
@@ -2232,21 +2246,24 @@ async function lerPostIA(file){
  const st=document.getElementById("postStatus");st.textContent="🤖 A IA está lendo o post…";
  const j=await ler(file,IA_POST);
  const precos=(Array.isArray(j.precos)?j.precos:[]).map(p=>({valor:num(p.valor),rotulo:String(p.rotulo||"").slice(0,40)})).filter(p=>p.valor>0);
- const r={nome:j.nome||"",tipoViagem:TIPOS.includes(j.tipoViagem)?j.tipoViagem:"",cidade:j.cidade||"",hotel:j.hotel||"",data:dataOk(j.data),dataVolta:dataOk(j.dataVolta),horaSaida:horaOk(j.horaSaida),localSaida:j.localSaida||"",horaVolta:horaOk(j.horaVolta),precos,valorTotal:precos.length?precos[0].valor:0,obs:j.obs||""};
+ const r={nome:j.nome||"",tipoViagem:TIPOS.includes(j.tipoViagem)?j.tipoViagem:"",cidade:j.cidade||"",hotel:j.hotel||"",data:dataOk(j.data),dataVolta:dataOk(j.dataVolta),horaSaida:horaOk(j.horaSaida),localSaida:j.localSaida||"",horaVolta:horaOk(j.horaVolta),precos,valorTotal:precos.length?precos[0].valor:0,obs:((j.organizador?"Organiza: "+j.organizador+(j.obs?"\n":""):"")+(j.obs||""))};
  preencherPeloPost(r);document.getElementById("btnColarPost").style.display="none";
 }
 async function lerIdeiaIA(file){
  const st=document.getElementById("ideiaStatus");st.style.display="block";st.textContent="🤖 A IA está lendo a foto…";
  const j=await ler(file,IA_POST);
- const precos=(Array.isArray(j.precos)?j.precos:[]).map(p=>num(p.valor)).filter(v=>v>0);
- const r={nome:j.nome||"",cidade:j.cidade||"",hotel:j.hotel||"",data:dataOk(j.data),dataVolta:dataOk(j.dataVolta),valorTotal:precos[0]||0,obs:j.obs||""};
+ const lp=(Array.isArray(j.precos)?j.precos:[]).map(p=>({v:num(p.valor),r:String(p.rotulo||"").trim()})).filter(p=>p.v>0);
+ const precos=lp.map(p=>p.v);
+ const r={nome:j.nome||"",cidade:j.cidade||"",hotel:j.hotel||"",data:dataOk(j.data),dataVolta:dataOk(j.dataVolta),valorTotal:precos[0]||0,obs:j.obs||"",org:String(j.organizador||"").replace(/^@/,"").trim()};
  const destino=r.cidade||r.nome||"";
  if(!destino){st.textContent="A IA não achou o destino nessa foto. Tente chegar mais perto, com boa luz e sem reflexo.";return}
  ideiaSel=null;ideiaFotoDados={cidade:r.cidade,data:r.data,dataVolta:r.dataVolta,hotel:r.hotel,valorTotal:r.valorTotal||""};
  document.getElementById("ideiaDestino").value=destino;
- const linhas=[];if(r.nome&&r.nome!==destino)linhas.push("🏞️ "+r.nome);if(r.data)linhas.push("📅 "+dateBR(r.data)+(r.dataVolta?" a "+dateBR(r.dataVolta):""));if(r.hotel)linhas.push("🏨 "+r.hotel);if(r.valorTotal)linhas.push("💰 "+money(r.valorTotal));if(r.obs)linhas.push(String(r.obs).replace(/\n+/g," • "));
+ const linhas=[];if(r.nome&&r.nome!==destino)linhas.push("🏞️ "+r.nome);if(r.data)linhas.push("📅 "+dateBR(r.data)+(r.dataVolta?" a "+dateBR(r.dataVolta):""));if(r.hotel)linhas.push("🏨 "+r.hotel);if(lp.length>1)linhas.push("💰 "+lp.map(p=>money(p.v)+(p.r?" "+p.r:"")).join(" / "));if(r.obs)linhas.push(String(r.obs).replace(/\n+/g," • "));
  document.getElementById("ideiaObs").value=linhas.join(" • ");
- st.textContent="✅ Li a indicação com IA. Confira e toque em Salvar.";
+ document.getElementById("ideiaOrg").value=r.org;
+ document.getElementById("ideiaValor").value=r.valorTotal?fmtBR(r.valorTotal):"";
+ st.textContent="✅ Li a indicação com IA"+(r.org?" ("+r.org+")":"")+". Confira e toque em Salvar.";
 }
 async function lerCardapioIA(file){
  const st=document.getElementById("cStatus");st.textContent="🤖 A IA está lendo o cardápio…";
@@ -2271,6 +2288,29 @@ document.addEventListener("change",async e=>{
  }
 },true);
 })();
+</script>
+
+<script>
+/* v4.3: 📤 compartilhar a viagem (texto pronto, SEM valores) */
+document.addEventListener("click",async e=>{
+ const b=e.target.closest('[data-action="share"]');if(!b)return;
+ const t=(viagens||[]).find(x=>x.id===Number(b.dataset.id));if(!t)return;
+ const L=[];
+ L.push("🧳 *"+(t.nome||"Viagem")+"*");
+ if(t.data)L.push("📅 Ida: "+dataSem(t.data)+(t.horaSaida?" às "+t.horaSaida:""));
+ if(t.dataVolta)L.push("📅 Volta: "+dataSem(t.dataVolta)+(t.horaVolta?" às "+t.horaVolta:""));
+ if(t.localSaida)L.push("🚗 Saída: "+t.localSaida);
+ if(t.hotel)L.push("🏨 "+t.hotel);
+ if(t.cidade)L.push("📍 "+t.cidade);
+ const q=[t.hotel,t.cidade].filter(Boolean).join(", ");
+ if(q)L.push("🗺️ https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q));
+ const texto=L.join("\n");
+ try{
+  if(navigator.share){await navigator.share({title:t.nome||"Viagem",text:texto});return}
+ }catch(err){if(err&&err.name==="AbortError")return}
+ try{await navigator.clipboard.writeText(texto);alert("📋 Texto da viagem copiado. É só colar na conversa.")}
+ catch(err){window.open("https://wa.me/?text="+encodeURIComponent(texto),"_blank")}
+});
 </script>
 </body>
 
