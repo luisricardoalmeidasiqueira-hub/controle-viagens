@@ -817,7 +817,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="4.6";
+const APP_VERSAO="4.7";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2326,6 +2326,24 @@ document.addEventListener("click",async e=>{
  try{await navigator.clipboard.writeText(texto);alert("📋 Texto da viagem copiado. É só colar na conversa.")}
  catch(err){window.open("https://wa.me/?text="+encodeURIComponent(texto),"_blank")}
 });
+</script>
+
+<script>
+/* v4.7: 🧹 botão Limpar no formulário de Ideias (apaga o que foi preenchido, sem salvar) */
+(function(){
+ const sv=document.getElementById("ideiaSalvar");if(!sv)return;
+ const linha=sv.closest(".searchLine")||sv.parentElement;
+ const b=document.createElement("button");b.type="button";b.id="ideiaLimpar";b.className="btn secondary";
+ b.textContent="🧹 Limpar campos";b.style.cssText="width:100%;margin-top:8px;height:36px;font-size:14px";
+ linha.insertAdjacentElement("afterend",b);
+ b.addEventListener("click",()=>{
+  ["ideiaDestino","ideiaOrg","ideiaValor","ideiaObs"].forEach(k=>{const el=document.getElementById(k);if(el)el.value=""});
+  ideiaEditId=null;ideiaFotoDados={};ideiaSel=null;
+  sv.textContent=ideiaSalvarTxt;
+  const st=document.getElementById("ideiaStatus");if(st){st.style.display="none";st.textContent=""}
+  const sg=document.getElementById("ideiaSugestoes");if(sg)sg.innerHTML="";
+ });
+})();
 </script>
 </body>
 
