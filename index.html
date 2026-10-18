@@ -817,7 +817,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="4.5";
+const APP_VERSAO="4.6";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1035,7 +1035,7 @@ function saveIdeias(){localStorage.setItem(IDEIAS_KEY,JSON.stringify(ideias))}
 function loadIdeias(){try{ideias=JSON.parse(localStorage.getItem(IDEIAS_KEY)||"[]")}catch{ideias=[]}renderIdeias()}
 function renderIdeias(){
  $("ideiasQtd").textContent=ideias.length;
- $("listaIdeias").innerHTML=ideias.length?ideias.map(i=>`<div class="ideaItem"><div class="ideaInfo"><strong>📍 ${esc(i.destino)}</strong>${i.org?`<small>🚌 Organiza: <b>${esc(i.org)}</b></small>`:""}${i.valorTotal?`<small>💰 ${money(i.valorTotal)}</small>`:""}${i.obs?`<small>${esc(i.obs)}</small>`:""}<small>Salva em ${dateBR(i.criado)}</small></div><div class="ideaActions"><button class="nextTripAction" type="button" data-idea-edit="${i.id}" title="Editar: abrir como nova viagem" aria-label="Editar ideia">✏️</button><button class="nextTripAction danger" type="button" data-idea-del="${i.id}" title="Apagar ideia" aria-label="Apagar ideia">🗑️</button></div></div>`).join(""):`<div class="empty">Nenhuma ideia salva. Digite um destino e toque em Salvar.</div>`;
+ $("listaIdeias").innerHTML=ideias.length?ideias.map(i=>`<div class="ideaItem"><div class="ideaInfo"><strong>📍 ${esc(i.destino)}</strong>${i.org?`<small>🚌 Organiza: <b>${esc(i.org)}</b></small>`:""}${i.valorTotal?`<small>💰 ${money(i.valorTotal)}</small>`:""}${i.obs?`<small>${esc(i.obs)}</small>`:""}<small>Salva em ${dateBR(i.criado)}</small></div><div class="ideaActions"><button class="nextTripAction" type="button" data-idea-edit="${i.id}" title="Editar ideia" aria-label="Editar ideia">✏️</button><button class="nextTripAction" type="button" data-idea-trip="${i.id}" title="Virar viagem" aria-label="Virar viagem">🧳</button><button class="nextTripAction danger" type="button" data-idea-del="${i.id}" title="Apagar ideia" aria-label="Apagar ideia">🗑️</button></div></div>`).join(""):`<div class="empty">Nenhuma ideia salva. Digite um destino e toque em Salvar.</div>`;
 }
 function montarSugestaoIdeia(x){
  const a=x.address||{},nome=x.name||String(x.display_name||"").split(",")[0];
@@ -1073,15 +1073,30 @@ $("ideiaSugestoes").addEventListener("click",e=>{
  const x=sugestoesIdeia[Number(b.dataset.ideaPick)];if(!x)return;
  ideiaSel=x;$("ideiaDestino").value=x.destino;$("ideiaSugestoes").innerHTML="";
 });
+let ideiaEditId=null;const ideiaSalvarTxt=$("ideiaSalvar").textContent;
+function editarIdeia(id){
+ const i=ideias.find(x=>x.id===id);if(!i)return;
+ ideiaEditId=id;ideiaSel=(i.lat||i.lon||i.cidade)?{cidade:i.cidade||"",lat:i.lat||"",lon:i.lon||""}:null;
+ ideiaFotoDados={cidade:i.cidade||"",data:i.data||"",dataVolta:i.dataVolta||"",hotel:i.hotel||"",valorTotal:i.valorTotal||""};
+ $("ideiaDestino").value=i.destino||"";$("ideiaOrg").value=i.org||"";$("ideiaValor").value=i.valorTotal?fmtBR(i.valorTotal):"";$("ideiaObs").value=i.obs||"";
+ $("ideiaSalvar").textContent="💾 Salvar";
+ const st=$("ideiaStatus");st.style.display="block";st.innerHTML='✏️ Editando a ideia. Mude o que quiser e toque em Salvar. <button type="button" id="ideiaCancelar" style="margin-left:6px">Cancelar</button>';
+ $("ideiaCancelar").onclick=()=>{ideiaEditId=null;ideiaFotoDados={};ideiaSel=null;$("ideiaSalvar").textContent=ideiaSalvarTxt;st.style.display="none";["ideiaDestino","ideiaOrg","ideiaValor","ideiaObs"].forEach(k=>$(k).value="")};
+ $("ideiaDestino").scrollIntoView({block:"center",behavior:"smooth"});
+}
 $("ideiaSalvar").onclick=()=>{
  const destino=$("ideiaDestino").value.trim();
  if(!destino){$("ideiaDestino").focus();$("ideiaSugestoes").innerHTML=`<div class="empty">Digite um destino para salvar.</div>`;return}
- ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:($("ideiaValor").value.trim()?numBR($("ideiaValor").value):(ideiaFotoDados.valorTotal||"")),org:$("ideiaOrg").value.trim()});ideiaFotoDados={};$("ideiaStatus").style.display="none";
+ const __novo={id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:($("ideiaValor").value.trim()?numBR($("ideiaValor").value):(ideiaFotoDados.valorTotal||"")),org:$("ideiaOrg").value.trim()};
+ if(ideiaEditId){const k=ideias.findIndex(x=>x.id===ideiaEditId);if(k>=0)ideias[k]={...ideias[k],...__novo,id:ideiaEditId,criado:ideias[k].criado};else ideias.unshift(__novo)}else ideias.unshift(__novo);
+ ideiaEditId=null;$("ideiaSalvar").textContent=ideiaSalvarTxt;ideiaFotoDados={};$("ideiaStatus").style.display="none";
  saveIdeias();$("ideiaDestino").value="";$("ideiaObs").value="";$("ideiaOrg").value="";$("ideiaValor").value="";$("ideiaSugestoes").innerHTML="";ideiaSel=null;renderIdeias();
 };
 $("listaIdeias").addEventListener("click",e=>{
  const ed=e.target.closest("[data-idea-edit]"),del=e.target.closest("[data-idea-del]");
- if(ed){abrirIdeiaComoViagem(Number(ed.dataset.ideaEdit));return}
+ const vi=e.target.closest("[data-idea-trip]");
+ if(ed){editarIdeia(Number(ed.dataset.ideaEdit));return}
+ if(vi){abrirIdeiaComoViagem(Number(vi.dataset.ideaTrip));return}
  if(del){const id=Number(del.dataset.ideaDel);if(confirm("Apagar esta ideia?")){ideias=ideias.filter(x=>x.id!==id);saveIdeias();renderIdeias()}}
 });
 
