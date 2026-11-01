@@ -608,6 +608,12 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .chaveBox[open] .chaveSeta{transform:rotate(180deg)}
 .chaveSeta{color:#6b5400;flex:none}
 .chaveOpc{font-weight:600;font-size:11px;color:#8a7a3a}
+.malaTopo{position:sticky;top:-18px;z-index:4;background:var(--panel);margin:0 -18px 6px;padding:8px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.malaTopo .barraMini{flex:1;height:8px;border-radius:9px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
+.malaTopo .barraMini i{display:block;height:100%;background:var(--accent)}
+.malaTopo button{flex:none;border:0;border-radius:999px;padding:8px 12px;font-weight:900;font-size:13px;background:var(--accent);color:#fff}
+.malaTopo .prontaOk{flex:none;font-weight:900;font-size:13px;color:#176642}
+.jaArrumei{display:inline-block;margin:0 0 6px;border:1px solid #8fd3b2;background:#E9F7F0;color:#176642;border-radius:999px;padding:5px 10px;font-weight:800;font-size:12px}
 </style>
 
 </head>
@@ -924,7 +930,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 </div>
 
 <div class="modal" id="modalMapa"><div class="sheet mapaSheet"><button class="close" id="fecharMapa" aria-label="Fechar mapa">×</button><h2 id="mapaTitulo">🗺️ Mapa</h2><div id="mapaStatus" class="notice"></div><div id="mapaBox"></div></div></div>
-<div class="modal" id="modalMala"><div class="sheet"><button class="close" id="fecharMala" aria-label="Fechar">×</button><h2>🎒 Mala da viagem</h2><div id="malaTitulo" class="notice"></div><div id="malaTempo"></div><div id="malaEtiquetas"></div>
+<div class="modal" id="modalMala"><div class="sheet"><button class="close" id="fecharMala" aria-label="Fechar">×</button><h2>🎒 Mala da viagem</h2><div class="malaTopo" id="malaTopo"></div><div id="malaTitulo" class="notice"></div><div id="malaTempo"></div><div id="malaEtiquetas"></div>
 <div id="malaCopiar"></div>
 <div class="malaBloco"><label>Quem vai</label><div class="malaChips" id="malaQuem"></div></div>
 <div class="malaBloco"><label>Tipo de viagem</label><div class="malaChips" id="malaTipo"></div></div>
@@ -995,7 +1001,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="6.8";
+const APP_VERSAO="6.9";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2659,7 +2665,7 @@ function avisoMalaHTML0(t){
  const e=estadoMala(t);if(!e)return "";
  if(e==="pronta")return `<span class="malaPill">🎒 ✅ Mala pronta!</span><br>`;
  const txt=e==="atrasada"?"🔴 A viagem está chegando e a mala não está pronta! Abrir lista":e==="comecar"?"🎒 Falta uma semana ou menos: hora de arrumar a mala! Abrir lista":"🎒 Mala em andamento… Abrir lista";
- return `<button type="button" class="malaChamada ${e==="atrasada"?"atrasada":""}" data-mala="${t.id}">${txt}</button>`;
+ return `<button type="button" class="malaChamada ${e==="atrasada"?"atrasada":""}" data-mala="${t.id}">${txt}</button><button type="button" class="jaArrumei" data-ja-arrumei="${t.id}">✅ Já arrumei a mala</button>`;
 }
 /* malaPendente passa a usar o mesmo critério (toast ao abrir o app) */
 malaPendente=function(t){const e=estadoMala(t);return e==="atrasada"||e==="comecar"||e==="andamento"};
@@ -3079,6 +3085,19 @@ render();
 /* v6.8: chave da casa recolhida (opcional) */
 $("modalMala").addEventListener("toggle",e=>{if(e.target.id!=="chaveDet")return;const t=viagens.find(x=>x.id===malaId);if(t)malaDe(t).chaveAberta=e.target.open?1:0},true);
 $("modalMala").addEventListener("click",e=>{if(e.target.id!=="chaveLimpar")return;e.preventDefault();const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);m.chave={};m.chaveAberta=0;salvarMala()});
+</script>
+<script>
+/* ===== v6.9: "Mala pronta" no topo da mala e na Próxima viagem ===== */
+function marcarMalaPronta(t){const m=malaDe(t);m.marcados=[...new Set(Object.values(malaItens(m)).flat())];m.usada=1;save();render();if(malaId===t.id&&$("modalMala").classList.contains("open"))renderMala();avisar("🎒 ✅ Mala pronta! Boa viagem!")}
+const __renderMala69=renderMala;
+renderMala=function(){
+ __renderMala69();const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
+ const todos=Object.values(malaItens(m)).flat(),ok=todos.filter(n=>m.marcados.includes(n)).length,pct=todos.length?Math.round(ok/todos.length*100):0;
+ $("malaTopo").innerHTML=`<span class="barraMini"><i style="width:${pct}%"></i></span>${ok===todos.length&&todos.length?'<span class="prontaOk">✅ Mala pronta!</span>':'<button type="button" id="malaProntaTopo">✅ Mala pronta</button>'}`;
+};
+$("modalMala").addEventListener("click",e=>{if(e.target.id!=="malaProntaTopo")return;e.preventDefault();const t=viagens.find(x=>x.id===malaId);if(t&&confirm("Já arrumou tudo? Marcar todos os itens como na mala?"))marcarMalaPronta(t)});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-ja-arrumei]");if(!b)return;e.preventDefault();e.stopPropagation();const t=viagens.find(x=>x.id===Number(b.dataset.jaArrumei));if(t&&confirm(`Mala da viagem ${t.nome} pronta? Vou marcar todos os itens.`))marcarMalaPronta(t)},true);
+render();
 </script>
 </body>
 
