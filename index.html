@@ -494,6 +494,14 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .malaAdd input{flex:1}
 .faltamTxt{display:inline-block;font-weight:900;color:var(--accent);margin-right:6px}
 .malaQtd{flex:none;border:1px solid var(--accent)!important;color:var(--accent)!important;background:var(--panel2)!important;border-radius:999px;font-size:12px!important;font-weight:900;padding:3px 9px!important;min-width:48px}
+.regrasAv{border:1.5px solid var(--accent);border-radius:12px;background:var(--panel2);padding:0 11px;margin-top:12px}
+.regrasAv summary{list-style:none;display:flex;justify-content:space-between;padding:11px 0;font-weight:900;font-size:14px;color:var(--accent);cursor:pointer}
+.regrasAv summary::-webkit-details-marker{display:none}
+.regrasAv[open] summary span{transform:rotate(180deg)}
+.regrasAv h4{margin:10px 0 4px;font-size:13px}
+.regrasAv ul{margin:0 0 6px;padding-left:18px;font-size:13px;line-height:1.45}
+.regrasAv li{margin-bottom:4px}
+.malaChamada{display:block;margin:6px 0 4px;border:1.5px solid #EF8C00;background:#FFF6E8;color:#9A5200;border-radius:10px;padding:7px 10px;font-weight:800;font-size:12px;text-align:left;width:100%}
 </style>
 
 </head>
@@ -807,6 +815,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 <div class="modal" id="modalMala"><div class="sheet"><button class="close" id="fecharMala" aria-label="Fechar">×</button><h2>🧳 Mala da viagem</h2><div id="malaTitulo" class="notice"></div>
 <div class="malaBloco"><label>Quem vai</label><div class="malaChips" id="malaQuem"></div></div>
 <div class="malaBloco"><label>Tipo de viagem</label><div class="malaChips" id="malaTipo"></div></div>
+<div id="malaAviao"></div>
 <div class="malaBarra"><i id="malaProg"></i></div><div id="malaStatus" class="malaStatus"></div>
 <div id="malaLista"></div>
 <div class="malaAdd"><input id="malaNovoItem" placeholder="Adicionar item (ex.: Carregador do relógio)"><button type="button" class="btn searchSmall" id="malaAddBtn" aria-label="Adicionar item">＋</button></div>
@@ -860,7 +869,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="4.4";
+const APP_VERSAO="4.6";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1302,7 +1311,7 @@ function gerarCalendario(id){
  const end=t.dataVolta?t.dataVolta+(t.horaVolta?`T${t.horaVolta}:00`:"T18:00:00"):t.data+(t.horaSaida?`T${t.horaSaida}:00`:"T10:00:00");
  const fmt=s=>s.replace(/[-:]/g,"").replace(".000","");
  let alarms="";
- (t.lembretes||["7","1","hora","embarque"]).forEach(v=>{let tr=v==="hora"?"PT1H":v==="embarque"?"PT0M":`P${v}D`;alarms+=`BEGIN:VALARM\nTRIGGER:-${tr}\nACTION:DISPLAY\nDESCRIPTION:Lembrete da viagem\nEND:VALARM\n`});
+ (t.lembretes||["7","1","hora","embarque"]).forEach(v=>{let tr=v==="hora"?"PT1H":v==="embarque"?"PT0M":`P${v}D`;const msg=v==="7"?"🧳 Falta uma semana para a viagem! Já arrumou a mala?":v==="1"?"🧳 A viagem é amanhã! Confira a mala no app Controle de Viagens":v==="hora"?"🚌 Falta 1 hora para sair! Documentos, carregador e remédios?":v==="embarque"?"🚌 Hora de embarcar! Boa viagem!":"Lembrete da viagem";alarms+=`BEGIN:VALARM\nTRIGGER:-${tr}\nACTION:DISPLAY\nDESCRIPTION:${msg}\nEND:VALARM\n`});
  const ics=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Controle de Viagens//PT-BR\nBEGIN:VEVENT\nUID:${t.id}@controleviagens\nDTSTART:${fmt(start)}\nDTEND:${fmt(end)}\nSUMMARY:🧳 ${t.nome}${t.cidade?" - "+t.cidade:""}\nDESCRIPTION:Saída: ${t.horaSaida||"não informada"}${t.localSaida?"\\nLocal: "+t.localSaida:""}\\nTotal: ${money(t.valorTotal)}\\nFalta pagar: ${money(Math.max(t.valorTotal-t.valorPago,0))}\n${alarms}END:VEVENT\nEND:VCALENDAR`;
  entregarCalendario("lembrete-viagem.ics",ics,{titulo:`🧳 ${t.nome}${t.cidade?" - "+t.cidade:""}`,inicio:start,fim:end,local:t.localSaida||t.cidade||"",detalhes:`Saída: ${t.horaSaida||"não informada"}${t.localSaida?"\nLocal: "+t.localSaida:""}\nTotal: ${money(t.valorTotal)}\nFalta pagar: ${money(Math.max(t.valorTotal-t.valorPago,0))}`});
 }
@@ -2262,7 +2271,7 @@ renderPasseios();
 </script>
 <script>
 /* ===== v4.0: 🧳 checklist da mala + contagem regressiva da viagem ===== */
-const MALA_CATS=["Documentos","Roupas","Higiene","Remédios","Eletrônicos","Praia","Frio","Ônibus","Criança","Parque / Piscina","Meus itens"];
+const MALA_CATS=["Avião","Documentos","Roupas","Higiene","Remédios","Eletrônicos","Praia","Frio","Ônibus","Criança","Parque / Piscina","Meus itens"];
 const MALA_MODELOS={
  base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Band-aid / curativo"],Eletrônicos:["Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
  m:{Roupas:["Cuecas"],Higiene:["Aparelho de barbear"]},
@@ -2271,10 +2280,11 @@ const MALA_MODELOS={
  praia:{Praia:["Protetor solar","Óculos de sol","Boné / chapéu","Toalha de praia","Roupa de banho","Canga / saída de praia","Repelente","Bolsa para a praia"]},
  frio:{Frio:["Casaco","Gorro","Luvas","Cachecol","Meia grossa","Hidratante / protetor labial"]},
  onibus:{Ônibus:["Travesseiro de pescoço","Cobertor / manta","Garrafinha de água","Lanche para a viagem","Lenço / álcool em gel"]},
+ aviao:{"Avião":["Documento original com foto","Cartão de embarque no celular","Saquinho transparente para líquidos","Etiqueta com nome na mala","Cadeado para a mala despachada"]},
  parque:{"Parque / Piscina":["Roupa de banho","Toalha","Protetor solar","Capa de chuva","Pochete / bolsinha","Sapato confortável"]}
 };
 const MALA_QUEM=[["m","👨 Masculino"],["f","👩 Feminino"],["c","🧒 Criança"]];
-const MALA_TIPOS=[["praia","🏖️ Praia"],["frio","❄️ Frio"],["onibus","🚌 Ônibus / excursão"],["parque","🎢 Parque / piscina"]];
+const MALA_TIPOS=[["aviao","✈️ Avião"],["praia","🏖️ Praia"],["frio","❄️ Frio"],["onibus","🚌 Ônibus / excursão"],["parque","🎢 Parque / piscina"]];
 const PRAIAS=/camboriu|penha|florianopolis|bombinhas|itapema|peruibe|santos|ubatuba|caraguatatuba|ilhabela|guaruja|bertioga|itanhaem|praia grande|sao sebastiao|paraty|angra|arraial|buzios|cabo frio|porto seguro|maceio|maragogi|natal|fortaleza|salvador|porto de galinhas|recife|ilha comprida|mongagua/;
 const FRIOS=/campos do jordao|monte verde|gramado|canela|urubici|sao joaquim|bento goncalves|petropolis/;
 const PARQUES=/beto carrero|olimpia|thermas|hopi hari|wet|caldas novas|aguas de lindoia|brotas/;
@@ -2298,8 +2308,9 @@ function qtdSugerida(n,d){
 function qtdItem(m,n,d){const q=(m.qtd||{})[n];return q!=null?q:qtdSugerida(n,d)}
 function malaDe(t){
  if(!t.mala){const c=semAcento((t.cidade||"")+" "+(t.nome||"")).toLowerCase();const tipos=[];
-  if(["excursao","onibus"].includes(t.tipoViagem))tipos.push("onibus");if(PRAIAS.test(c))tipos.push("praia");if(FRIOS.test(c))tipos.push("frio");if(PARQUES.test(c))tipos.push("parque");
+  if(["excursao","onibus"].includes(t.tipoViagem))tipos.push("onibus");if(t.tipoViagem==="aviao")tipos.push("aviao");if(PRAIAS.test(c))tipos.push("praia");if(FRIOS.test(c))tipos.push("frio");if(PARQUES.test(c))tipos.push("parque");
   t.mala={quem:["m"],tipos,marcados:[],extras:[],tirados:[]};}
+ if(t.tipoViagem==="aviao"&&!t.mala.avChk){t.mala.avChk=1;if(!t.mala.tipos.includes("aviao"))t.mala.tipos.push("aviao")}
  return t.mala;
 }
 function malaItens(m){
@@ -2314,7 +2325,7 @@ function malaPendente(t){
  const m=malaDe(t),todos=Object.values(malaItens(m)).flat();return todos.some(n=>!m.marcados.includes(n));
 }
 function diasPara(iso){return Math.round((new Date(iso+"T12:00:00")-new Date(localDate()+"T12:00:00"))/86400000)}
-function faltamTexto(t){const d=diasPara(t.data);if(d<0)return "";const txt=d===0?"🎉 É hoje!":d===1?"⏳ É amanhã!":`⏳ Faltam ${d} dias`;return `<span class="faltamTxt">${txt}</span><br>`}
+function faltamTexto(t){const d=diasPara(t.data);if(d<0)return "";const txt=d===0?"🎉 É hoje!":d===1?"⏳ É amanhã!":d===7?"⏳ Falta uma semana!":`⏳ Faltam ${d} dias`;return `<span class="faltamTxt">${txt}</span>${malaPendente(t)?`<button type="button" class="malaChamada" data-mala="${t.id}">🧳 Já arrumou a mala? Abrir lista</button>`:""}<br>`}
 function abrirMala(id){
  const t=viagens.find(x=>x.id===id);if(!t)return;malaId=id;malaDe(t);
  $("malaTitulo").innerHTML=`<b>${esc(t.nome)}</b>${t.data?" • "+dataSem(t.data):""}`;
@@ -2324,10 +2335,29 @@ function renderMala(){
  const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
  $("malaQuem").innerHTML=MALA_QUEM.map(([k,r])=>`<button type="button" class="${m.quem.includes(k)?"on":""}" data-mala-quem="${k}">${r}</button>`).join("");
  $("malaTipo").innerHTML=MALA_TIPOS.map(([k,r])=>`<button type="button" class="${m.tipos.includes(k)?"on":""}" data-mala-tipo="${k}">${r}</button>`).join("");
+ $("malaAviao").innerHTML=m.tipos.includes("aviao")?regrasAviao(m):"";
  const porCat=malaItens(m),todos=Object.values(porCat).flat(),ok=todos.filter(n=>m.marcados.includes(n)).length;
  $("malaProg").style.width=(todos.length?Math.round(ok/todos.length*100):0)+"%";
  {const d=diasViagem(t);$("malaStatus").textContent=(!todos.length?"":ok===todos.length?"✅ Tudo na mala!":ok===0?"Marque o que já colocou na mala":"Falta pouco… continue marcando")+(d?` • ${d===1&&!t.dataVolta?"coloque a data de volta para calcular as quantidades":d+" dias de viagem"}`:"")}
- $("malaLista").innerHTML=MALA_CATS.filter(c=>porCat[c]).map(c=>`<div class="malaCat"><h3>${{Documentos:"🪪",Roupas:"👕",Higiene:"🧴",Remédios:"💊",Eletrônicos:"🔌",Praia:"🏖️",Frio:"❄️",Ônibus:"🚌",Criança:"🧒","Parque / Piscina":"🎢","Meus itens":"⭐"}[c]||"•"} ${c}</h3>${porCat[c].map(n=>{const on=m.marcados.includes(n);const q=qtdItem(m,n,diasViagem(t));return `<label class="malaItem ${on?"ok":""}"><input type="checkbox" data-mala-item="${esc(n)}" ${on?"checked":""}><span>${esc(n)}</span>${q||/cueca|calcinha|camiseta|shorts|bermuda|calca|meia|sutia|pijama|roupa/i.test(semAcento(n))?`<button type="button" class="malaQtd" data-mala-qtd="${esc(n)}" aria-label="Quantidade">${q?q+(q>1?" un.":" un."):"qtd"}</button>`:""}<button type="button" data-mala-tirar="${esc(n)}" aria-label="Tirar da lista">✕</button></label>`}).join("")}</div>`).join("");
+ $("malaLista").innerHTML=MALA_CATS.filter(c=>porCat[c]).map(c=>`<div class="malaCat"><h3>${{"Avião":"✈️",Documentos:"🪪",Roupas:"👕",Higiene:"🧴",Remédios:"💊",Eletrônicos:"🔌",Praia:"🏖️",Frio:"❄️",Ônibus:"🚌",Criança:"🧒","Parque / Piscina":"🎢","Meus itens":"⭐"}[c]||"•"} ${c}</h3>${porCat[c].map(n=>{const on=m.marcados.includes(n);const q=qtdItem(m,n,diasViagem(t));return `<label class="malaItem ${on?"ok":""}"><input type="checkbox" data-mala-item="${esc(n)}" ${on?"checked":""}><span>${esc(n)}</span>${q||/cueca|calcinha|camiseta|shorts|bermuda|calca|meia|sutia|pijama|roupa/i.test(semAcento(n))?`<button type="button" class="malaQtd" data-mala-qtd="${esc(n)}" aria-label="Quantidade">${q?q+(q>1?" un.":" un."):"qtd"}</button>`:""}<button type="button" data-mala-tirar="${esc(n)}" aria-label="Tirar da lista">✕</button></label>`}).join("")}</div>`).join("");
+}
+function regrasAviao(m){
+ const intl=m.voo==="int";
+ return `<details class="regrasAv" ${m.regrasAbertas?"open":""} id="regrasAvDet"><summary>✈️ O que pode levar no avião <span>▾</span></summary>
+ <div class="malaChips" style="margin:8px 0"><button type="button" class="${!intl?"on":""}" data-voo="nac">🇧🇷 Voo nacional</button><button type="button" class="${intl?"on":""}" data-voo="int">🌎 Voo internacional</button></div>
+ <h4>🎒 Mala de mão (cabine)</h4>
+ <ul><li>Até <b>10 kg</b> de graça. Tamanho: altura + largura + profundidade até <b>115 cm</b> (o comum é 55 × 35 × 25 cm).</li>
+ ${intl?`<li>💧 Líquidos, cremes e sprays: frascos de até <b>100 ml</b>, todos num <b>saquinho transparente com fecho de até 1 litro</b>. Um saquinho por pessoa.</li>`:`<li>💧 Líquidos, cremes e sprays: frascos de até <b>300 ml</b> cada, no total até <b>1,2 litro</b> por pessoa. Sprays: no máximo 4, com tampa.</li>`}
+ <li>🔋 <b>Carregador portátil (power bank) só na mala de mão</b>, no máximo 2. Até 100 Wh pode; de 100 a 160 Wh precisa de autorização da companhia; acima disso é proibido. Não pode usar no voo.</li>
+ <li>💊 Remédios pode, de preferência com a receita. Remédio líquido, comida de bebê e dieta especial podem passar do limite: avise na inspeção.</li>
+ <li>✂️ Tesourinha ou canivete só com lâmina <b>menor que 6 cm</b>. Cortador de unha pode.</li>
+ <li>🥪 Comida sólida (lanche, fruta) normalmente pode${intl?", mas confira as regras do país de destino":""}.</li></ul>
+ <h4>🚫 Não pode na mala de mão</h4>
+ <ul><li>Facas, ferramentas (chave de fenda, martelo), armas e réplicas, até de brinquedo.</li><li>Fogos, sprays inflamáveis, álcool combustível, alvejante e veneno.</li><li>Isqueiro tipo maçarico ou em formato de arma.</li></ul>
+ <h4>🧳 Mala despachada</h4>
+ <ul><li>🔋 <b>Power bank e bateria solta NÃO vão na despachada</b>, só na de mão.</li><li>Coisas de valor (dinheiro, joias, documentos, celular) é melhor levar com você.</li><li>Peso e preço da despachada mudam de companhia para companhia: confira na sua passagem.</li></ul>
+ <div class="notice">Regras da ANAC (2026). Elas podem mudar: confira também no site da companhia aérea antes de viajar.</div>
+ </details>`;
 }
 function salvarMala(){save();renderMala();render()}
 $("fecharMala").onclick=()=>$("modalMala").classList.remove("open");
@@ -2336,6 +2366,7 @@ $("modalMala").addEventListener("click",e=>{
  const q=e.target.closest("[data-mala-quem]");if(q){const k=q.dataset.malaQuem;m.quem=m.quem.includes(k)?m.quem.filter(x=>x!==k):[...m.quem,k];salvarMala();return}
  const tp=e.target.closest("[data-mala-tipo]");if(tp){const k=tp.dataset.malaTipo;m.tipos=m.tipos.includes(k)?m.tipos.filter(x=>x!==k):[...m.tipos,k];salvarMala();return}
  const qb=e.target.closest("[data-mala-qtd]");if(qb){e.preventDefault();const n=qb.dataset.malaQtd,atual=qtdItem(m,n,diasViagem(t));const v=prompt(`Quantas unidades de "${n}"?\n(deixe vazio para voltar ao cálculo automático)`,atual||"");if(v===null)return;m.qtd=m.qtd||{};if(v.trim()==="")delete m.qtd[n];else{const x=parseInt(v);if(x>=0)m.qtd[n]=x}salvarMala();return}
+ const vb=e.target.closest("[data-voo]");if(vb){e.preventDefault();m.voo=vb.dataset.voo;m.regrasAbertas=1;salvarMala();return}
  const tr=e.target.closest("[data-mala-tirar]");if(tr){e.preventDefault();const n=tr.dataset.malaTirar;if(m.extras.includes(n))m.extras=m.extras.filter(x=>x!==n);else m.tirados.push(n);m.marcados=m.marcados.filter(x=>x!==n);salvarMala();return}
 });
 $("modalMala").addEventListener("change",e=>{
@@ -2344,6 +2375,7 @@ $("modalMala").addEventListener("change",e=>{
 });
 function addItemMala(){const v=$("malaNovoItem").value.trim();if(!v)return;const t=viagens.find(x=>x.id===malaId);const m=malaDe(t);m.tirados=m.tirados.filter(x=>x.toLowerCase()!==v.toLowerCase());if(!m.extras.some(x=>x.toLowerCase()===v.toLowerCase()))m.extras.push(v);$("malaNovoItem").value="";salvarMala()}
 $("malaAddBtn").onclick=addItemMala;
+$("modalMala").addEventListener("toggle",e=>{if(e.target.id!=="regrasAvDet")return;const t=viagens.find(x=>x.id===malaId);if(t)malaDe(t).regrasAbertas=e.target.open?1:0},true);
 $("malaNovoItem").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addItemMala()}});
 $("malaDesmarcar").onclick=()=>{const t=viagens.find(x=>x.id===malaId);if(!t)return;if(confirm("Desmarcar todos os itens para conferir de novo?")){malaDe(t).marcados=[];salvarMala()}};
 $("malaEnviar").onclick=async()=>{
@@ -2358,8 +2390,8 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-mala]");if
  try{
   const hoje=localDate(),chave="controle_viagens_aviso_viagem_dia";if(localStorage.getItem(chave)===hoje)return;
   const t=[...viagens].filter(x=>x.data&&diasPara(x.data)>=0&&diasPara(x.data)<=7).sort((a,b)=>a.data.localeCompare(b.data))[0];if(!t)return;
-  const d=diasPara(t.data),quando=d===0?"é hoje":d===1?"é amanhã":`é daqui a ${d} dias`;
-  setTimeout(()=>{avisar(`🧳 A viagem ${t.nome} ${quando}${t.horaSaida?" às "+t.horaSaida:""}! ${malaPendente(t)?"Já conferiu a mala?":""}`);try{localStorage.setItem(chave,hoje)}catch(e){}},1500);
+  const d=diasPara(t.data),quando=d===0?"é hoje":d===1?"é amanhã":d===7?"é daqui a uma semana":`é daqui a ${d} dias`;
+  setTimeout(()=>{avisar(`🧳 A viagem ${t.nome} ${quando}${t.horaSaida?" às "+t.horaSaida:""}! ${malaPendente(t)?(d>=2?"Já arrumou a mala?":"Confira a mala!"):""}`);try{localStorage.setItem(chave,hoje)}catch(e){}},1500);
  }catch(e){}
 })();
 render();
