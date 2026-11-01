@@ -700,6 +700,9 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .docLinha .docItem{border:0;border-top:1px solid var(--line);border-radius:0 0 12px 12px;margin:0}
 .docVencDot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#E65100;vertical-align:middle;margin-left:4px}
 .docNovoBtn{padding:8px 14px!important;font-size:14px!important}
+.bulaFrasesBox{white-space:normal}
+.bulaDoseLinha{display:inline;border:0;background:#FFE0B2;color:#4E2A00;font:inherit;font-weight:700;border-radius:4px;padding:1px 3px;margin:1px 0;text-align:left;cursor:pointer;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.bulaDoseLinha.usada{background:#C8E6C9;color:#1B5E20}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
 </head>
@@ -1042,7 +1045,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 </div></div>
 <div class="modal" id="modalBula"><div class="sheet"><button class="close" id="fecharBula" aria-label="Fechar">×</button><h2>📄 Bula do remédio</h2><div id="bulaItem" class="notice"></div>
 <div class="field"><label>Nome do remédio (como está na caixa)</label><input id="bulaNome" placeholder="Ex.: Loratadina 10 mg" autocomplete="off"></div>
-<div class="actions" style="margin-bottom:8px"><label class="btn secondary" style="cursor:pointer;margin:0">📷 Foto da caixa (lê o nome)<input type="file" accept="image/*" capture="environment" id="bulaFotoCaixa" hidden></label><label class="btn secondary" style="cursor:pointer;margin:0">📷 Foto da bula (lê como usar)<input type="file" accept="image/*" capture="environment" id="bulaFotoPapel" hidden></label></div>
+<div class="actions" style="margin-bottom:8px"><label class="btn secondary" style="cursor:pointer;margin:0">📷 Foto da caixa (lê o nome)<input type="file" accept="image/*" id="bulaFotoCaixa" hidden></label><label class="btn secondary" style="cursor:pointer;margin:0">📷 Foto da bula (lê como usar)<input type="file" accept="image/*" id="bulaFotoPapel" hidden></label></div>
 <div id="bulaLido"></div>
 <div class="actions"><button type="button" class="btn" id="bulaAnvisa">📄 Bula oficial (Anvisa)</button><button type="button" class="btn secondary" id="bulaGoogle">🔎 Pesquisar a bula</button></div>
 <div class="field" style="margin-top:12px"><label>Como tomar (anote o que está na receita ou na bula)</label><textarea id="bulaComo" placeholder="Ex.: 1 comprimido por dia, se tiver alergia"></textarea></div>
@@ -1104,7 +1107,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="8.4";
+const APP_VERSAO="8.5";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -3151,15 +3154,18 @@ function trechoComoUsar(txt){
 }
 $("bulaFotoCaixa").addEventListener("change",async e=>{
  const f=e.target.files[0];if(!f)return;$("bulaLido").innerHTML='<div class="notice">🔎 Lendo o nome na caixa… (a 1ª vez demora um pouco)</div>';
- try{const nome=nomeDaCaixa(await ocrFoto(f,"11"));if(nome){$("bulaNome").value=nome;$("bulaLido").innerHTML=`<div class="notice">✅ Li: <b>${esc(nome)}</b>. Confira o nome e toque em 📄 Bula oficial.</div>`}else $("bulaLido").innerHTML='<div class="notice">Não consegui ler o nome. Tire a foto mais de perto, com boa luz, ou digite o nome.</div>'}
+ try{const lido=await lerNomeCaixaFoto(f),nome=lido.nome;if(nome){$("bulaNome").value=nome;$("bulaLido").innerHTML=`<div class="notice">${lido.ia?"🤖 ":""}✅ Li: <b>${esc(nome)}</b>${lido.forma?" ("+esc(lido.forma)+")":""}. Abrindo a bula oficial…</div><button type="button" class="btn" id="bulaAbrirLida" style="width:100%;margin:0 0 8px">📄 Abrir a bula oficial de ${esc(nome)}</button><div class="notice" style="margin-top:0">Na bula, procure <b>"Como devo usar este medicamento"</b>. Ou tire foto dessa parte da bula de papel: o app destaca as linhas da dose.</div>`;$("bulaAbrirLida").onclick=()=>$("bulaAnvisa").click();let w=null;try{w=window.open("https://consultas.anvisa.gov.br/#/bulario/q/?nomeProduto="+encodeURIComponent(nome.replace(/\s*\d+.*$/,"").trim()||nome),"_blank")}catch(er){}if(!w){const n=$("bulaLido").querySelector(".notice");if(n)n.innerHTML=n.innerHTML.replace("Abrindo a bula oficial…","Toque no botão abaixo para abrir a bula oficial.")}}else $("bulaLido").innerHTML='<div class="notice">Não consegui ler o nome. Tire a foto mais de perto, com boa luz, ou digite o nome.</div>'}
  catch(err){$("bulaLido").innerHTML='<div class="notice">Não consegui ler a foto (precisa de internet na 1ª vez). Digite o nome do remédio.</div>'}
  e.target.value="";
 });
 $("bulaFotoPapel").addEventListener("change",async e=>{
  const f=e.target.files[0];if(!f)return;$("bulaLido").innerHTML='<div class="notice">🔎 Lendo a bula… procure fotografar a parte "Como devo usar este medicamento".</div>';
- try{const txt=await ocrFoto(f);const tr=trechoComoUsar(txt);
-  if(tr){$("bulaLido").innerHTML=`<div class="notice"><b>Texto lido da bula</b> — ⚠️ a leitura da foto pode trocar números (ex.: 1 por 7). <b>Confira no papel</b> antes de tomar.</div><div class="bulaLidoBox">${esc(tr)}</div><button type="button" class="btn secondary" id="bulaUsarTexto" style="width:100%">📋 Colocar em "Como tomar" (eu conferi)</button>`;
-   $("bulaUsarTexto").onclick=()=>{$("bulaComo").value=tr.replace(/\s+/g," ").slice(0,400);$("bulaComo").focus()}}
+ try{let txt="",tr="";for(const psm of [undefined,"6","4"]){txt=await ocrFoto(f,psm);tr=trechoComoUsar(txt);if(tr)break}
+  if(!tr&&bulaFrases(txt).some(x=>x.dose))tr=txt.trim();
+  if(tr){const fr=bulaFrases(tr),temDose=fr.some(x=>x.dose);
+   $("bulaLido").innerHTML=`<div class="notice"><b>Texto lido da bula</b> — ⚠️ a leitura da foto pode trocar números (ex.: 1 por 7). <b>Confira no papel</b> antes de tomar.${temDose?"<br>🟧 As partes em destaque falam de dose. <b>Toque na que vale para você</b> (ou na receita do médico) para colocar em \"Como tomar\".":""}</div><div class="bulaLidoBox bulaFrasesBox">${fr.map((x,i)=>x.dose?`<button type="button" class="bulaDoseLinha" data-bula-frase="${i}">${esc(x.t)}</button>`:`<span>${esc(x.t)} </span>`).join("")}</div><button type="button" class="btn secondary" id="bulaUsarTexto" style="width:100%">📋 Colocar o trecho todo em "Como tomar" (eu conferi)</button>`;
+   $("bulaUsarTexto").onclick=()=>{$("bulaComo").value=tr.replace(/\s+/g," ").slice(0,400);$("bulaComo").focus()};
+   $("bulaLido").querySelectorAll("[data-bula-frase]").forEach(b=>b.onclick=()=>{const t=fr[Number(b.dataset.bulaFrase)].t.trim();const c=$("bulaComo");c.value=(c.value.trim()?c.value.trim()+"\n":"")+t;b.classList.add("usada");avisar("📋 Colocado em \"Como tomar\". Confira no papel.")})}
   else $("bulaLido").innerHTML='<div class="notice">Não achei a parte "Como devo usar" nessa foto. Fotografe bem de perto essa parte da bula, ou use o botão 📄 Bula oficial.</div>';
  }catch(err){$("bulaLido").innerHTML='<div class="notice">Não consegui ler a foto (precisa de internet na 1ª vez).</div>'}
  e.target.value="";
@@ -3226,7 +3232,7 @@ $("modalMala").addEventListener("click",e=>{if(e.target.id!=="remNovoDigitar")re
 $("modalMala").addEventListener("change",async e=>{
  if(e.target.id!=="remNovoFoto")return;const f=e.target.files[0];if(!f)return;
  avisar("🔎 Lendo o nome do remédio… (a 1ª vez demora um pouco)");
- let nome="";try{nome=nomeDaCaixa(await ocrFoto(f,"11"))}catch(err){}
+ let nome="";try{nome=(await lerNomeCaixaFoto(f)).nome}catch(err){}
  const v=prompt(nome?"Li este nome na caixa. Confira e corrija se precisar:":"Não consegui ler o nome na foto. Digite o nome do remédio:",nome);
  if(v)addRemedio(v);
 });
@@ -3551,6 +3557,28 @@ $("menuInstalar").onclick=async()=>{
 };
 $("modalInstalar").addEventListener("click",e=>{if(e.target.id==="instCompartilhar"){$("modalInstalar").classList.remove("open");$("menuCompartilhar").click()}else if(e.target.id==="modalInstalar")$("modalInstalar").classList.remove("open")});
 renderDocs();
+/* v8.5: nome do remédio pela IA; linhas da dose destacadas na bula */
+function bulaFrases(txt){
+ const T=String(txt||"").replace(/[ \t]+/g," ").replace(/-\n(?=[a-zà-ú])/g,"").replace(/\n+/g," ").trim();
+ const partes=T.match(/[^.;!?]+(?:[.;!?](?!\d)|$)/g)||[];
+ const re=/\b\d+([.,]\d+)?\s*(gotas?|comprimidos?|c[aá]psulas?|dr[aá]geas?|ml|mg|g\b|sach[eê]s?|colher|jatos?|aplica[cç])|\bgotas?\b|\bcomprimidos?\b|vezes ao dia|vez ao dia|a cada \d+\s*(a \d+\s*)?horas?|de \d+\s*em \d+\s*horas?|dose m[aá]xima|dose di[aá]ria|n[aã]o (ultrapasse|exceda)|limite m[aá]ximo/i;
+ return partes.map(t=>({t:t.trim(),dose:re.test(t)})).filter(x=>x.t);
+}
+async function lerNomeCaixaFoto(f){
+ if(typeof iaChave==="function"&&iaChave()){
+  try{iaMenuAtualiza("lendo");const b64=await fotoParaIA(f);
+   const r=await iaPedir([{text:`Esta é a foto da caixa (embalagem) de um remédio vendido no Brasil. Responda SOMENTE com JSON:
+{"nome":"","concentracao":"","forma":""}
+- nome: o nome comercial do remédio como está na caixa (ex.: "Losartana Potássica", "Neosaldina"). Se só tiver o nome do princípio ativo, use ele.
+- concentracao: a concentração impressa na caixa (ex.: "50 mg", "300 mg/ml"). Vazio se não estiver na foto.
+- forma: como vem (ex.: "comprimidos", "gotas", "xarope", "pomada"). Vazio se não estiver na foto.
+Copie só o que está escrito na caixa. Não invente e não fale de dose.`},{inline_data:{mime_type:"image/jpeg",data:b64}}]);
+   iaMenuAtualiza();const nome=String(r.nome||"").trim();
+   if(nome){const conc=String(r.concentracao||"").trim();return{nome:(nome+(conc&&!nome.includes(conc)?" "+conc:"")).slice(0,60),forma:String(r.forma||"").trim(),ia:true}}
+  }catch(err){iaMenuAtualiza()}
+ }
+ return{nome:nomeDaCaixa(await ocrFoto(f,"11"))};
+}
 /* v8.1: 🤖 IA do Google (Gemini) lendo os documentos */
 const IA_KEY="controle_viagens_gemini_key";
 function iaChave(){try{return(localStorage.getItem(IA_KEY)||"").trim()}catch{return""}}
