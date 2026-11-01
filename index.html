@@ -1107,7 +1107,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="8.5";
+const APP_VERSAO="8.6";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -3522,15 +3522,22 @@ $("docsConteudo").addEventListener("change",async e=>{
 let instEvt=null;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();instEvt=e});
 function appInstalado(){try{return matchMedia("(display-mode: standalone)").matches||matchMedia("(display-mode: fullscreen)").matches||navigator.standalone===true}catch{return false}}
-if(appInstalado())$("menuInstalar").style.display="none";
-window.addEventListener("appinstalled",()=>{$("menuInstalar").style.display="none";$("modalInstalar").classList.remove("open");avisar("📲 App instalado! O ícone está na tela do celular.")});
+if(appInstalado())$("menuInstalar").innerHTML="📲 App instalado <span>✅</span>";
+window.addEventListener("appinstalled",()=>{$("menuInstalar").innerHTML="📲 App instalado <span>✅</span>";$("modalInstalar").classList.remove("open");avisar("📲 App instalado! O ícone está na tela do celular.")});
 $("fecharInstalar").onclick=()=>$("modalInstalar").classList.remove("open");
 $("menuInstalar").onclick=async()=>{
  $("menuPanel").style.display="none";
  if(instEvt){const ev=instEvt;instEvt=null;try{ev.prompt();const r=await ev.userChoice;if(r&&r.outcome==="accepted"){avisar("📲 Instalando… o ícone vai aparecer na tela do celular.");return}}catch(err){}}
  const ua=navigator.userAgent,ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
  let h;
- if(ios){
+ if(appInstalado()){
+  h=`<div class="notice" style="font-size:15px">✅ <b>O app já está instalado neste celular.</b> É o ícone 🧳 na tela de início, e as atualizações chegam sozinhas.</div>
+  <p style="margin:10px 0 4px"><b>Para instalar no celular de outra pessoa:</b> mande o link pelo botão abaixo. Ela abre o link e faz assim:</p>
+  <ol class="instPassos"><li><b>iPhone (Safari):</b> botão Compartilhar ⬆️ (ou •••) → <b>Adicionar à Tela de Início</b> → Adicionar.</li>
+  <li><b>Android (Chrome):</b> três pontinhos ⋮ → <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</li>
+  <li><b>Android (Opera):</b> menu do Opera → <b>Adicionar à tela inicial</b>.</li></ol>
+  <div class="notice">Ou peça para ela abrir o link e tocar no menu ⋮ do app → <b>📲 Instalar app no celular</b>, que mostra o passo a passo do celular dela.</div>`;
+ }else if(ios){
   const naoSafari=/CriOS|FxiOS|EdgiOS|OPiOS|OPT\//.test(ua);
   h=`<p style="margin:4px 0">No iPhone é assim:</p><ol class="instPassos">
   <li>Toque no botão <b>Compartilhar</b> <span style="white-space:nowrap">(quadradinho com a setinha ⬆️)</span>. Se não achar, toque nos <b>três pontinhos •••</b> e depois em <b>Compartilhar</b>.</li>
