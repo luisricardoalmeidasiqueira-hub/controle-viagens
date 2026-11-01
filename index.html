@@ -703,6 +703,15 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .bulaFrasesBox{white-space:normal}
 .bulaDoseLinha{display:inline;border:0;background:#FFE0B2;color:#4E2A00;font:inherit;font-weight:700;border-radius:4px;padding:1px 3px;margin:1px 0;text-align:left;cursor:pointer;box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .bulaDoseLinha.usada{background:#C8E6C9;color:#1B5E20}
+.roupaBox{border:1.5px solid var(--line);border-radius:12px;background:#fff;margin-top:10px;padding:0}
+.roupaBox>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 12px;font-size:14px}
+.roupaBox>summary::-webkit-details-marker{display:none}
+.roupaBox>summary small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;font-weight:500}
+.roupaBox[open]>summary .secSeta{transform:rotate(180deg)}
+.roupaBox[open]{padding:0 12px 10px}.roupaBox[open]>summary{padding:11px 0}
+.roupaLado{border-top:1px solid var(--line);padding:8px 0}
+.roupaLado b{font-size:13.5px}.roupaLado small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.45}
+.roupaSug{font-size:15px;font-weight:700;margin-top:4px}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
 </head>
@@ -1107,7 +1116,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="8.6";
+const APP_VERSAO="8.8";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2831,8 +2840,10 @@ function dicasTempo(r){
  const dicas=[],acoes=[];
  if(max>=28){dicas.push(`🔥 <b>Calor</b> (até ${max}°): roupas leves, boné e protetor solar.`);acoes.push("calor")}
  else if(max>=22)dicas.push(`🙂 Temperatura agradável durante o dia (até ${max}°).`);
- if(min<=14){dicas.push(`🧥 <b>Frio à noite</b> (mínima de ${min}°): leve casaco e calça.`);acoes.push("frio")}
- else if(min<=18)dicas.push(`🧥 Pode esfriar à noite (${min}°): leve uma blusa.`);
+ if(min<=10){dicas.push(`🥶 <b>Muito frio</b> (mínima de ${min}°): leve <b>casaco grosso</b> e blusa de frio, calça, meia grossa, gorro e luvas.`);acoes.push("frio")}
+ else if(min<=14){dicas.push(`🧥 <b>Frio à noite</b> (mínima de ${min}°): leve uma <b>blusa de frio ou moletom</b> e um casaco, e calça.`);acoes.push("blusafrio")}
+ else if(min<=18){dicas.push(`🧥 Pode esfriar à noite (${min}°): uma <b>blusa leve</b> (manga comprida fina) já resolve.`);acoes.push("blusaleve")}
+ else if(max>=26){dicas.push(`😎 Noites quentes (mínima de ${min}°): <b>não precisa de blusa de frio</b>. Uma blusa leve basta${["excursao","onibus","aviao"].includes((viagens.find(x=>x.id===malaId)||{}).tipoViagem)?" (para o ar-condicionado do ônibus/avião)":""}.`);acoes.push("semfrio")}
  if(chuva>=50){dicas.push(`☔ <b>Chance de chuva</b> de até ${chuva}%: leve guarda-chuva ou capa de chuva.`);acoes.push("chuva")}
  return {dicas,acoes};
 }
@@ -2864,7 +2875,10 @@ $("modalMala").addEventListener("click",e=>{
  const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t),a=b.dataset.tempoMala.split(",");
  const add=n=>{m.tirados=m.tirados.filter(x=>x!==n);if(!m.extras.includes(n)&&!Object.values(malaItens(m)).flat().includes(n))m.extras.push(n)};
  if(a.includes("chuva")){add("Guarda-chuva");add("Capa de chuva")}
- if(a.includes("frio")&&!m.tipos.includes("frio"))m.tipos.push("frio");
+ if(a.includes("frio")){if(!m.tipos.includes("frio"))m.tipos.push("frio");add("Blusa de frio")}
+ if(a.includes("blusafrio")){add("Blusa de frio");add("Casaco")}
+ if(a.includes("blusaleve")){add("Blusa leve (manga comprida fina)")}
+ if(a.includes("semfrio")){if(!m.tirados.includes("Blusa de frio"))m.tirados.push("Blusa de frio");add("Blusa leve (manga comprida fina)")}
  if(a.includes("calor")){add("Protetor solar");add("Boné / chapéu")}
  salvarMala();avisar("🌤️ Sugestões do tempo colocadas na mala!");
 });
@@ -3677,6 +3691,70 @@ $("modalMala").addEventListener("click",e=>{
  docRasc={tipo:b.dataset.docNovo};docEdId=null;mostrarFormDoc();
  setTimeout(()=>$("secDocs").scrollIntoView({behavior:"smooth",block:"start"}),150);
 },true);
+/* v8.7: 👕 roupa sugerida para a ida e para a volta (pelo horário e pela previsão) */
+async function geoCidade(txt){
+ txt=String(txt||"").trim();if(!txt)return null;
+ const m=txt.match(/([A-Za-zÀ-ú' .]+?)\s*[,\-\/]\s*([A-Za-z]{2})\b/);const nomeC=(m?m[1]:txt.split(",")[0]).trim(),uf=m?m[2].toUpperCase():"";
+ const g=await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nomeC)}&count=10&language=pt&countryCode=BR`)).json();
+ return (g.results||[]).find(r=>uf&&UF_NOME[uf]&&r.admin1===UF_NOME[uf])||(g.results||[])[0]||null;
+}
+async function tempoNaHora(lugarTxt,dia,hora){
+ if(!lugarTxt||!dia||!hora)return null;const d=diasPara(dia);if(d<0||d>15)return null;
+ const ck="cv_roupa_"+[lugarTxt,dia,hora].join("|");try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&c.em===localDate())return c}catch(e){}
+ const lugar=await geoCidade(lugarTxt);if(!lugar)return null;
+ const f=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lugar.latitude}&longitude=${lugar.longitude}&hourly=temperature_2m,precipitation_probability&timezone=America%2FSao_Paulo&start_date=${dia}&end_date=${dia}`)).json();
+ if(!f.hourly)return null;const h=Math.min(23,Math.max(0,parseInt(hora,10)||0));
+ const r={em:localDate(),temp:Math.round(f.hourly.temperature_2m[h]),chuva:f.hourly.precipitation_probability?(f.hourly.precipitation_probability[h]??0):0,lugar:lugar.name};
+ try{localStorage.setItem(ck,JSON.stringify(r))}catch(e){}
+ return r;
+}
+function tempEstimada(dia,hora){
+ const mes=Number(String(dia).slice(5,7))||1,h=parseInt(hora,10);const noite=h>=19||h<6,madr=h>=0&&h<7,tarde=h>=11&&h<17;
+ const [quente,frio]=[6,7,8].includes(mes)?[22,10]:[5,9].includes(mes)?[25,13]:[4,10].includes(mes)?[27,16]:[30,19];
+ return madr?frio:noite?frio+4:tarde?quente:Math.round((quente+frio)/2+2);
+}
+function roupaPara(temp,{noite,veiculo,chuva,aviao}){
+ let roupa,ic;
+ if(temp<=12){roupa="Calça, blusa de frio ou moletom, jaqueta, meia e tênis";ic="🧥"}
+ else if(temp<=17){roupa="Calça, blusa de frio ou moletom e tênis";ic="🧥"}
+ else if(temp<=22){roupa="Calça, camiseta e tênis";ic="👖"}
+ else if(temp<=26){roupa=noite?"Calça, camiseta e tênis":"Bermuda ou calça leve, camiseta e tênis";ic="👕"}
+ else{roupa=noite?"Bermuda ou calça leve, camiseta e tênis":"Bermuda, camiseta e chinelo";ic="🩳"}
+ if(aviao&&/chinelo/.test(roupa))roupa=roupa.replace("chinelo","tênis (o chinelo vai na mala)");
+ const extras=[];
+ if(veiculo&&temp>17)extras.push(`🧥 Leve uma blusa na mão: o ar-condicionado do ${aviao?"avião":"ônibus"} costuma ser gelado.`);
+ if(veiculo&&noite)extras.push("😴 De noite na estrada: roupa confortável para cochilar.");
+ if(chuva>=50)extras.push(`☔ Chance de chuva (${chuva}%): deixe o guarda-chuva à mão.`);
+ return {roupa,ic,extras};
+}
+function roupaLado(t,lado){
+ const dia=lado==="ida"?t.data:(t.dataVolta||""),hora=lado==="ida"?t.horaSaida:t.horaVolta;
+ return {dia,hora,lugar:lado==="ida"?(t.localSaida||""):(t.cidade||"")};
+}
+let roupaAberta=false;
+function roupaHTML(t,prev){
+ const veiculo=["excursao","onibus","aviao"].includes(t.tipoViagem),aviao=t.tipoViagem==="aviao";
+ const linhas=[],resumo=[];
+ for(const lado of ["ida","volta"]){
+  const L=roupaLado(t,lado);const tit=lado==="ida"?"🚌 Ida":"🏠 Volta";
+  if(!L.dia||!L.hora){linhas.push(`<div class="roupaLado"><b>${tit}</b><small>Coloque a ${lado==="ida"?"data e o horário de saída":"data e o horário de volta"} na viagem (✏️ Editar) para ver a sugestão.</small></div>`);continue}
+  const p=prev&&prev[lado];const temp=p?p.temp:tempEstimada(L.dia,L.hora);const h=parseInt(L.hora,10);
+  const s=roupaPara(temp,{noite:h>=18||h<6,veiculo,chuva:p?p.chuva:0,aviao});
+  resumo.push(`${lado==="ida"?"Ida":"Volta"}: ${s.ic} ${s.roupa.split(",")[0].toLowerCase()}`);
+  linhas.push(`<div class="roupaLado"><b>${tit} — ${dataSem(L.dia).split(",")[0]} ${dateBR(L.dia).slice(0,5)} às ${esc(L.hora)}</b><div class="roupaSug">${s.ic} ${s.roupa}</div><small>${p?`🌡️ Previsão: <b>${p.temp}°</b> nessa hora${p.lugar?" em "+esc(p.lugar):""}`:`🌡️ Estimativa pela época do ano (por volta de ${temp}°). A previsão de verdade entra 15 dias antes.`}</small>${s.extras.length?`<small>${s.extras.join("<br>")}</small>`:""}</div>`);
+ }
+ return `<details class="roupaBox" id="roupaDet"${roupaAberta?" open":""}><summary><span><b>👕 Com que roupa ir e voltar</b>${resumo.length?`<small>${resumo.join(" • ")}</small>`:""}</span><span class="secSeta">▾</span></summary>${linhas.join("")}<div class="notice" style="margin:6px 0 0">É só uma sugestão pelo horário e pelo tempo. Quem decide é você 😉</div></details>`;
+}
+async function mostrarRoupa(t){
+ const box=$("malaRoupa");if(!box)return;box.innerHTML=roupaHTML(t,null);
+ const prev={};
+ for(const lado of ["ida","volta"]){const L=roupaLado(t,lado);try{const r=await tempoNaHora(L.lugar,L.dia,L.hora);if(r)prev[lado]=r}catch(e){}}
+ if(malaId===t.id&&(prev.ida||prev.volta))box.innerHTML=roupaHTML(t,prev);
+}
+(function(){const tb=$("malaTempo");if(tb&&!$("malaRoupa"))tb.insertAdjacentHTML("afterend",'<div id="malaRoupa"></div>')})();
+document.addEventListener("toggle",e=>{if(e.target&&e.target.id==="roupaDet")roupaAberta=e.target.open},true);
+const __abrirMala87=abrirMala;
+abrirMala=function(id){__abrirMala87(id);roupaAberta=false;const t=viagens.find(x=>x.id===id);if(t)mostrarRoupa(t)};
 </script>
 </body>
 
