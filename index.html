@@ -450,6 +450,50 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .trocaWrap{position:relative;display:inline-block;max-width:62%}
 .trocaWrap .trocaCidade{max-width:100%}
 .trocaWrap select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer;padding:0;border:0}
+/* v3.9: escolher cidade salva no cardápio */
+.selCidWrap{position:relative;display:inline-block;flex:none}
+.selCidWrap select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;padding:0;border:0;cursor:pointer}
+/* v4.0: mala e contagem */
+.bolinhaPend{display:inline-block;width:9px;height:9px;border-radius:50%;background:#EF8C00;margin-left:6px;vertical-align:middle;box-shadow:0 0 0 2px #fff}
+.malaBloco{margin-top:10px}
+.malaBloco>label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.malaChips{display:flex;flex-wrap:wrap;gap:6px}
+.malaChips button{border:1.5px solid var(--line);background:#fff;color:var(--text);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:700}
+.malaChips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.malaBarra{height:8px;border-radius:9px;background:var(--panel2);margin-top:14px;overflow:hidden;border:1px solid var(--line)}
+.malaBarra i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.malaStatus{font-size:12px;font-weight:800;color:var(--accent);margin-top:5px}
+.malaCat{margin-top:12px}
+.malaCat h3{font-size:14px;margin:0 0 4px}
+.malaItem{display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line);padding:8px 2px}
+.malaItem input{width:22px;height:22px;flex:none;accent-color:var(--accent);margin:0}
+.malaItem span{flex:1;font-size:14px}
+.malaItem.ok span{text-decoration:line-through;color:var(--muted)}
+.malaItem button{border:0;background:none;color:var(--muted);font-size:15px;padding:2px 6px}
+.malaAdd{display:flex;gap:7px;margin-top:12px}
+.malaAdd input{flex:1}
+.faltamTxt{display:inline-block;font-weight:900;color:var(--accent);margin-right:6px}
+/* v4.0: mala e contagem */
+.bolinhaPend{display:inline-block;width:9px;height:9px;border-radius:50%;background:#EF8C00;margin-left:6px;vertical-align:middle;box-shadow:0 0 0 2px #fff}
+.malaBloco{margin-top:10px}
+.malaBloco>label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.malaChips{display:flex;flex-wrap:wrap;gap:6px}
+.malaChips button{border:1.5px solid var(--line);background:#fff;color:var(--text);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:700}
+.malaChips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.malaBarra{height:8px;border-radius:9px;background:var(--panel2);margin-top:14px;overflow:hidden;border:1px solid var(--line)}
+.malaBarra i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.malaStatus{font-size:12px;font-weight:800;color:var(--accent);margin-top:5px}
+.malaCat{margin-top:12px}
+.malaCat h3{font-size:14px;margin:0 0 4px}
+.malaItem{display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line);padding:8px 2px}
+.malaItem input{width:22px;height:22px;flex:none;accent-color:var(--accent);margin:0}
+.malaItem span{flex:1;font-size:14px}
+.malaItem.ok span{text-decoration:line-through;color:var(--muted)}
+.malaItem button{border:0;background:none;color:var(--muted);font-size:15px;padding:2px 6px}
+.malaAdd{display:flex;gap:7px;margin-top:12px}
+.malaAdd input{flex:1}
+.faltamTxt{display:inline-block;font-weight:900;color:var(--accent);margin-right:6px}
+.malaQtd{flex:none;border:1px solid var(--accent)!important;color:var(--accent)!important;background:var(--panel2)!important;border-radius:999px;font-size:12px!important;font-weight:900;padding:3px 9px!important;min-width:48px}
 </style>
 
 </head>
@@ -515,7 +559,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
   <div id="comidaConteudo" style="display:none;margin-top:10px">
     <div class="grid">
       <div class="field"><label>Restaurante (opcional)</label><input id="cRest" placeholder="Ex.: Restaurante do Zé"></div>
-      <div class="field"><label>Cidade</label><div class="searchLine"><input id="cCidade" list="listaCidades" placeholder="Ex.: Peruíbe, SP"><label class="btn searchSmall" title="Câmera" aria-label="Tirar foto do cardápio" style="cursor:pointer">📷<input type="file" id="cFoto" accept="image/*" capture="environment" hidden></label></div></div>
+      <div class="field"><label>Cidade</label><div class="searchLine"><input id="cCidade" list="listaCidades" placeholder="Ex.: Peruíbe, SP" autocomplete="off"><span class="selCidWrap"><button type="button" class="btn secondary searchSmall" tabindex="-1" aria-hidden="true">▾</button><select id="cSelCidade" aria-label="Escolher cidade salva"></select></span><label class="btn searchSmall" title="Câmera" aria-label="Tirar foto do cardápio" style="cursor:pointer">📷<input type="file" id="cFoto" accept="image/*" capture="environment" hidden></label></div></div>
     </div>
     <div id="cTipicos"></div>
         <div id="cStatus" class="notice"></div>
@@ -760,6 +804,15 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 </div>
 
 <div class="modal" id="modalMapa"><div class="sheet mapaSheet"><button class="close" id="fecharMapa" aria-label="Fechar mapa">×</button><h2 id="mapaTitulo">🗺️ Mapa</h2><div id="mapaStatus" class="notice"></div><div id="mapaBox"></div></div></div>
+<div class="modal" id="modalMala"><div class="sheet"><button class="close" id="fecharMala" aria-label="Fechar">×</button><h2>🧳 Mala da viagem</h2><div id="malaTitulo" class="notice"></div>
+<div class="malaBloco"><label>Quem vai</label><div class="malaChips" id="malaQuem"></div></div>
+<div class="malaBloco"><label>Tipo de viagem</label><div class="malaChips" id="malaTipo"></div></div>
+<div class="malaBarra"><i id="malaProg"></i></div><div id="malaStatus" class="malaStatus"></div>
+<div id="malaLista"></div>
+<div class="malaAdd"><input id="malaNovoItem" placeholder="Adicionar item (ex.: Carregador do relógio)"><button type="button" class="btn searchSmall" id="malaAddBtn" aria-label="Adicionar item">＋</button></div>
+<div class="actions" style="margin-top:10px"><button type="button" class="btn secondary" id="malaEnviar">📤 Enviar lista</button><button type="button" class="btn secondary" id="malaDesmarcar">↩️ Desmarcar tudo</button></div>
+<div class="notice">Use o "Desmarcar tudo" na volta, para conferir se não esqueceu nada no hotel.</div>
+</div></div>
 <div class="modal" id="modalPagamentos"><div class="sheet"><button class="close" id="fecharPagamentos">×</button><h2>💰 Pagamentos da viagem</h2><div id="pagamentoViagemTitulo" class="notice"></div><div id="pagamentoEditor"></div><div class="actions"><button class="btn secondary" type="button" id="fecharPagamentos2">Fechar</button></div></div></div>
 
 <div class="modal" id="modalLugar">
@@ -807,7 +860,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="4.2";
+const APP_VERSAO="4.4";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1016,6 +1069,7 @@ $("formViagem").onsubmit=e=>{
  lembretes:[...$("fLembretes").selectedOptions].map(o=>o.value),gastos:Math.max(numBR($("fGastos").value),0),roteiro:$("fRoteiro").value.trim(),pagamentos:[...document.querySelectorAll('input[name="pagamento"]:checked')].map(x=>x.value),origemTransporte:$("fOrigemTransporte").value.trim(),destinoTransporte:$("fDestinoTransporte").value.trim(),status:pago>=total&&total>0?"paga":"pagar"};
  if(obj.modoPagamento==="parcelado"){if(obj.numeroParcelas<2){alert("Informe pelo menos 2 parcelas.");return}if(!obj.primeiroVencimento){alert("Informe o primeiro vencimento.");return}obj.entrada=entradaForm();obj.dataEntrada=obj.entrada?($("fDataEntrada").value||""):"";if(obj.entrada>obj.valorTotal){alert("A entrada não pode ser maior que o valor total.");return}obj.parcelas=gerarParcelas(Math.max(obj.valorTotal-obj.entrada,0),obj.numeroParcelas,obj.primeiroVencimento,parcelasForm);obj.valorPago=somaPagoViagem(obj);obj.status=obj.valorTotal>0&&faltanteViagem(obj)<=0?"paga":"pagar"}else{obj.parcelas=[]}if(obj.dataVolta&&obj.dataVolta<obj.data){alert("A data de volta não pode ser anterior à ida.");return}
  if(window.lerAcompForm)obj.acompanhantes=lerAcompForm();
+ {const velha=editId&&viagens.find(x=>x.id===editId);if(velha)["mala","proximaFixada"].forEach(k=>{if(velha[k]!==undefined&&obj[k]===undefined)obj[k]=velha[k]})}
  if(editId) viagens=viagens.map(x=>x.id===editId?obj:x);else viagens.push(obj);
  save();const ideiaOrigem=ideiaEmEdicao;closeModal();if(ideiaOrigem){ideias=ideias.filter(x=>x.id!==ideiaOrigem);saveIdeias();renderIdeias()}render();
 };
@@ -1100,7 +1154,7 @@ function renderProximaViagem(t){
  const tipo={viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"}[t.tipoViagem]||"Viagem";
  const ic={viagem:"🏖️",excursao:"🚌",carro:"🚗",moto:"🏍️",aviao:"✈️",onibus:"🚌",outro:"➕"}[t.tipoViagem]||"🧳";
  const fixada=!!t.proximaFixada;
- box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta)+(t.horaVolta?" às "+esc(t.horaVolta):""):""} • 📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div></div><div class="nextTripActions"><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>`;
+ box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">${window.faltamTexto?faltamTexto(t):""}📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta)+(t.horaVolta?" às "+esc(t.horaVolta):""):""} • 📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div></div><div class="nextTripActions"><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>`;
 }
 /* Festas conhecidas: o mês costuma se repetir todo ano, mas as datas exatas mudam — sempre confirmar */
 const FESTAS=[
@@ -1211,6 +1265,7 @@ function card(t){
     <button class="btn secondary" type="button" data-action="pagamentos" data-id="${t.id}">💳 Pagamentos</button>
     <button class="btn secondary" type="button" data-action="calendar" data-id="${t.id}">📅 Agenda</button>
     <button class="btn secondary" type="button" data-action="mapa" data-id="${t.id}">🗺️ Mapa</button>
+    <button class="btn secondary" type="button" data-mala="${t.id}">🧳 Mala${window.malaPendente&&malaPendente(t)?'<i class="bolinhaPend"></i>':""}</button>
     <button class="btn secondary" type="button" data-action="toggle" data-id="${t.id}">${t.status==="paga"?"↩️ Reabrir":"✅ Marcar paga"}</button>
     <button class="btn tripDel" type="button" data-action="delete" data-id="${t.id}">🗑️ Excluir viagem</button>
    </div>
@@ -1669,6 +1724,7 @@ if(!BK_CHAVES.includes(PASSEIOS_KEY))BK_CHAVES.push(PASSEIOS_KEY);
 function passeiosExtra(){return lerJSON(PASSEIOS_KEY,[])}
 function cidadePasseio(){
  const digitada=$("cidadeBusca").value.trim();if(digitada)return digitada;
+ try{if(localStorage.getItem("controle_viagens_sem_cidade_padrao")==="1")return ""}catch(e){}
  const hoje=localDate(),prox=[...viagens].filter(t=>t.cidade&&(t.dataVolta||t.data)>=hoje).sort((a,b)=>a.data.localeCompare(b.data))[0];
  return prox?.cidade||"";
 }
@@ -2026,7 +2082,7 @@ const PRATOS_TIPICOS={"balneario camboriu":"Frutos do mar, sequência de camarã
 let cardapio=[],cardSel=new Set();
 function cidadeComida(){const t=[...(viagens||[])].filter(x=>x.data>=localDate()).sort((a,b)=>a.data.localeCompare(b.data))[0];return t?.cidade||""}
 function mostrarTipicos(){const c=semAcento(($("cCidade").value||"").split(",")[0]).toLowerCase().trim();const k=Object.keys(PRATOS_TIPICOS).find(x=>c&&(c===x||c.includes(x)||x.includes(c)&&c.length>3));$("cTipicos").innerHTML=k?`<div class="tipicos">🍲 <b>O que comer em ${esc(($("cCidade").value||"").split(",")[0])}:</b> ${PRATOS_TIPICOS[k]}</div>`:""}
-$("btnComida").onclick=()=>{const c=$("comidaConteudo"),abrir=c.style.display==="none";c.style.display=abrir?"block":"none";$("setaComida").textContent=abrir?"︿":"︾";if(abrir&&!$("cCidade").value){$("cCidade").value=cidadeComida()}mostrarTipicos()};
+$("btnComida").onclick=()=>{const c=$("comidaConteudo"),abrir=c.style.display==="none";c.style.display=abrir?"block":"none";$("setaComida").textContent=abrir?"︿":"︾";if(abrir&&typeof montarSelCidadeComida==="function")montarSelCidadeComida();mostrarTipicos()};
 $("cCidade").addEventListener("input",mostrarTipicos);$("cCidade").addEventListener("change",mostrarTipicos);
 document.addEventListener("click",e=>{
  const b=e.target.closest("[data-rec-comida]");if(!b)return;
@@ -2183,6 +2239,130 @@ $("cidadeBusca").addEventListener("change",()=>{salvarCidade($("cidadeBusca").va
 const __renderPasseios37=renderPasseios;
 renderPasseios=function(...a){const r=__renderPasseios37.apply(this,a);montarSeletorCidade();return r};
 renderPasseios();
+</script>
+<script>
+/* ===== v3.9: cidade não volta sozinha depois de apagada + roleta de cidades no cardápio ===== */
+function semCidadePadrao(on){try{localStorage.setItem("controle_viagens_sem_cidade_padrao",on?"1":"0")}catch(e){}}
+$("limparCidadeBusca").addEventListener("click",()=>{semCidadePadrao(true);renderPasseios()});
+$("cidadeBusca").addEventListener("input",()=>{if(!$("cidadeBusca").value.trim()){semCidadePadrao(true);renderPasseios()}});
+function montarSelCidadeComida(){
+ const sel=$("cSelCidade");if(!sel)return;
+ const lista=typeof listaCidadesPasseio==="function"?listaCidadesPasseio():[];
+ sel.innerHTML=`<option value="" selected disabled>Escolha a cidade</option>`+lista.map(c=>`<option value="${esc(c)}">📍 ${esc(c)}</option>`).join("")+`<option value="__limpar">✕ Deixar em branco</option>`;
+}
+$("cSelCidade").addEventListener("change",e=>{
+ const v=e.target.value;$("cCidade").value=v==="__limpar"?"":v;
+ if(v!=="__limpar"&&typeof salvarCidade==="function")salvarCidade(v);
+ mostrarTipicos();montarSelCidadeComida();
+});
+$("cCidade").addEventListener("change",()=>{const v=$("cCidade").value.trim();if(v&&typeof salvarCidade==="function")salvarCidade(v);montarSelCidadeComida()});
+$("cSelCidade").addEventListener("focus",montarSelCidadeComida);
+montarSelCidadeComida();
+renderPasseios();
+</script>
+<script>
+/* ===== v4.0: 🧳 checklist da mala + contagem regressiva da viagem ===== */
+const MALA_CATS=["Documentos","Roupas","Higiene","Remédios","Eletrônicos","Praia","Frio","Ônibus","Criança","Parque / Piscina","Meus itens"];
+const MALA_MODELOS={
+ base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Band-aid / curativo"],Eletrônicos:["Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
+ m:{Roupas:["Cuecas"],Higiene:["Aparelho de barbear"]},
+ f:{Roupas:["Calcinhas","Sutiãs"],Higiene:["Absorventes","Maquiagem","Secador / prancha","Elástico / presilha de cabelo"]},
+ c:{Criança:["Fraldas","Lenço umedecido","Mamadeira / copinho","Brinquedo ou livrinho","Roupas extras da criança","Remédios da criança"]},
+ praia:{Praia:["Protetor solar","Óculos de sol","Boné / chapéu","Toalha de praia","Roupa de banho","Canga / saída de praia","Repelente","Bolsa para a praia"]},
+ frio:{Frio:["Casaco","Gorro","Luvas","Cachecol","Meia grossa","Hidratante / protetor labial"]},
+ onibus:{Ônibus:["Travesseiro de pescoço","Cobertor / manta","Garrafinha de água","Lanche para a viagem","Lenço / álcool em gel"]},
+ parque:{"Parque / Piscina":["Roupa de banho","Toalha","Protetor solar","Capa de chuva","Pochete / bolsinha","Sapato confortável"]}
+};
+const MALA_QUEM=[["m","👨 Masculino"],["f","👩 Feminino"],["c","🧒 Criança"]];
+const MALA_TIPOS=[["praia","🏖️ Praia"],["frio","❄️ Frio"],["onibus","🚌 Ônibus / excursão"],["parque","🎢 Parque / piscina"]];
+const PRAIAS=/camboriu|penha|florianopolis|bombinhas|itapema|peruibe|santos|ubatuba|caraguatatuba|ilhabela|guaruja|bertioga|itanhaem|praia grande|sao sebastiao|paraty|angra|arraial|buzios|cabo frio|porto seguro|maceio|maragogi|natal|fortaleza|salvador|porto de galinhas|recife|ilha comprida|mongagua/;
+const FRIOS=/campos do jordao|monte verde|gramado|canela|urubici|sao joaquim|bento goncalves|petropolis/;
+const PARQUES=/beto carrero|olimpia|thermas|hopi hari|wet|caldas novas|aguas de lindoia|brotas/;
+let malaId=null;
+function diasViagem(t){if(!t.data)return 0;if(!t.dataVolta)return 1;return Math.max(1,Math.round((new Date(t.dataVolta+"T12:00:00")-new Date(t.data+"T12:00:00"))/86400000)+1)}
+function qtdSugerida(n,d){
+ const k=semAcento(n).toLowerCase(),meia=Math.ceil(d/2);
+ if(/cueca|calcinha|meias$|^meias/.test(k))return d+1;
+ if(/camiseta/.test(k))return d;
+ if(/shorts|bermuda/.test(k))return Math.max(1,meia);
+ if(/calca/.test(k))return Math.max(1,Math.ceil(d/3));
+ if(/sutia/.test(k))return Math.max(1,meia);
+ if(/pijama/.test(k))return d>4?2:1;
+ if(/roupa de banho/.test(k))return d>2?2:1;
+ if(/fralda/.test(k))return d*6;
+ if(/roupas extras da crianca/.test(k))return d+1;
+ if(/blusa de frio|casaco/.test(k))return d>5?2:1;
+ if(/meia grossa/.test(k))return d;
+ return 0;
+}
+function qtdItem(m,n,d){const q=(m.qtd||{})[n];return q!=null?q:qtdSugerida(n,d)}
+function malaDe(t){
+ if(!t.mala){const c=semAcento((t.cidade||"")+" "+(t.nome||"")).toLowerCase();const tipos=[];
+  if(["excursao","onibus"].includes(t.tipoViagem))tipos.push("onibus");if(PRAIAS.test(c))tipos.push("praia");if(FRIOS.test(c))tipos.push("frio");if(PARQUES.test(c))tipos.push("parque");
+  t.mala={quem:["m"],tipos,marcados:[],extras:[],tirados:[]};}
+ return t.mala;
+}
+function malaItens(m){
+ const grupos=["base",...m.quem,...m.tipos],porCat={},vistos=new Set();
+ const pos=(cat,n)=>{const k=semAcento(n).toLowerCase();if(vistos.has(k)||m.tirados.includes(n))return;vistos.add(k);(porCat[cat]=porCat[cat]||[]).push(n)};
+ grupos.forEach(g=>{const mod=MALA_MODELOS[g]||{};Object.keys(mod).forEach(cat=>mod[cat].forEach(n=>pos(cat,n)))});
+ (m.extras||[]).forEach(n=>pos("Meus itens",n));
+ return porCat;
+}
+function malaPendente(t){
+ if(!t||!t.data)return false;const d=diasPara(t.data);if(d<0||d>7)return false;
+ const m=malaDe(t),todos=Object.values(malaItens(m)).flat();return todos.some(n=>!m.marcados.includes(n));
+}
+function diasPara(iso){return Math.round((new Date(iso+"T12:00:00")-new Date(localDate()+"T12:00:00"))/86400000)}
+function faltamTexto(t){const d=diasPara(t.data);if(d<0)return "";const txt=d===0?"🎉 É hoje!":d===1?"⏳ É amanhã!":`⏳ Faltam ${d} dias`;return `<span class="faltamTxt">${txt}</span><br>`}
+function abrirMala(id){
+ const t=viagens.find(x=>x.id===id);if(!t)return;malaId=id;malaDe(t);
+ $("malaTitulo").innerHTML=`<b>${esc(t.nome)}</b>${t.data?" • "+dataSem(t.data):""}`;
+ renderMala();$("modalMala").classList.add("open");
+}
+function renderMala(){
+ const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
+ $("malaQuem").innerHTML=MALA_QUEM.map(([k,r])=>`<button type="button" class="${m.quem.includes(k)?"on":""}" data-mala-quem="${k}">${r}</button>`).join("");
+ $("malaTipo").innerHTML=MALA_TIPOS.map(([k,r])=>`<button type="button" class="${m.tipos.includes(k)?"on":""}" data-mala-tipo="${k}">${r}</button>`).join("");
+ const porCat=malaItens(m),todos=Object.values(porCat).flat(),ok=todos.filter(n=>m.marcados.includes(n)).length;
+ $("malaProg").style.width=(todos.length?Math.round(ok/todos.length*100):0)+"%";
+ {const d=diasViagem(t);$("malaStatus").textContent=(!todos.length?"":ok===todos.length?"✅ Tudo na mala!":ok===0?"Marque o que já colocou na mala":"Falta pouco… continue marcando")+(d?` • ${d===1&&!t.dataVolta?"coloque a data de volta para calcular as quantidades":d+" dias de viagem"}`:"")}
+ $("malaLista").innerHTML=MALA_CATS.filter(c=>porCat[c]).map(c=>`<div class="malaCat"><h3>${{Documentos:"🪪",Roupas:"👕",Higiene:"🧴",Remédios:"💊",Eletrônicos:"🔌",Praia:"🏖️",Frio:"❄️",Ônibus:"🚌",Criança:"🧒","Parque / Piscina":"🎢","Meus itens":"⭐"}[c]||"•"} ${c}</h3>${porCat[c].map(n=>{const on=m.marcados.includes(n);const q=qtdItem(m,n,diasViagem(t));return `<label class="malaItem ${on?"ok":""}"><input type="checkbox" data-mala-item="${esc(n)}" ${on?"checked":""}><span>${esc(n)}</span>${q||/cueca|calcinha|camiseta|shorts|bermuda|calca|meia|sutia|pijama|roupa/i.test(semAcento(n))?`<button type="button" class="malaQtd" data-mala-qtd="${esc(n)}" aria-label="Quantidade">${q?q+(q>1?" un.":" un."):"qtd"}</button>`:""}<button type="button" data-mala-tirar="${esc(n)}" aria-label="Tirar da lista">✕</button></label>`}).join("")}</div>`).join("");
+}
+function salvarMala(){save();renderMala();render()}
+$("fecharMala").onclick=()=>$("modalMala").classList.remove("open");
+$("modalMala").addEventListener("click",e=>{
+ const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
+ const q=e.target.closest("[data-mala-quem]");if(q){const k=q.dataset.malaQuem;m.quem=m.quem.includes(k)?m.quem.filter(x=>x!==k):[...m.quem,k];salvarMala();return}
+ const tp=e.target.closest("[data-mala-tipo]");if(tp){const k=tp.dataset.malaTipo;m.tipos=m.tipos.includes(k)?m.tipos.filter(x=>x!==k):[...m.tipos,k];salvarMala();return}
+ const qb=e.target.closest("[data-mala-qtd]");if(qb){e.preventDefault();const n=qb.dataset.malaQtd,atual=qtdItem(m,n,diasViagem(t));const v=prompt(`Quantas unidades de "${n}"?\n(deixe vazio para voltar ao cálculo automático)`,atual||"");if(v===null)return;m.qtd=m.qtd||{};if(v.trim()==="")delete m.qtd[n];else{const x=parseInt(v);if(x>=0)m.qtd[n]=x}salvarMala();return}
+ const tr=e.target.closest("[data-mala-tirar]");if(tr){e.preventDefault();const n=tr.dataset.malaTirar;if(m.extras.includes(n))m.extras=m.extras.filter(x=>x!==n);else m.tirados.push(n);m.marcados=m.marcados.filter(x=>x!==n);salvarMala();return}
+});
+$("modalMala").addEventListener("change",e=>{
+ const c=e.target.closest("[data-mala-item]");if(!c)return;const t=viagens.find(x=>x.id===malaId);const m=malaDe(t),n=c.dataset.malaItem;
+ m.marcados=c.checked?[...new Set([...m.marcados,n])]:m.marcados.filter(x=>x!==n);salvarMala();
+});
+function addItemMala(){const v=$("malaNovoItem").value.trim();if(!v)return;const t=viagens.find(x=>x.id===malaId);const m=malaDe(t);m.tirados=m.tirados.filter(x=>x.toLowerCase()!==v.toLowerCase());if(!m.extras.some(x=>x.toLowerCase()===v.toLowerCase()))m.extras.push(v);$("malaNovoItem").value="";salvarMala()}
+$("malaAddBtn").onclick=addItemMala;
+$("malaNovoItem").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addItemMala()}});
+$("malaDesmarcar").onclick=()=>{const t=viagens.find(x=>x.id===malaId);if(!t)return;if(confirm("Desmarcar todos os itens para conferir de novo?")){malaDe(t).marcados=[];salvarMala()}};
+$("malaEnviar").onclick=async()=>{
+ const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t),porCat=malaItens(m);
+ const texto=`🧳 Mala - ${t.nome}${t.data?" ("+dateBR(t.data)+")":""}\n`+MALA_CATS.filter(c=>porCat[c]).map(c=>`\n${c}:\n`+porCat[c].map(n=>{const q=qtdItem(m,n,diasViagem(t));return (m.marcados.includes(n)?"✅ ":"⬜ ")+n+(q?` (${q})`:"")}).join("\n")).join("\n");
+ try{if(navigator.share){await navigator.share({title:"Mala da viagem",text:texto});return}}catch(err){if(err&&err.name==="AbortError")return}
+ window.open("https://wa.me/?text="+encodeURIComponent(texto),"_blank");
+};
+document.addEventListener("click",e=>{const b=e.target.closest("[data-mala]");if(b){e.preventDefault();abrirMala(Number(b.dataset.mala))}});
+/* aviso ao abrir o app quando a viagem está perto (uma vez por dia) */
+(function(){
+ try{
+  const hoje=localDate(),chave="controle_viagens_aviso_viagem_dia";if(localStorage.getItem(chave)===hoje)return;
+  const t=[...viagens].filter(x=>x.data&&diasPara(x.data)>=0&&diasPara(x.data)<=7).sort((a,b)=>a.data.localeCompare(b.data))[0];if(!t)return;
+  const d=diasPara(t.data),quando=d===0?"é hoje":d===1?"é amanhã":`é daqui a ${d} dias`;
+  setTimeout(()=>{avisar(`🧳 A viagem ${t.nome} ${quando}${t.horaSaida?" às "+t.horaSaida:""}! ${malaPendente(t)?"Já conferiu a mala?":""}`);try{localStorage.setItem(chave,hoje)}catch(e){}},1500);
+ }catch(e){}
+})();
+render();
 </script>
 </body>
 
