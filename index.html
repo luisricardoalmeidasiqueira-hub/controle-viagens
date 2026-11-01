@@ -692,6 +692,14 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .etqBox .notice{font-size:12.5px}
 .iaBtn{position:relative}.iaDot{position:absolute;right:3px;bottom:3px;width:10px;height:10px;border-radius:50%;background:#BDBDBD;border:2px solid #fff}.iaDot.ok{background:#2E9E44}.iaDot.lendo{background:#F9A825}.iaDot.erro{background:#D32F2F}
 .iaLegenda{display:grid;gap:4px;font-size:13px;margin:4px 0 10px}.iaLegenda span{display:flex;align-items:center;gap:7px}.iaLegenda i{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
+.docLinha{border:1px solid var(--line);border-radius:12px;margin-bottom:6px;background:#fff}
+.docLinha>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer}
+.docLinha>summary::-webkit-details-marker{display:none}
+.docLinha[open]>summary .secSeta{transform:rotate(180deg)}
+.docLIc{font-size:22px;flex:none}.docLTxt{flex:1;min-width:0;display:flex;flex-direction:column}.docLTxt b{font-size:14px}.docLTxt small{color:var(--muted);font-size:12.5px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.docLinha .docItem{border:0;border-top:1px solid var(--line);border-radius:0 0 12px 12px;margin:0}
+.docVencDot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#E65100;vertical-align:middle;margin-left:4px}
+.docNovoBtn{padding:8px 14px!important;font-size:14px!important}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
 </head>
@@ -1096,7 +1104,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="8.3";
+const APP_VERSAO="8.4";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -3426,15 +3434,16 @@ Se não conseguir ler algum campo, deixe vazio. Não invente.`},{inline_data:{mi
  for(const psm of [undefined,"6","11"]){const x=lerNotinha(await ocrFoto(f,psm));if(x.valor){melhor=x;break}if(!melhor.desc)melhor=x}
  return melhor;
 }
-let docsAberto=false,docRasc=null,docEdId=null;
+let docsAberto=false,docRasc=null,docEdId=null;const docsAbertos=new Set();
+document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.classList&&d.classList.contains("docLinha")){if(d.open)docsAbertos.add(d.dataset.docId);else docsAbertos.delete(d.dataset.docId)}},true);
 function renderDocs(){
- const L=docsLer();$("btnDocs").firstChild.textContent=`🪪 Meus documentos e carteirinhas${L.length?" ("+L.length+")":""} `;
+ const L=docsLer();$("btnDocs").firstChild.textContent=`🪪 Meus documentos e carteirinhas `;
  const box=$("docsConteudo");if(!docsAberto)return;
- box.innerHTML=`<div class="notice" style="margin:0 0 8px">Foto e número das carteirinhas (SUS, convênio, RG…) para ter sempre no celular. Fica guardado só neste aparelho (e no backup).</div>
+ box.innerHTML=`${L.length?"":`<div class="notice" style="margin:0 0 8px">Foto e número das carteirinhas (SUS, convênio, RG…) para ter sempre no celular. Fica guardado só neste aparelho (e no backup).</div>`}
  <div id="docFormBox"></div>
- ${L.map(d=>{const tp=docTipo(d.tipo);return `<div class="docItem">${d.foto?`<img src="${d.foto}" alt="Foto do documento" data-doc-ver="${d.id}">`:`<span class="docIc">${tp[1]}</span>`}<div class="docInfo"><small>${tp[1]} ${esc((d.tipo==="outro"||d.tipo==="convenio")&&d.nomeDoc?d.nomeDoc:tp[2])}${d.titular?" • "+esc(d.titular):""}</small><div class="docNum">${d.numero?esc(docFormatar(d.numero,d.tipo)):"<span style='color:var(--muted);font-weight:600'>sem número</span>"}</div>${d.codigo?`<small>Código: <b>${esc(d.codigo)}</b></small>`:""}${d.validade?`<small style="${d.validade<localDate()?"color:#C62828;font-weight:700":""}">${d.validade<localDate()?"⚠️ Venceu em ":"Válido até "}${dateBR(d.validade)}</small>`:""}
- <div class="docBtns"><button type="button" data-doc-ver="${d.id}">🔍 Ver</button>${d.numero?`<button type="button" data-doc-copiar="${d.id}">📋 Copiar número</button>`:""}<button type="button" data-doc-editar="${d.id}">✏️ Editar</button><button type="button" data-doc-apagar="${d.id}">🗑️</button></div></div></div>`}).join("")||`<div class="notice">Nenhum documento salvo ainda.</div>`}
- <div class="actions" style="margin-top:8px"><button type="button" class="btn" id="docNovo">➕ Adicionar documento</button></div>`;
+ ${L.map(d=>{const tp=docTipo(d.tipo),nomeD=(d.tipo==="outro"||d.tipo==="convenio")&&d.nomeDoc?d.nomeDoc:tp[2],venc=d.validade&&d.validade<localDate();return `<details class="docLinha" data-doc-id="${d.id}"${docsAbertos.has(d.id)?" open":""}><summary><span class="docLIc">${tp[1]}</span><span class="docLTxt"><b>${esc(nomeD)}${venc?' <span class="docVencDot" title="Vencido"></span>':""}</b><small>${d.numero?esc(docFormatar(d.numero,d.tipo)):"sem número"}</small></span><span class="secSeta">▾</span></summary><div class="docItem">${d.foto?`<img src="${d.foto}" alt="Foto do documento" data-doc-ver="${d.id}">`:`<span class="docIc">${tp[1]}</span>`}<div class="docInfo"><small>${tp[1]} ${esc((d.tipo==="outro"||d.tipo==="convenio")&&d.nomeDoc?d.nomeDoc:tp[2])}${d.titular?" • "+esc(d.titular):""}</small><div class="docNum">${d.numero?esc(docFormatar(d.numero,d.tipo)):"<span style='color:var(--muted);font-weight:600'>sem número</span>"}</div>${d.codigo?`<small>Código: <b>${esc(d.codigo)}</b></small>`:""}${d.validade?`<small style="${d.validade<localDate()?"color:#C62828;font-weight:700":""}">${d.validade<localDate()?"⚠️ Venceu em ":"Válido até "}${dateBR(d.validade)}</small>`:""}
+ <div class="docBtns"><button type="button" data-doc-ver="${d.id}">🔍 Ver</button>${d.numero?`<button type="button" data-doc-copiar="${d.id}">📋 Copiar número</button>`:""}<button type="button" data-doc-editar="${d.id}">✏️ Editar</button><button type="button" data-doc-apagar="${d.id}">🗑️</button></div></div></div></details>`}).join("")||`<div class="notice">Nenhum documento salvo ainda.</div>`}
+ <div class="actions" style="margin-top:8px"><button type="button" class="btn secondary docNovoBtn" id="docNovo">➕ Adicionar documento</button></div>`;
  if(docRasc)mostrarFormDoc();
 }
 function mostrarFormDoc(){
