@@ -712,6 +712,13 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .roupaLado{border-top:1px solid var(--line);padding:8px 0}
 .roupaLado b{font-size:13.5px}.roupaLado small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.45}
 .roupaSug{font-size:15px;font-weight:700;margin-top:4px}
+.malaItem .dragAlca,.dragAlca{flex:0 0 22px!important;width:26px;height:34px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#9AA5B1;touch-action:none;cursor:grab;margin-left:-4px;-webkit-user-select:none;user-select:none}
+.malaItem.arrastando{background:#FFF8E1;box-shadow:0 6px 18px #0002;border-radius:10px;position:relative;z-index:2}
+.precoTag{display:inline-block;font-style:normal;font-size:11px;font-weight:700;border-radius:8px;padding:1px 6px;margin:3px 4px 0 0}
+.precoTag.ok{background:#E8F5E9;color:#2E7D32}.precoTag.caro{background:#FFEBEE;color:#C62828}
+.precoTag.ia{background:#E3F2FD;color:#1565C0}.precoTag.ia.caro{background:#FFF3E0;color:#E65100}.precoTag.ia.barato{background:#E8F5E9;color:#2E7D32}
+.menuItem span{display:block}
+.cardResumo{border:1px solid var(--line);border-radius:10px;background:var(--panel2,#f4f6f8);padding:8px 10px;font-size:13px;margin-top:8px;line-height:1.5}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
 </head>
@@ -1116,7 +1123,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="8.8";
+const APP_VERSAO="8.9";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2391,6 +2398,7 @@ $("cItens").addEventListener("change",e=>{if(e.target.id==="cOrdem"){ordemCard=e
 $("cConta").addEventListener("change",e=>{const box=$("cConta");if(e.target.id==="cGorj")box.dataset.g=e.target.checked?"1":"0";if(e.target.id==="cPessoas")box.dataset.p=e.target.value;setTimeout(renderConta,0)});
 $("cConta").addEventListener("click",e=>{if(e.target.id==="cLimpar"){cardSel.clear();const f=$("cBusca")?.value||"";renderCardapio(f)}});
 $("cFoto").addEventListener("change",async e=>{
+ if(typeof iaChave==="function"&&iaChave()&&!e.target.__semIA)return;
  const f=e.target.files[0];if(!f)return;const st=$("cStatus");
  st.textContent="📷 Preparando a leitura do cardápio… (a 1ª vez demora um pouco)";
  try{await carregarTesseract()}catch(err){st.textContent="Não consegui carregar o leitor de imagem. Ele precisa de internet.";return}
@@ -3755,6 +3763,110 @@ async function mostrarRoupa(t){
 document.addEventListener("toggle",e=>{if(e.target&&e.target.id==="roupaDet")roupaAberta=e.target.open},true);
 const __abrirMala87=abrirMala;
 abrirMala=function(id){__abrirMala87(id);roupaAberta=false;const t=viagens.find(x=>x.id===id);if(t)mostrarRoupa(t)};
+/* v8.9: ↕️ arrastar para mudar a ordem dos itens da mala */
+const ORDEM_KEY="controle_viagens_mala_ordem";
+if(typeof BK_CHAVES!=="undefined"&&!BK_CHAVES.includes(ORDEM_KEY))BK_CHAVES.push(ORDEM_KEY);
+function ordemLer(){try{return JSON.parse(localStorage.getItem(ORDEM_KEY)||"{}")||{}}catch{return{}}}
+function ordemSalvar(o){try{localStorage.setItem(ORDEM_KEY,JSON.stringify(o))}catch(e){}}
+function nomeDoItem(li){const cb=li.querySelector("input[data-mala-item]");return cb?cb.dataset.malaItem:""}
+const __renderMala89=renderMala;
+renderMala=function(){
+ __renderMala89();const O=ordemLer();
+ document.querySelectorAll("#malaLista .malaCat").forEach(div=>{
+  const cat=div.dataset.cat,corpo=div.querySelector(".catCorpo");if(!corpo)return;
+  const itens=[...corpo.querySelectorAll(":scope>.malaItem")];if(!itens.length)return;
+  const ord=O[cat]||[];
+  if(ord.length&&itens.length>1){
+   const antes=itens[0].previousSibling;
+   const sorted=itens.map((li,i)=>({li,i,k:ord.indexOf(nomeDoItem(li))})).sort((a,b)=>(a.k<0?1000+a.i:a.k)-(b.k<0?1000+b.i:b.k)).map(x=>x.li);
+   let ref=antes;sorted.forEach(li=>{if(ref)ref.after(li);else corpo.prepend(li);ref=li});
+  }
+  if(itens.length>1)itens.forEach(li=>{if(!li.querySelector(".dragAlca"))li.insertAdjacentHTML("afterbegin",'<span class="dragAlca" aria-label="Arrastar para mudar a ordem" title="Arraste para mudar a ordem">⠿</span>')});
+ });
+};
+(function(){
+ let arr=null,ultimoY=0,rolar=null;
+ const sheet=()=>$("modalMala").querySelector(".sheet");
+ function mover(y){
+  if(!arr)return;const pai=arr.parentElement;const irmaos=[...pai.querySelectorAll(":scope>.malaItem")].filter(x=>x!==arr);
+  /* mexe nos vizinhos (não no item arrastado), para o dedo não "soltar" o item no iPhone */
+  let alvo=irmaos.length;for(let i=0;i<irmaos.length;i++){const r=irmaos[i].getBoundingClientRect();if(y<r.top+r.height/2){alvo=i;break}}
+  for(let g=0;g<60;g++){
+   const todos=[...pai.querySelectorAll(":scope>.malaItem")],pos=todos.indexOf(arr);
+   if(pos>alvo){const ant=todos[pos-1];arr.after(ant)}else if(pos<alvo){const prox=todos[pos+1];arr.before(prox)}else break;
+  }
+ }
+ function auto(){if(!arr)return;const sh=sheet(),r=sh.getBoundingClientRect();const v=ultimoY<r.top+90?-12:ultimoY>r.bottom-90?12:0;if(v){sh.scrollTop+=v;mover(ultimoY)}rolar=requestAnimationFrame(auto)}
+ $("modalMala").addEventListener("pointerdown",e=>{
+  const h=e.target.closest(".dragAlca");if(!h)return;e.preventDefault();e.stopPropagation();
+  arr=h.closest(".malaItem");arr.classList.add("arrastando");ultimoY=e.clientY;try{h.setPointerCapture(e.pointerId)}catch(er){}
+  if(navigator.vibrate)try{navigator.vibrate(15)}catch(er){}
+  rolar=requestAnimationFrame(auto);
+ },true);
+ $("modalMala").addEventListener("pointermove",e=>{if(!arr)return;e.preventDefault();ultimoY=e.clientY;mover(e.clientY)},true);
+ function soltar(){
+  if(!arr)return;cancelAnimationFrame(rolar);const div=arr.closest(".malaCat"),cat=div&&div.dataset.cat;arr.classList.remove("arrastando");
+  if(cat){const O=ordemLer();O[cat]=[...div.querySelectorAll(".catCorpo>.malaItem")].map(nomeDoItem).filter(Boolean);ordemSalvar(O)}
+  arr=null;
+ }
+ window.addEventListener("pointerup",soltar,true);window.addEventListener("pointercancel",soltar,true);window.addEventListener("touchend",soltar,true);
+ $("modalMala").addEventListener("click",e=>{if(e.target.closest(".dragAlca")){e.preventDefault();e.stopPropagation()}},true);
+})();
+
+/* v8.9: 🍽️ cardápio — até quanto quero pagar + IA dizendo se está caro */
+const ORC_KEY="controle_viagens_orc_prato";
+function orcLer(){try{return numBR(localStorage.getItem(ORC_KEY)||"")||0}catch{return 0}}
+(function(){const st=$("cStatus");if(st&&!$("cOrcBox"))st.insertAdjacentHTML("afterend",`<div id="cOrcBox" class="field" style="display:none;margin-top:8px"><label>💰 Até quanto quero pagar por prato (opcional)</label><input id="cOrc" inputmode="decimal" placeholder="Ex.: 45,00" value="${orcLer()?String(orcLer().toFixed(2)).replace(".",","):""}"></div><div id="cAnalise"></div>`)})();
+let cardIA=null;
+const __renderCardapio89=renderCardapio;
+renderCardapio=function(filtro=""){
+ __renderCardapio89(filtro);
+ const box=$("cOrcBox");if(box)box.style.display=cardapio.length?"block":"none";
+ if(!cardapio.length){$("cAnalise").innerHTML="";cardIA=null;return}
+ const orc=orcLer();
+ document.querySelectorAll("#cItens [data-menu-i]").forEach(b=>{
+  const it=cardapio[Number(b.dataset.menuI)];if(!it)return;const sp=b.querySelector("span");if(!sp||sp.querySelector(".precoTag"))return;
+  const ia=cardIA&&cardIA[semAcento(it.nome).toLowerCase()];
+  let tag="";
+  if(orc)tag+=it.valor<=orc?'<em class="precoTag ok">✅ no seu preço</em>':'<em class="precoTag caro">💸 passa do seu preço</em>';
+  if(ia)tag+=`<em class="precoTag ia ${ia}">🤖 ${ia==="caro"?"caro":ia==="barato"?"barato":"preço normal"}</em>`;
+  sp.insertAdjacentHTML("beforeend",tag);
+ });
+ const vs=cardapio.map(x=>x.valor).sort((a,b)=>a-b),med=vs.reduce((s,v)=>s+v,0)/vs.length;
+ const dentro=orc?cardapio.filter(x=>x.valor<=orc).length:0;
+ $("cAnalise").innerHTML=`<div class="cardResumo">📊 Mais barato <b>${money(vs[0])}</b> • média <b>${money(med)}</b> • mais caro <b>${money(vs[vs.length-1])}</b>${orc?`<br>💰 <b>${dentro}</b> de ${cardapio.length} cabem no seu preço (até ${money(orc)}).`:""}</div>${typeof iaChave==="function"&&iaChave()?`<button type="button" class="btn secondary" id="cIAcaro" style="width:100%;margin-top:6px">🤖 Os preços estão caros? (opinião da IA)</button><div id="cIAres"></div>`:""}`;
+};
+document.addEventListener("input",e=>{if(e.target.id==="cOrc"){try{localStorage.setItem(ORC_KEY,e.target.value)}catch(er){}clearTimeout(window.__orcT);window.__orcT=setTimeout(()=>renderCardapio($("cBusca")?.value||""),400)}});
+document.addEventListener("click",async e=>{
+ if(e.target.id!=="cIAcaro")return;const res=$("cIAres");res.innerHTML='<div class="notice">🤖 Pensando… (comparando com preços comuns)</div>';
+ const lugar=[$("cRest").value.trim(),$("cCidade").value.trim()].filter(Boolean).join(", ");
+ try{iaMenuAtualiza("lendo");
+  const r=await iaPedir([{text:`Estes são itens de um cardápio no Brasil${lugar?` (lugar: ${lugar})`:""}. Pode ser restaurante de hotel ou de cidade turística.
+Para cada item, diga se o preço parece "barato", "normal" ou "caro" comparando com o que costuma ser cobrado no Brasil hoje por esse tipo de prato em lugar parecido. Seja realista e curto.
+Responda SOMENTE com JSON: {"resumo":"1 ou 2 frases em português simples","itens":[{"nome":"","avaliacao":"barato|normal|caro"}]}
+Itens:
+${cardapio.slice(0,80).map(x=>`- ${x.nome}: R$ ${x.valor.toFixed(2)}`).join("\n")}`}]);
+  iaMenuAtualiza();cardIA={};(r.itens||[]).forEach(x=>{if(x&&x.nome&&/^(barato|normal|caro)$/.test(x.avaliacao))cardIA[semAcento(x.nome).toLowerCase()]=x.avaliacao});
+  renderCardapio($("cBusca")?.value||"");
+  const box=$("cIAres");if(box)box.innerHTML=`<div class="notice">🤖 <b>Opinião da IA:</b> ${esc(r.resumo||"")}<br><small>É uma estimativa: preço muda muito de lugar para lugar.</small></div>`;
+ }catch(err){iaMenuAtualiza();res.innerHTML=`<div class="notice">🤖 A IA não respondeu agora (${esc(err.message)}).</div>`}
+});
+/* foto do cardápio: com a IA ligada, ela lê os pratos e preços */
+$("cFoto").addEventListener("change",async e=>{
+ if(e.target.__semIA){e.target.__semIA=false;return}
+ if(typeof iaChave!=="function"||!iaChave())return;const f=e.target.files[0];if(!f)return;const st=$("cStatus");st.textContent="🤖 A IA está lendo o cardápio…";
+ try{iaMenuAtualiza("lendo");const b64=await fotoParaIA(f,2000);
+  const r=await iaPedir([{text:`Esta é a foto de um cardápio no Brasil. Liste TODOS os itens que têm preço. Responda SOMENTE com JSON: {"itens":[{"nome":"","valor":0}]}
+- nome: nome do prato/bebida como está escrito (curto).
+- valor: preço em reais, número com ponto decimal (ex.: 39.90). Se tiver mais de um tamanho, faça um item para cada (ex.: "Pizza grande").
+Não invente itens nem preços.`},{inline_data:{mime_type:"image/jpeg",data:b64}}]);
+  iaMenuAtualiza();
+  const novos=(r.itens||[]).map(x=>({nome:String(x.nome||"").trim().slice(0,60),valor:Number(String(x.valor).replace(",","."))})).filter(x=>x.nome&&x.valor>0&&x.valor<5000);
+  if(novos.length){cardapio=cardapio.concat(novos.filter(n=>!cardapio.some(c=>c.nome===n.nome&&c.valor===n.valor)));cardIA=null;st.textContent=`🤖 ✅ A IA leu ${novos.length} ${novos.length===1?"item":"itens"}. Pode tirar foto das outras páginas que eu junto.`;renderCardapio("");e.target.value="";return}
+  st.textContent="🤖 A IA não achou preços. Tentando o leitor normal…";
+ }catch(err){iaMenuAtualiza();st.textContent="🤖 A IA não respondeu. Tentando o leitor normal…"}
+ e.target.__semIA=true;e.target.dispatchEvent(new Event("change"));
+});
 </script>
 </body>
 
