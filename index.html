@@ -608,12 +608,15 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .chaveBox[open] .chaveSeta{transform:rotate(180deg)}
 .chaveSeta{color:#6b5400;flex:none}
 .chaveOpc{font-weight:600;font-size:11px;color:#8a7a3a}
-.malaTopo{position:sticky;top:-18px;z-index:4;background:var(--panel);margin:0 -18px 6px;padding:8px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.malaTopo{position:sticky;top:calc(-18px - env(safe-area-inset-top));z-index:4;background:var(--panel);margin:0 -18px 6px;padding:8px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
 .malaTopo .barraMini{flex:1;height:8px;border-radius:9px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
 .malaTopo .barraMini i{display:block;height:100%;background:var(--accent)}
 .malaTopo button{flex:none;border:0;border-radius:999px;padding:8px 12px;font-weight:900;font-size:13px;background:var(--accent);color:#fff}
 .malaTopo .prontaOk{flex:none;font-weight:900;font-size:13px;color:#176642}
 .jaArrumei{display:inline-block;margin:0 0 6px;border:1px solid #8fd3b2;background:#E9F7F0;color:#176642;border-radius:999px;padding:5px 10px;font-weight:800;font-size:12px}
+.remNovo{display:flex;gap:6px;flex-wrap:wrap;background:var(--panel2);border:1.5px dashed var(--accent);border-radius:12px;padding:8px;margin:4px 0 8px;align-items:center}
+.remNovo b{width:100%;font-size:12px;color:var(--accent)}
+.remNovo label,.remNovo button{flex:1;text-align:center;margin:0;cursor:pointer;font-size:13px;padding:8px}
 </style>
 
 </head>
@@ -1001,7 +1004,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="7.1";
+const APP_VERSAO="7.3";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2409,7 +2412,7 @@ renderPasseios();
 /* ===== v4.0: 🧳 checklist da mala + contagem regressiva da viagem ===== */
 const MALA_CATS=["Antes de sair de casa","Avião","Documentos","Roupas","Higiene","Remédios","Eletrônicos","Praia","Frio","Ônibus","Criança","Parque / Piscina","Meus itens"];
 const MALA_MODELOS={
- base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Cortador de unha","Protetor labial","Lenço umedecido"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Band-aid / curativo"],Eletrônicos:["Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
+ base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Cortador de unha","Protetor labial","Lenço umedecido"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
  casa:{"Antes de sair de casa":["Desligar o registro do gás","Tirar aparelhos da tomada","Fechar janelas e portas","Deixar água e comida para os bichos (ou combinar quem cuida)","Tirar o lixo","Ligar o alarme","Ligar a cerca elétrica","Trancar portão e porta (conferir duas vezes)","Avisar um vizinho ou parente"]},
  m:{Roupas:["Cuecas"],Higiene:["Aparelho de barbear"]},
  f:{Roupas:["Calcinhas","Sutiãs"],Higiene:["Absorventes","Maquiagem","Secador / prancha","Elástico / presilha de cabelo"]},
@@ -2870,7 +2873,7 @@ const APARELHOS=[
 /* itens que você digita vão sozinhos para o grupo certo */
 const CATEGORIA_POR_PALAVRA=[
  [/receptor|hdmi|controle remoto|tv box|chromecast|fire ?stick|tablet|notebook|celular|carregador|tensao|tensão|testador|voltagem|aquecedor|secador|fone|power ?bank|camera|câmera|videogame|console|relogio|relógio|smartwatch|caixinha|cabo|pilha|bateria|extens|benjamim|kindle|ipad/i,"Eletrônicos"],
- [/remedio|remédio|pomada|vitamina|dipirona|paracetamol|curativo|band-?aid|termometro|termômetro|soro/i,"Remédios"],
+ [/term[oô]metro|gotas|remedio|remédio|pomada|vitamina|dipirona|paracetamol|curativo|band-?aid|termometro|termômetro|soro/i,"Remédios"],
  [/escova|pasta|desodorante|shampoo|xampu|sabonete|perfume|creme|hidratante|maquiagem|barbear|absorvente|cotonete|fio dental/i,"Higiene"],
  [/camisa|camiseta|blusa|bermuda|short|calça|calca|cueca|calcinha|sutia|sutiã|meia|pijama|vestido|saia|jaqueta|moletom|casaco|chinelo|tenis|tênis|sapato|sandalia|sandália|bone|boné/i,"Roupas"],
  [/stanley|copo t[eé]rmico|garrafa t[eé]rmica|cooler|guarda-?sol|cadeira de praia|canga|pos-?sol|pós-?sol|boia|boia|snorkel|oculos de natacao|óculos de natação/i,"Praia"],
@@ -3098,6 +3101,33 @@ renderMala=function(){
 $("modalMala").addEventListener("click",e=>{if(e.target.id!=="malaProntaTopo")return;e.preventDefault();const t=viagens.find(x=>x.id===malaId);if(t&&confirm("Já arrumou tudo? Marcar todos os itens como na mala?"))marcarMalaPronta(t)});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-ja-arrumei]");if(!b)return;e.preventDefault();e.stopPropagation();const t=viagens.find(x=>x.id===Number(b.dataset.jaArrumei));if(t&&confirm(`Mala da viagem ${t.nome} pronta? Vou marcar todos os itens.`))marcarMalaPronta(t)},true);
 render();
+</script>
+<script>
+/* ===== v7.2: ➕ remédio novo na mala (foto da caixa ou digitar) ===== */
+const __renderMala72=renderMala;
+renderMala=function(){
+ __renderMala72();
+ const h=[...document.querySelectorAll("#malaLista .malaCat h3")].find(x=>/Rem[eé]dios/.test(x.textContent));
+ if(h)h.insertAdjacentHTML("afterend",`<div class="remNovo"><b>➕ Comprou ou usa outro remédio? Coloque na lista:</b><label class="btn">📷 Foto da caixa<input type="file" accept="image/*" capture="environment" id="remNovoFoto" hidden></label><button type="button" class="btn secondary" id="remNovoDigitar">⌨️ Digitar o nome</button></div>`);
+};
+function addRemedio(nome){
+ nome=String(nome||"").trim();if(!nome)return;const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
+ const item=/rem[eé]dio/i.test(nome)?nome:`${nome} (remédio)`;
+ m.remedios=m.remedios||{};m.remedios[item]={nome:nome.replace(/\s*\(remédio\)$/i,""),como:""};
+ m.tirados=(m.tirados||[]).filter(x=>x!==item);
+ const todas=confirm(`Colocar "${nome}" também em TODAS as outras viagens?\n\nOK = em todas • Cancelar = só nesta viagem`);
+ if(todas){const l=sempreLista();if(!l.includes(item)){l.push(item);sempreSalvar(l)}}else if(!m.extras.includes(item))m.extras.push(item);
+ salvarMala();avisar(`💊 ${nome} colocado em Remédios. Toque no 📄 dele para ver a bula.`);
+ setTimeout(()=>{if(confirm("Quer abrir a bula agora para anotar como tomar?"))abrirBula(item)},400);
+}
+$("modalMala").addEventListener("click",e=>{if(e.target.id!=="remNovoDigitar")return;e.preventDefault();const v=prompt("Nome do remédio (como está na caixa):\nEx.: Loratadina 10 mg","");if(v)addRemedio(v)});
+$("modalMala").addEventListener("change",async e=>{
+ if(e.target.id!=="remNovoFoto")return;const f=e.target.files[0];if(!f)return;
+ avisar("🔎 Lendo o nome do remédio… (a 1ª vez demora um pouco)");
+ let nome="";try{nome=nomeDaCaixa(await ocrFoto(f,"11"))}catch(err){}
+ const v=prompt(nome?"Li este nome na caixa. Confira e corrija se precisar:":"Não consegui ler o nome na foto. Digite o nome do remédio:",nome);
+ if(v)addRemedio(v);
+});
 </script>
 </body>
 
