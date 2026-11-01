@@ -502,6 +502,21 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .regrasAv ul{margin:0 0 6px;padding-left:18px;font-size:13px;line-height:1.45}
 .regrasAv li{margin-bottom:4px}
 .malaChamada{display:block;margin:6px 0 4px;border:1.5px solid #EF8C00;background:#FFF6E8;color:#9A5200;border-radius:10px;padding:7px 10px;font-weight:800;font-size:12px;text-align:left;width:100%}
+/* v4.7: viagens feitas (arquivo) e aviso de viagem repetida */
+.arqFeitas{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:0 10px}
+.arqFeitas>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:11px 2px;font-weight:900;font-size:14px;cursor:pointer}
+.arqFeitas>summary::-webkit-details-marker{display:none}
+.arqFeitas[open]>summary .arqSeta{transform:rotate(180deg)}
+.arqFeitas .arqSeta{color:var(--muted)}
+.feitaItem{margin-bottom:10px}
+.feitaTop{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-top:6px;font-size:12px;color:var(--muted)}
+.notaStars button{border:0;background:none;padding:0 1px;font-size:19px;line-height:1;color:#C9CFCB}
+.notaStars button.on{color:#F5B400}
+.btnDeNovo{border:1px solid var(--accent);background:#fff;color:var(--accent);border-radius:999px;padding:5px 10px;font-weight:800;font-size:12px}
+.avisoRep{border-radius:12px;padding:10px 11px;margin:-2px 0 12px;font-size:13px;line-height:1.45}
+.avisoRep.foi{background:#EAF4FF;border:1.5px solid #8DB8E8;color:#17406b}
+.avisoRep.marcada{background:#FFF6E8;border:1.5px solid #EF8C00;color:#7a4300}
+.avisoRep b{font-weight:900}
 </style>
 
 </head>
@@ -692,6 +707,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
       <div id="postPrecos" class="postPrecos"></div>
     </div>
     <div class="field"><label>Nome da viagem <span class="required">*</span></label><input id="fNome" required></div>
+    <div id="avisoRepetida"></div>
     <div class="field"><label>🧳 Tipo de viagem</label>
       <select id="fTipoViagem" class="typeSelect">
         <option value="viagem">🏖️ Viagem</option>
@@ -869,7 +885,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="4.6";
+const APP_VERSAO="4.7";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1150,7 +1166,7 @@ function render(){
  const hojeL=localDate(),fim=t=>t.dataVolta||t.data||"";
  const prox=arr.filter(t=>fim(t)>=hojeL),feitas=arr.filter(t=>fim(t)<hojeL).reverse();
  $("viagensQtd").textContent=arr.length;
- $("listaViagens").innerHTML=arr.length?prox.map(card).join("")+(feitas.length?`<div class="tripsDivider">Já realizadas</div>`+feitas.map(card).join(""):""):`<div class="empty">Nenhuma viagem cadastrada. Toque em ＋ para adicionar.</div>`;
+ $("listaViagens").innerHTML=arr.length?prox.map(card).join("")+(feitas.length?(window.arquivoFeitas?arquivoFeitas(feitas):`<div class="tripsDivider">Já realizadas</div>`+feitas.map(card).join("")):""):`<div class="empty">Nenhuma viagem cadastrada. Toque em ＋ para adicionar.</div>`;
  if(typeof aplicarFinanceiro==="function")aplicarFinanceiro();
 }
 function renderProximaViagem(t){
@@ -2394,6 +2410,60 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-mala]");if
   setTimeout(()=>{avisar(`🧳 A viagem ${t.nome} ${quando}${t.horaSaida?" às "+t.horaSaida:""}! ${malaPendente(t)?(d>=2?"Já arrumou a mala?":"Confira a mala!"):""}`);try{localStorage.setItem(chave,hoje)}catch(e){}},1500);
  }catch(e){}
 })();
+render();
+</script>
+<script>
+/* ===== v4.7: 📚 viagens feitas guardadas + aviso "você já foi" ===== */
+function tempoDesde(iso){
+ const d=Math.round((new Date(localDate()+"T12:00:00")-new Date(iso+"T12:00:00"))/86400000);
+ if(d<1)return "hoje";if(d===1)return "ontem";if(d<30)return `há ${d} dias`;
+ const m=Math.round(d/30.4);if(m<12)return m===1?"há 1 mês":`há ${m} meses`;
+ const a=Math.floor(d/365),r=Math.round((d-a*365)/30.4);return (a===1?"há 1 ano":`há ${a} anos`)+(r>0&&a<3?` e ${r} ${r===1?"mês":"meses"}`:"");
+}
+function estrelasHTML(t){const n=Number(t.nota)||0;return `<span class="notaStars" title="Gostou da viagem?">${[1,2,3,4,5].map(i=>`<button type="button" class="${i<=n?"on":""}" data-nota="${t.id}" data-n="${i}" aria-label="${i} estrela${i>1?"s":""}">★</button>`).join("")}</span>`}
+let arqAberto=false;
+function arquivoFeitas(feitas){
+ return `<details class="arqFeitas" id="arqFeitas" ${arqAberto?"open":""}><summary><span>📚 Viagens feitas</span><span class="arqSeta">▾</span></summary>${feitas.map(t=>`<div class="feitaItem"><div class="feitaTop"><span>🗓️ ${tempoDesde(t.dataVolta||t.data)} ${estrelasHTML(t)}</span><button type="button" class="btnDeNovo" data-denovo="${t.id}">🔁 Ir de novo</button></div>${card(t)}</div>`).join("")}<div class="notice" style="margin:0 0 10px">Toque nas estrelas para dizer se gostou. Isso aparece quando você for lançar uma viagem para o mesmo lugar.</div></details>`;
+}
+document.addEventListener("toggle",e=>{if(e.target.id==="arqFeitas")arqAberto=e.target.open},true);
+document.addEventListener("click",e=>{
+ const st=e.target.closest("[data-nota]");
+ if(st){e.preventDefault();const t=viagens.find(x=>x.id===Number(st.dataset.nota));if(!t)return;const n=Number(st.dataset.n);t.nota=t.nota===n?0:n;save();render();return}
+ const dn=e.target.closest("[data-denovo]");
+ if(dn){e.preventDefault();const t=viagens.find(x=>x.id===Number(dn.dataset.denovo));if(!t)return;
+  openModal();$("modalTitulo").textContent="Nova viagem (ir de novo)";
+  $("fNome").value=t.nome||"";if(t.tipoViagem)$("fTipoViagem").value=t.tipoViagem;$("fCidade").value=t.cidade||"";$("fHotel").value=t.hotel||"";$("fLocalSaida").value=t.localSaida||"";
+  $("fObs").value=`🔁 Repetindo a viagem de ${dateBR(t.data)}${t.nota?" (nota "+"★".repeat(t.nota)+")":""}`;
+  ["fNome","fCidade","fHotel"].forEach(id=>$(id).dispatchEvent(new Event("input",{bubbles:true})));
+  $("fData").focus();return}
+});
+/* parecido? compara cidade e palavras importantes do nome */
+const PALAVRAS_FRACAS=new Set(["viagem","viagens","excursao","excursoes","passeio","feriado","finados","natal","reveillon","carnaval","pacote","turismo","cidade","fim","semana","para","com","dos","das","sao","santa","santo","brasil","hotel","pousada","resort","praia","praias","parque","world"]);
+function chaves(t){
+ const txt=semAcento([t.nome,t.cidade,t.hotel].filter(Boolean).join(" ")).toLowerCase();
+ const cid=semAcento((t.cidade||"").split(",")[0]).toLowerCase().trim();
+ const pal=new Set(txt.split(/[^a-z0-9]+/).filter(w=>w.length>=4&&!PALAVRAS_FRACAS.has(w)));
+ return {cid,pal};
+}
+function parecidas(novo,excluirId){
+ const a=chaves(novo);if(!a.cid&&!a.pal.size)return[];
+ return viagens.filter(t=>t.id!==excluirId).filter(t=>{const b=chaves(t);if(a.cid&&b.cid&&a.cid===b.cid)return true;for(const w of a.pal)if(b.pal.has(w))return true;return false});
+}
+function atualizarAvisoRepetida(){
+ const box=$("avisoRepetida");if(!box)return;
+ const novo={nome:$("fNome").value,cidade:$("fCidade").value,hotel:$("fHotel").value};
+ if((novo.nome+novo.cidade).trim().length<4){box.innerHTML="";return}
+ const lista=parecidas(novo,editId),hoje=localDate(),fim=t=>t.dataVolta||t.data||"";
+ const feitas=lista.filter(t=>fim(t)<hoje).sort((x,y)=>fim(y).localeCompare(fim(x)));
+ const marcadas=lista.filter(t=>fim(t)>=hoje).sort((x,y)=>(x.data||"").localeCompare(y.data||""));
+ let h="";
+ if(marcadas.length){const t=marcadas[0];h+=`<div class="avisoRep marcada">⚠️ <b>Você já tem uma viagem marcada para lá:</b> ${esc(t.nome)} em ${dataSem(t.data)}. Confira se não é a mesma antes de reservar de novo.</div>`}
+ if(feitas.length){const t=feitas[0];h+=`<div class="avisoRep foi">📚 <b>${feitas.length>1?`Você já foi ${feitas.length} vezes`:"Você já foi"}</b>${feitas.length>1?" — a última":""}: ${esc(t.nome)}, ${tempoDesde(fim(t))} (${dateBR(t.data)})${t.nota?` • você deu ${"★".repeat(t.nota)}`:""}${t.hotel?` • ${/^(hotel|pousada|resort|hostel|chal)/i.test(t.hotel.trim())?"":"hotel "}${esc(t.hotel)}`:""}.</div>`}
+ box.innerHTML=h;
+}
+let __avRep;["fNome","fCidade","fHotel"].forEach(id=>$(id).addEventListener("input",()=>{clearTimeout(__avRep);__avRep=setTimeout(atualizarAvisoRepetida,250)}));
+const __openModal47=openModal;
+openModal=function(...a){const r=__openModal47.apply(this,a);setTimeout(atualizarAvisoRepetida,0);return r};
 render();
 </script>
 </body>
