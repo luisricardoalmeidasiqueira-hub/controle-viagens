@@ -1137,7 +1137,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="9.4";
+const APP_VERSAO="9.5";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2548,7 +2548,7 @@ renderPasseios();
 /* ===== v4.0: 🧳 checklist da mala + contagem regressiva da viagem ===== */
 const MALA_CATS=["Antes de sair de casa","Avião","Documentos","Roupas","Higiene","Remédios","Eletrônicos","Praia","Frio","Ônibus","Criança","Parque / Piscina","Meus itens"];
 const MALA_MODELOS={
- base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Cortador de unha","Protetor labial","Lenço umedecido"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
+ base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Cabides","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Enxaguante bucal","Cortador de unha","Protetor labial","Lenço umedecido"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
  casa:{"Antes de sair de casa":["Desligar o registro do gás","Tirar aparelhos da tomada","Fechar janelas e portas","Deixar água e comida para os bichos (ou combinar quem cuida)","Tirar o lixo","Ligar o alarme","Ligar a cerca elétrica","Trancar portão e porta (conferir duas vezes)","Avisar um vizinho ou parente"]},
  m:{Roupas:["Cuecas"],Higiene:["Aparelho de barbear","Espuma / gel de barbear","Pós-barba"]},
  f:{Roupas:["Calcinhas","Sutiãs"],Higiene:["Absorventes","Maquiagem","Secador / prancha","Elástico / presilha de cabelo"]},
@@ -2579,6 +2579,7 @@ function qtdSugerida(n,d){
  if(/roupas extras da crianca/.test(k))return d+1;
  if(/blusa de frio|casaco/.test(k))return d>5?2:1;
  if(/meia grossa/.test(k))return d;
+ if(/^cabide/.test(k))return Math.min(Math.max(Math.ceil(d/2)+1,2),6);
  return 1;
 }
 function qtdItem(m,n,d){const q=(m.qtd||{})[n];return q!=null?q:qtdSugerida(n,d)}
@@ -3015,8 +3016,8 @@ const APARELHOS=[
 const CATEGORIA_POR_PALAVRA=[
  [/receptor|hdmi|controle remoto|tv box|chromecast|fire ?stick|tablet|notebook|celular|carregador|tensao|tensão|testador|voltagem|aquecedor|secador|fone|power ?bank|camera|câmera|videogame|console|relogio|relógio|smartwatch|caixinha|cabo|pilha|bateria|extens|benjamim|kindle|ipad/i,"Eletrônicos"],
  [/term[oô]metro|gotas|remedio|remédio|pomada|vitamina|dipirona|paracetamol|curativo|band-?aid|termometro|termômetro|soro/i,"Remédios"],
- [/escova|pasta|desodorante|shampoo|xampu|sabonete|perfume|creme|hidratante|maquiagem|barbear|absorvente|cotonete|fio dental/i,"Higiene"],
- [/camisa|camiseta|blusa|bermuda|short|calça|calca|cueca|calcinha|sutia|sutiã|meia|pijama|vestido|saia|jaqueta|moletom|casaco|chinelo|tenis|tênis|sapato|sandalia|sandália|bone|boné/i,"Roupas"],
+ [/escova|pasta|desodorante|shampoo|xampu|sabonete|perfume|creme|hidratante|maquiagem|barbear|absorvente|cotonete|fio dental|enxaguante/i,"Higiene"],
+ [/camisa|camiseta|blusa|bermuda|short|calça|calca|cueca|calcinha|sutia|sutiã|meia|pijama|vestido|saia|jaqueta|moletom|casaco|chinelo|tenis|tênis|sapato|sandalia|sandália|bone|boné|cabide/i,"Roupas"],
  [/stanley|copo t[eé]rmico|garrafa t[eé]rmica|cooler|guarda-?sol|cadeira de praia|canga|pos-?sol|pós-?sol|boia|boia|snorkel|oculos de natacao|óculos de natação/i,"Praia"],
  [/\brg\b|cnh|caneta|bloquinho|caderninho|caderno|agenda de papel|documento|identidade|cartao|cartão|passagem|reserva|dinheiro|carteira|passaporte|cpf/i,"Documentos"]
 ];
