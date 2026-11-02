@@ -733,6 +733,12 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .planoRes.bom{background:#E8F5E9;color:#1B5E20}.planoRes.ruim{background:#FFF3E0;color:#6D3B00}
 .planoLinha{display:block;color:var(--accent)!important;font-weight:700}
 .planoDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#EF6C00;vertical-align:middle}
+#malaLista .malaItem{flex-wrap:wrap;row-gap:2px}
+#malaLista .malaItem>span:not(.dragAlca){min-width:0}
+#malaLista .malaItem>.naMalaTag,#malaLista .malaItem>.quemItemBox{flex:0 0 100%;order:9;padding-left:57px;box-sizing:border-box;margin-top:0}
+#malaLista .malaItem>.naMalaTag .ondeEscolha{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+#malaLista .malaItem>.naMalaTag .ondeEscolha button{white-space:nowrap;font-size:12.5px!important;padding:5px 11px!important;line-height:1.2!important;min-height:0!important;width:auto!important}
+#malaLista .malaItem>.naMalaTag .dicaMao{margin-top:4px;font-size:12px}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
 </head>
@@ -1137,7 +1143,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="9.5";
+const APP_VERSAO="9.6";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -3285,7 +3291,7 @@ renderMala=function(){
   if(/Antes de sair/.test(cat)){tag.textContent="✅ feito";return}
   if(bolsa==="mochila"){tag.textContent="✅ já está na 🎒 mochila";return}
   const onde=m.mochila?ondeItem(m,cat,n):((m.onde||{})[n]||"mala"),sug=ondeItem(m,cat,n);
-  tag.innerHTML=`✅ Guardado em: <span class="ondeEscolha"><button type="button" class="${onde==="mochila"?"on":""}" data-onde-escolha="mochila" data-onde-item="${esc(n)}">🎒 Na mão</button><button type="button" class="${onde!=="mochila"?"on":""}" data-onde-escolha="mala" data-onde-item="${esc(n)}">🧳 Na mala de rodinha</button></span>${!m.mochila&&sug==="mochila"?'<span class="dicaMao">💡 Este costuma ir na mão</span>':""}`;
+  tag.innerHTML=`✅ Guardado em: <span class="ondeEscolha"><button type="button" class="${onde==="mochila"?"on":""}" data-onde-escolha="mochila" data-onde-item="${esc(n)}">🎒 Na mão</button><button type="button" class="${onde!=="mochila"?"on":""}" data-onde-escolha="mala" data-onde-item="${esc(n)}">🧳 Na mala</button></span>${!m.mochila&&sug==="mochila"?'<span class="dicaMao">💡 Este costuma ir na mão</span>':""}`;
  });
 };
 </script>
@@ -4024,6 +4030,14 @@ abrirIdeiaComoViagem=function(id){
    $("fPrimeiroVenc").value=`${a}-${String(m).padStart(2,"0")}-10`;$("fPrimeiroVenc").dispatchEvent(new Event("change",{bubbles:true}))}
   if(!$("fData").value)$("fData").placeholder="";
  }catch(e){}
+};
+/* v9.6: "Guardado em" ocupa a linha inteira embaixo do item (não espreme o nome) */
+const __renderMala96=renderMala;
+renderMala=function(){
+ __renderMala96();
+ document.querySelectorAll("#malaLista .malaItem").forEach(li=>{
+  li.querySelectorAll(":scope>span .naMalaTag, :scope>span .quemItemBox").forEach(el=>li.appendChild(el));
+ });
 };
 </script>
 </body>
