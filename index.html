@@ -746,6 +746,11 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .anoPasta[open]>summary .secSeta{transform:rotate(180deg)}
 .anoPasta>.anoCorpo{padding:0 8px 4px}
 .arqBusca{width:100%;font-size:16px;padding:8px 10px;margin:0 0 8px;box-sizing:border-box;border:1px solid var(--line);border-radius:10px}
+.cadBox{border-top:1px dashed var(--line);margin-top:10px;padding-top:8px}
+.cadBox b{font-size:14px}.cadBox small{display:block;color:var(--muted);font-size:12px;margin-top:4px;line-height:1.4}
+.cadLinha{display:flex;gap:6px;margin-top:6px}.cadLinha input{flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:9px}
+.cadLb{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:8px 0 3px}.cadInp{width:100%;box-sizing:border-box;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:9px}.cadTipos{margin-top:6px}.cadOlho{flex:none;width:44px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:18px}
+.cadIco{margin-left:auto;margin-right:6px}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
 </head>
@@ -1150,7 +1155,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="9.7";
+const APP_VERSAO="9.9";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1359,7 +1364,7 @@ $("formViagem").onsubmit=e=>{
  lembretes:[...$("fLembretes").selectedOptions].map(o=>o.value),gastos:Math.max(numBR($("fGastos").value),0),roteiro:$("fRoteiro").value.trim(),pagamentos:[...document.querySelectorAll('input[name="pagamento"]:checked')].map(x=>x.value),origemTransporte:$("fOrigemTransporte").value.trim(),destinoTransporte:$("fDestinoTransporte").value.trim(),status:pago>=total&&total>0?"paga":"pagar"};
  if(obj.modoPagamento==="parcelado"){if(obj.numeroParcelas<2){alert("Informe pelo menos 2 parcelas.");return}if(!obj.primeiroVencimento){alert("Informe o primeiro vencimento.");return}obj.entrada=entradaForm();obj.dataEntrada=obj.entrada?($("fDataEntrada").value||""):"";if(obj.entrada>obj.valorTotal){alert("A entrada não pode ser maior que o valor total.");return}obj.parcelas=gerarParcelas(Math.max(obj.valorTotal-obj.entrada,0),obj.numeroParcelas,obj.primeiroVencimento,parcelasForm);obj.valorPago=somaPagoViagem(obj);obj.status=obj.valorTotal>0&&faltanteViagem(obj)<=0?"paga":"pagar"}else{obj.parcelas=[]}if(obj.dataVolta&&obj.dataVolta<obj.data){alert("A data de volta não pode ser anterior à ida.");return}
  if(window.lerAcompForm)obj.acompanhantes=lerAcompForm();
- {const velha=editId&&viagens.find(x=>x.id===editId);if(velha)["mala","proximaFixada","etiquetas","nota","despesas"].forEach(k=>{if(velha[k]!==undefined&&obj[k]===undefined)obj[k]=velha[k]})}
+ {const velha=editId&&viagens.find(x=>x.id===editId);if(velha)["mala","proximaFixada","etiquetas","nota","despesas","cadeado"].forEach(k=>{if(velha[k]!==undefined&&obj[k]===undefined)obj[k]=velha[k]})}
  if(editId) viagens=viagens.map(x=>x.id===editId?obj:x);else viagens.push(obj);
  save();const ideiaOrigem=ideiaEmEdicao;closeModal();if(ideiaOrigem){ideias=ideias.filter(x=>x.id!==ideiaOrigem);saveIdeias();renderIdeias()}render();
 };
@@ -4071,6 +4076,38 @@ arquivoFeitas=function(feitas){
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.classList&&d.classList.contains("anoPasta")){window.__anosMexeu=true;if(d.open)anosAbertos.add(d.dataset.ano);else anosAbertos.delete(d.dataset.ano)}},true);
 document.addEventListener("input",e=>{if(e.target.id!=="arqBusca")return;arqBuscaTxt=e.target.value;clearTimeout(window.__arqT);window.__arqT=setTimeout(()=>{render();const el=$("arqBusca");if(el){el.focus();const n=el.value.length;try{el.setSelectionRange(n,n)}catch(er){}}},350)});
 try{render()}catch(e){}
+/* v9.8: 🔒 cadeado da mala (junto da etiqueta) */
+const CAD_ITEM="Colocar o cadeado na mala";
+const __malaItens98=malaItens;
+malaItens=function(m){
+ const r=__malaItens98(m);try{const t=viagens.find(x=>x.mala===m);if(!t)return r;
+  if(bolsaDe(t,m)!=="mochila"&&!(m.tirados||[]).includes(CAD_ITEM)){const c="Antes de sair de casa";r[c]=r[c]||[];if(!r[c].includes(CAD_ITEM))r[c].push(CAD_ITEM)}}catch(e){}
+ return r;
+};
+const __qtdItem98=qtdItem;qtdItem=function(m,n,d){return n===CAD_ITEM?0:__qtdItem98(m,n,d)};
+function cadeadoHTML(t){
+ const c=t.cadeado||{};const tipo=c.tipo||(c.segredo?"segredo":"");const intl=(()=>{try{return malaDe(t).voo==="int"}catch(e){return false}})()&&t.tipoViagem==="aviao";
+ return `<div class="cadBox"><b>🔒 Cadeado da mala</b>
+ <div class="malaChips cadTipos"><button type="button" class="${tipo==="chave"?"on":""}" data-cad-tipo="chave">🔑 Com chave</button><button type="button" class="${tipo==="segredo"?"on":""}" data-cad-tipo="segredo">🔢 Com segredo</button></div>
+ <label class="cadLb">Cor / como é o cadeado</label><input id="cadCor" class="cadInp" autocomplete="off" placeholder="Ex.: azul, pequeno" value="${esc(c.cor||"")}">
+ ${tipo==="segredo"?`<label class="cadLb">Segredo (opcional)</label><div class="cadLinha"><input id="cadSegredo" type="password" inputmode="numeric" autocomplete="off" placeholder="Ex.: 000" value="${esc(c.segredo||"")}"><button type="button" class="cadOlho" id="cadOlho" aria-label="Mostrar segredo">👁️</button></div>`:""}
+ ${tipo==="chave"?`<label class="cadLb">Onde fica a chave? (opcional)</label><input id="cadChave" class="cadInp" autocomplete="off" placeholder="Ex.: na carteira, no bolso da mochila" value="${esc(c.chave||"")}">`:""}
+ <small>${c.cor?`Para achar a sua mala: <b>mala com cadeado ${esc(c.cor)}</b>. `:""}Fica guardado só neste celular.${intl?"<br>✈️ Voo para fora do Brasil: use <b>cadeado TSA</b> (a fiscalização dos EUA abre sem quebrar).":""}</small></div>`;
+}
+const __etiquetasHTML98=etiquetasHTML;
+etiquetasHTML=function(t){
+ let h=__etiquetasHTML98(t);
+ h=h.replace(/<\/details>\s*$/,cadeadoHTML(t)+"</details>");
+ {const c=t.cadeado||{};if(c.segredo||c.cor||c.chave||c.tipo)h=h.replace('<span class="secSeta">▾</span></summary>',`<span class="cadIco">🔒${c.cor?" "+esc(c.cor):""}</span><span class="secSeta">▾</span></summary>`)}
+ return h;
+};
+$("modalMala").addEventListener("input",e=>{
+ const campo={cadSegredo:"segredo",cadCor:"cor",cadChave:"chave"}[e.target.id];if(!campo)return;const t=viagens.find(x=>x.id===malaId);if(!t)return;
+ t.cadeado=t.cadeado||{};t.cadeado[campo]=e.target.value.trim();clearTimeout(window.__cadT);window.__cadT=setTimeout(()=>{try{save()}catch(er){}},500);
+});
+$("modalMala").addEventListener("change",e=>{if(["cadSegredo","cadCor","cadChave"].includes(e.target.id)){try{save()}catch(er){}avisar("🔒 Cadeado anotado.")}});
+$("modalMala").addEventListener("click",e=>{const b=e.target.closest("[data-cad-tipo]");if(!b)return;e.preventDefault();const t=viagens.find(x=>x.id===malaId);if(!t)return;t.cadeado=t.cadeado||{};t.cadeado.tipo=t.cadeado.tipo===b.dataset.cadTipo?"":b.dataset.cadTipo;try{save()}catch(er){}window.etqAberta=true;renderMala()});
+$("modalMala").addEventListener("click",e=>{if(e.target.id!=="cadOlho")return;e.preventDefault();const i=$("cadSegredo");if(!i)return;i.type=i.type==="password"?"text":"password";e.target.textContent=i.type==="password"?"👁️":"🙈"});
 </script>
 </body>
 
