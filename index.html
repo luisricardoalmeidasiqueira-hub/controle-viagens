@@ -690,7 +690,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .etqBox .etqAdd{flex-wrap:nowrap;gap:6px}
 .etqBox .etqAdd label.btn,.etqBox .etqAdd button.btn{flex:1 1 0;min-height:0!important;height:auto!important;padding:7px 4px!important;font-size:13px!important;line-height:1.2!important;border-radius:10px!important;white-space:nowrap;box-shadow:none}
 .etqBox .notice{font-size:12.5px}
-.iaBtn{position:relative}.iaDot{position:absolute;right:3px;bottom:3px;width:10px;height:10px;border-radius:50%;background:#BDBDBD;border:2px solid #fff}.iaDot.ok{background:#2E9E44}.iaDot.lendo{background:#F9A825}.iaDot.erro{background:#D32F2F}
+.iaBtn{position:relative}.iaDot{position:absolute;right:3px;bottom:3px;width:10px;height:10px;border-radius:50%;background:#BDBDBD;border:2px solid #fff}.iaDot.ok{background:#2E9E44}.iaDot.lendo{background:#F9A825}.iaDot.erro{background:#D32F2F}.iaDot.ocupada{background:#EF6C00}
 .iaLegenda{display:grid;gap:4px;font-size:13px;margin:4px 0 10px}.iaLegenda span{display:flex;align-items:center;gap:7px}.iaLegenda i{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
 .docLinha{border:1px solid var(--line);border-radius:12px;margin-bottom:6px;background:#fff}
 .docLinha>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer}
@@ -754,6 +754,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .planoPessoas{background:var(--panel2,#f4f6f8);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:10px;font-size:14px}
 .badge.semValor{background:var(--panel2,#eef2f5)!important;color:var(--muted)!important;border:1px dashed var(--line)!important}
 .ideaLimparBtn{flex:none;width:48px;padding:0!important;font-size:18px!important;margin-left:6px}
+.chegLinha{font-size:13.5px;margin:6px 0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2,#f4f6f8)}.chegLinha small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
 </head>
@@ -1158,7 +1159,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="10.8";
+const APP_VERSAO="11.1";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1557,6 +1558,7 @@ function card(t){
    ${t.hotel||t.tipoViagem?`<div class="sub">${t.hotel?"🏨 "+esc(t.hotel):""}${t.hotel&&t.tipoViagem?" • ":""}${t.tipoViagem?"🧳 "+esc(TIPO_NOME[t.tipoViagem]||t.tipoViagem):""}</div>`:""}
    <div class="info">${t.horaSaida?"🚗 Saída: "+esc(t.horaSaida)+(t.localSaida?" • "+esc(t.localSaida):"")+"<br>":""}${t.dataInicioPagamento?"💳 Começou a pagar: "+dateBR(t.dataInicioPagamento)+"<br>":""}${parc?(proxParc?`📆 Próxima parcela: ${proxParc.numero}ª • ${dataSem(proxParc.vencimento)} • ${money(proxParc.valor)}${atrasada?" 🔴 atrasada":""}<br>`:""):(t.venc?"📆 Vencimento: "+dataSem(t.venc)+"<br>":"")}<button type="button" class="finLock" data-fin-toggle="1" aria-label="Mostrar ou esconder valores">🔒</button><span class="financeValues financeLink" data-action="pagamentos" data-id="${t.id}" role="button" tabindex="0" title="Abrir pagamentos">💰 Total: ${money(t.valorTotal)} • Pago: ${money(t.valorPago)} • Falta: ${money(falta)}${t.modoPagamento==="parcelado"&&t.parcelas?.length?` • 💳 ${entradaDe(t)?"entrada "+money(entradaDe(t))+" + ":""}${t.parcelas.length}x mensal`:""}${t.gastos?`<br>💸 Gastos adicionais: ${money(t.gastos)}`:""}</span></div>
    ${window.acompCard?acompCard(t):""}
+   ${window.chegadaLinha?chegadaLinha(t):""}
    ${window.feriadosLinha?feriadosLinha(t):""}
    ${window.gastosLinha?gastosLinha(t):""}
    ${window.chaveLinha?chaveLinha(t):""}
@@ -2274,8 +2276,8 @@ function lerPost(texto){
  const crian=T.match(/free[^\n]*crian[^\n]*/i)||T.match(/crian[çc]as?[^\n]*(?:gr[aá]tis|free)[^\n]*/i);if(crian)obs.push("👶 "+crian[0].replace(/\s*[→>-]+\s*/," → ").trim());
  if(r.feriado)obs.push("🎉 "+r.feriado);
  if(r.estrelas)obs.push(`🏨 Hotel ${r.estrelas} estrelas`);
- {const pc=(r.precos||[]).find(p=>p.parcelas);if(pc)obs.push(`💳 Parcelado em ${pc.parcelas}x de ${money(pc.parcela)}`);}
- {const sj=N.match(/(?:em\s*)?(\d{1,2})\s*x\s*sem\s*juros/i);if(sj){r.parcelasMax=Number(sj[1]);if(!(r.precos||[]).some(p=>p.parcelas))obs.push(`💳 Até ${sj[1]}x sem juros`)}}
+ {const pc=(r.precos||[]).find(p=>p.parcelas);if(pc)obs.push(`🧾 Parcelado em ${pc.parcelas}x de ${money(pc.parcela)}`);}
+ {const sj=N.match(/(?:em\s*)?(\d{1,2})\s*x\s*sem\s*juros/i);if(sj){r.parcelasMax=Number(sj[1]);if(!(r.precos||[]).some(p=>p.parcelas))obs.push(`🧾 Até ${sj[1]}x sem juros`)}}
  if(/a partir de \d+ anos pagam normal/i.test(N))obs.push("👦 A partir de "+N.match(/a partir de (\d+) anos/i)[1]+" anos paga normal");
  if(r.reserva)obs.push("🔖 Reserva confirmada com "+money(r.reserva));
  const tel=T.match(/\(?\d{2}\)?\s*9\s?\d{4}[.\-\s]?\d{4}(?:\s*\/\s*9\s?\d{4}[.\-\s]?\d{4})?/);if(tel)obs.push("📞 Contato: "+tel[0].trim());
@@ -3403,7 +3405,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-gastos]");
 render();
 </script>
 <div class="modal" id="modalIA"><div class="sheet"><button class="close" id="fecharIA" aria-label="Fechar">×</button><h2>🤖 IA do Google</h2>
-<div id="iaSitAgora" class="notice" style="margin-top:0"></div><div class="iaLegenda"><span><i style="background:#2E9E44"></i> Verde: IA ligada e funcionando</span><span><i style="background:#F9A825"></i> Amarela: IA lendo uma foto agora</span><span><i style="background:#D32F2F"></i> Vermelha: a IA deu erro na última vez (veja a chave)</span><span><i style="background:#BDBDBD"></i> Cinza: IA desligada (sem chave)</span></div>
+<div id="iaSitAgora" class="notice" style="margin-top:0"></div><div id="iaUltErro" class="notice" style="display:none;margin-top:0;font-size:12px"></div><div class="iaLegenda"><span><i style="background:#2E9E44"></i> Verde: IA ligada e funcionando</span><span><i style="background:#F9A825"></i> Amarela: IA lendo uma foto agora</span><span><i style="background:#EF6C00"></i> Laranja: o Google estava ocupado — a chave está boa, tenta de novo sozinha</span><span><i style="background:#D32F2F"></i> Vermelha: problema na chave (confira e teste)</span><span><i style="background:#BDBDBD"></i> Cinza: IA desligada (sem chave)</span></div>
 <p class="sourceNote">Com a chave do Google (Gemini), o app usa a IA para ler a foto dos documentos e carteirinhas. Ela acerta mesmo com foto torta, com reflexo ou com o cartão no plástico.</p>
 <div class="field"><label>Chave da IA do Google (Gemini)</label><div class="apiKeyRow"><input id="iaChave" type="password" placeholder="Cole sua chave aqui (começa com AIza…)" autocomplete="off"><button class="smallBtn" id="iaSalvar" type="button">Salvar</button></div></div>
 <div id="iaStatus" class="notice" style="display:none"></div>
@@ -3657,22 +3659,29 @@ const IA_KEY="controle_viagens_gemini_key";
 function iaChave(){try{return(localStorage.getItem(IA_KEY)||"").trim()}catch{return""}}
 const IA_ST="controle_viagens_gemini_st";
 function iaSit(v){try{if(v===undefined)return localStorage.getItem(IA_ST)||"";localStorage.setItem(IA_ST,v)}catch{}iaMenuAtualiza()}
-function iaMenuAtualiza(v){const tem=!!iaChave(),st=v||(tem?(iaSit()==="erro"?"erro":"ok"):"");const el=$("iaMenuSt");if(el)el.textContent=tem?(st==="erro"?"🔴 com erro":"🟢 ligada"):"desligada";const d=$("iaDot");if(d)d.className="iaDot"+(st?" "+st:"");const a=$("iaSitAgora");if(a)a.innerHTML=!tem?"⚪ <b>IA desligada</b> — cole a chave abaixo para ligar.":st==="erro"?"🔴 <b>A IA deu erro na última vez.</b> Toque em Testar a chave.":"🟢 <b>IA ligada.</b>"}
+function iaMenuAtualiza(v){const tem=!!iaChave(),sv=iaSit(),st=v||(tem?(sv==="erro"?"erro":sv==="ocupada"?"ocupada":"ok"):"");const el=$("iaMenuSt");if(el)el.textContent=tem?(st==="erro"?"🔴 com erro":st==="ocupada"?"🟠 ocupada":"🟢 ligada"):"desligada";const d=$("iaDot");if(d)d.className="iaDot"+(st?" "+st:"");const a=$("iaSitAgora");if(a)a.innerHTML=!tem?"⚪ <b>IA desligada</b> — cole a chave abaixo para ligar.":st==="erro"?"🔴 <b>A chave deu erro.</b> Confira a chave e toque em Testar.":st==="ocupada"?"🟠 <b>IA ligada, mas o Google estava ocupado na última vez.</b> A chave está boa: na próxima leitura ela tenta de novo sozinha.":"🟢 <b>IA ligada.</b>";const ue=$("iaUltErro");if(ue){let t="";try{t=localStorage.getItem("controle_viagens_gemini_err")||""}catch(e){}ue.textContent=tem&&st!=="ok"&&t?"Último aviso: "+t:"";ue.style.display=ue.textContent?"block":"none"}}
 iaMenuAtualiza();
 function iaStatus(msg){const s=$("iaStatus");s.style.display=msg?"block":"none";s.innerHTML=msg||""}
 function fotoParaIA(file,max=1600){return new Promise((ok,er)=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const f=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*f);c.height=Math.round(img.height*f);c.getContext("2d").drawImage(img,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",.85).split(",")[1])};img.onerror=er;img.src=fr.result};fr.onerror=er;fr.readAsDataURL(file)})}
-const IA_MODELOS=["gemini-flash-latest","gemini-2.5-flash","gemini-2.0-flash"];
+const IA_MODELOS=["gemini-flash-latest","gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.0-flash"];
+function iaErro(msg){try{localStorage.setItem("controle_viagens_gemini_err",msg+" ("+new Date().toLocaleString("pt-BR")+")")}catch(e){}}
 async function iaPedir(partes,json=true){
- const k=iaChave();if(!k)throw new Error("sem chave");let ultimo="";
+ const k=iaChave();if(!k)throw new Error("sem chave");let temp="",achou=false;
  for(const mod of IA_MODELOS){
-  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${encodeURIComponent(k)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:partes}],generationConfig:json?{temperature:0,responseMimeType:"application/json"}:{temperature:0}})});
-  if(r.status===404){ultimo="modelo";continue}
+  let r;try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${encodeURIComponent(k)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:partes}],generationConfig:json?{temperature:0,responseMimeType:"application/json"}:{temperature:0}})})}
+  catch(e){temp="sem internet ou conexão fraca";continue}
+  if(r.status===404)continue;achou=true;
   const d=await r.json().catch(()=>({}));
-  if(!r.ok){iaSit("erro");const m=(d.error&&d.error.message)||"";if(r.status===400&&/api key/i.test(m))throw new Error("chave inválida");if(r.status===403)throw new Error("chave sem permissão");if(r.status===429)throw new Error("limite grátis do dia acabou");throw new Error(m||("erro "+r.status))}
+  if(!r.ok){const m=(d.error&&d.error.message)||"";
+   if((r.status===400&&/api key/i.test(m))||r.status===401){iaSit("erro");iaErro("chave inválida");throw new Error("chave inválida")}
+   if(r.status===403){iaSit("erro");iaErro("chave sem permissão");throw new Error("chave sem permissão")}
+   temp=r.status===429?"muitos pedidos seguidos (limite grátis por minuto)":r.status>=500?"o Google está ocupado agora":(m||"erro "+r.status);continue}
   const t=(((d.candidates||[])[0]||{}).content||{}).parts;const txt=(t||[]).map(x=>x.text||"").join("");
-  iaSit("ok");if(!json)return txt;try{return JSON.parse(txt.replace(/^```(json)?|```$/g,"").trim())}catch{throw new Error("resposta estranha da IA")}
+  if(!txt){temp="a IA não mandou resposta";continue}
+  iaSit("ok");if(!json)return txt;try{return JSON.parse(txt.replace(/^```(json)?|```$/g,"").trim())}catch{temp="resposta estranha da IA";continue}
  }
- throw new Error(ultimo==="modelo"?"modelo da IA não encontrado":"falhou");
+ if(!achou&&!temp){iaSit("erro");iaErro("modelo da IA não encontrado");throw new Error("modelo da IA não encontrado")}
+ iaSit("ocupada");iaErro(temp||"falhou");throw new Error(temp||"falhou");
 }
 async function iaLerDocumento(file,tipo){
  const b64=await fotoParaIA(file);
@@ -4176,7 +4185,7 @@ Deixe vazio o que não estiver no cartaz. Não invente.`},{inline_data:{mime_typ
 window.lerIdeiaFotoIA=lerIdeiaFotoIA;async function lerIdeiaFotoIA(e){
  if(typeof iaChave!=="function"||!iaChave())return lerIdeiaFoto(e);
  const f=e.target.files[0];if(!f)return;const st=$("ideiaStatus");st.style.display="block";st.textContent="🤖 A IA está lendo o cartaz…";
- let r;try{iaMenuAtualiza("lendo");r=await lerCartazIA(f);iaMenuAtualiza()}catch(err){iaMenuAtualiza();st.textContent="🤖 A IA não respondeu. Usando o leitor normal…";return lerIdeiaFoto(e)}
+ let r;try{iaMenuAtualiza("lendo");r=await lerCartazIA(f);iaMenuAtualiza()}catch(err){iaMenuAtualiza();st.textContent="🤖 A IA não respondeu. Usando o leitor normal…";await lerIdeiaFoto(e);st.innerHTML+=`<br><small>🤖 Lido pelo leitor normal porque ${esc(err.message)}. Se ficou errado, toque na 🗑️ e leia de novo daqui a 1 minuto.</small>`;return}
  const ok=v=>typeof v==="string"&&v.trim();
  const cidade=ok(r.cidade)?(r.cidade.trim()+(ok(r.uf)?", "+r.uf.trim().toUpperCase():"")):"";
  const titulo=ok(r.titulo)?r.titulo.trim():"";
@@ -4289,6 +4298,44 @@ abrirIdeiaComoViagem=function(id){
  }catch(e){}
 };
 try{renderIdeias()}catch(e){}
+/* v10.9: tira o cartãozinho dos "sem juros" já salvos (só fica 💳 quando é mesmo no cartão) */
+(function(){
+ const fix=t=>String(t||"").replace(/💳\s*(Até \d+\s*x sem juros|Parcelado em \d+\s*x)(?! no cart)/g,"🧾 $1");
+ let mud=false;
+ try{ideias.forEach(i=>{const n=fix(i.obs);if(n!==(i.obs||"")){i.obs=n;mud=true}});if(mud){saveIdeias();renderIdeias()}}catch(e){}
+ let mv=false;try{viagens.forEach(t=>{const n=fix(t.obs);if(t.obs&&n!==t.obs){t.obs=n;mv=true}});if(mv){save();render()}}catch(e){}
+})();
+/* v11.0: 🕗 previsão de chegada (tempo de estrada + folga para ônibus/excursão) */
+const chegBusca=new Set();
+function chegChave(t){return [t.localSaida,t.cidade,t.nome,t.tipoViagem].join("|")}
+function chegCache(t){try{const c=JSON.parse(localStorage.getItem("cv_cheg_"+t.id)||"null");if(c&&c.k===chegChave(t))return c}catch(e){}return null}
+async function chegCalcular(t){
+ const a=await resolverLugar(t.localSaida,null),b=await resolverLugar(t.cidade,t);if(!a||!b)return {erro:1};
+ const r=await (await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving/${a.longitude},${a.latitude};${b.longitude},${b.latitude}?overview=false&access_token=${MAPBOX_TOKEN}`)).json();
+ const seg=r&&r.routes&&r.routes[0]&&r.routes[0].duration;if(!seg)return {erro:1};
+ const c={k:chegChave(t),seg,km:Math.round((r.routes[0].distance||0)/1000),de:a.name,para:b.name};
+ try{localStorage.setItem("cv_cheg_"+t.id,JSON.stringify(c))}catch(e){}
+ return c;
+}
+function chegadaLinha(t){
+ if(!t||!t.data||!t.horaSaida||!t.localSaida||!t.cidade||t.tipoViagem==="aviao")return "";
+ const hoje=localDate();if((t.dataVolta||t.data)<hoje)return "";
+ const c=chegCache(t);
+ if(!c){if(!chegBusca.has(t.id)){chegBusca.add(t.id);chegCalcular(t).then(x=>{if(x&&!x.erro)render()}).catch(()=>{})}return ""}
+ if(c.erro||!c.seg)return "";
+ const onibus=["excursao","onibus"].includes(t.tipoViagem);
+ let min=c.seg/60*(onibus?1.2:1.05);min+=Math.floor(min/240)*(onibus?30:15);
+ const folga=onibus?60:30;
+ const [h,m]=String(t.horaSaida).split(":").map(Number);const ini=new Date(t.data+"T00:00:00");ini.setHours(h||0,m||0,0,0);
+ const ar=x=>{const d=new Date(ini.getTime()+Math.round(x/15)*15*60000);return d};
+ const d1=ar(min),d2=ar(min+folga);const p=n=>String(n).padStart(2,"0");const hhmm=d=>`${p(d.getHours())}:${p(d.getMinutes())}`;
+ const iso=d=>`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+ const dia=iso(d1)!==t.data?dataSem(iso(d1)).split(",")[0]+" "+dateBR(iso(d1)).slice(0,5)+" ":"";
+ const horas=Math.floor(min/60),mins=Math.round(min%60/15)*15;
+ return `<div class="chegLinha">🕗 <b>Chegada prevista:</b> ${dia}entre ${hhmm(d1)} e ${hhmm(d2)} <small>(≈ ${horas}h${mins?String(mins).padStart(2,"0"):""} de ${onibus?"ônibus":"estrada"}${c.km?", "+c.km+" km":""}. Pode mudar com trânsito e paradas.)</small></div>`;
+}
+window.chegadaLinha=chegadaLinha;
+try{render()}catch(e){}
 </script>
 </body>
 
