@@ -690,7 +690,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .etqBox .etqAdd{flex-wrap:nowrap;gap:6px}
 .etqBox .etqAdd label.btn,.etqBox .etqAdd button.btn{flex:1 1 0;min-height:0!important;height:auto!important;padding:7px 4px!important;font-size:13px!important;line-height:1.2!important;border-radius:10px!important;white-space:nowrap;box-shadow:none}
 .etqBox .notice{font-size:12.5px}
-.iaBtn{position:relative}.iaDot{position:absolute;right:3px;bottom:3px;width:10px;height:10px;border-radius:50%;background:#BDBDBD;border:2px solid #fff}.iaDot.ok{background:#2E9E44}.iaDot.lendo{background:#F9A825}.iaDot.erro{background:#D32F2F}.iaDot.ocupada{background:#EF6C00}
+.iaBtn{position:relative}.iaDot{position:absolute;right:1px;bottom:1px;width:14px;height:14px;border-radius:50%;background:#BDBDBD;border:2px solid #fff}.iaDot.ok{background:#2E9E44}.iaDot.lendo{background:#FFD600}.iaDot.erro{background:#D50000}.iaDot.ocupada{background:#FF9100}
 .iaLegenda{display:grid;gap:4px;font-size:13px;margin:4px 0 10px}.iaLegenda span{display:flex;align-items:center;gap:7px}.iaLegenda i{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
 .docLinha{border:1px solid var(--line);border-radius:12px;margin-bottom:6px;background:#fff}
 .docLinha>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer}
@@ -1159,7 +1159,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="11.1";
+const APP_VERSAO="11.4";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -3405,7 +3405,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-gastos]");
 render();
 </script>
 <div class="modal" id="modalIA"><div class="sheet"><button class="close" id="fecharIA" aria-label="Fechar">×</button><h2>🤖 IA do Google</h2>
-<div id="iaSitAgora" class="notice" style="margin-top:0"></div><div id="iaUltErro" class="notice" style="display:none;margin-top:0;font-size:12px"></div><div class="iaLegenda"><span><i style="background:#2E9E44"></i> Verde: IA ligada e funcionando</span><span><i style="background:#F9A825"></i> Amarela: IA lendo uma foto agora</span><span><i style="background:#EF6C00"></i> Laranja: o Google estava ocupado — a chave está boa, tenta de novo sozinha</span><span><i style="background:#D32F2F"></i> Vermelha: problema na chave (confira e teste)</span><span><i style="background:#BDBDBD"></i> Cinza: IA desligada (sem chave)</span></div>
+<div id="iaSitAgora" class="notice" style="margin-top:0"></div><div id="iaUltErro" class="notice" style="display:none;margin-top:0;font-size:12px"></div><div class="iaLegenda"><span><i style="background:#2E9E44"></i> Verde: IA ligada e funcionando</span><span><i style="background:#FFD600"></i> Amarela: IA lendo uma foto agora</span><span><i style="background:#FF9100"></i> Laranja: o Google estava ocupado — a chave está boa, tenta de novo sozinha</span><span><i style="background:#D32F2F"></i> Vermelha: problema na chave (confira e teste)</span><span><i style="background:#BDBDBD"></i> Cinza: IA desligada (sem chave)</span></div>
 <p class="sourceNote">Com a chave do Google (Gemini), o app usa a IA para ler a foto dos documentos e carteirinhas. Ela acerta mesmo com foto torta, com reflexo ou com o cartão no plástico.</p>
 <div class="field"><label>Chave da IA do Google (Gemini)</label><div class="apiKeyRow"><input id="iaChave" type="password" placeholder="Cole sua chave aqui (começa com AIza…)" autocomplete="off"><button class="smallBtn" id="iaSalvar" type="button">Salvar</button></div></div>
 <div id="iaStatus" class="notice" style="display:none"></div>
@@ -3666,22 +3666,27 @@ function fotoParaIA(file,max=1600){return new Promise((ok,er)=>{const fr=new Fil
 const IA_MODELOS=["gemini-flash-latest","gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.0-flash"];
 function iaErro(msg){try{localStorage.setItem("controle_viagens_gemini_err",msg+" ("+new Date().toLocaleString("pt-BR")+")")}catch(e){}}
 async function iaPedir(partes,json=true){
- const k=iaChave();if(!k)throw new Error("sem chave");let temp="",achou=false;
+ const k=iaChave();if(!k)throw new Error("sem chave");let temp="",achou=false;const det=[];
+ const espera=ms=>new Promise(ok=>setTimeout(ok,ms));
  for(const mod of IA_MODELOS){
-  let r;try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${encodeURIComponent(k)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:partes}],generationConfig:json?{temperature:0,responseMimeType:"application/json"}:{temperature:0}})})}
-  catch(e){temp="sem internet ou conexão fraca";continue}
-  if(r.status===404)continue;achou=true;
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok){const m=(d.error&&d.error.message)||"";
-   if((r.status===400&&/api key/i.test(m))||r.status===401){iaSit("erro");iaErro("chave inválida");throw new Error("chave inválida")}
-   if(r.status===403){iaSit("erro");iaErro("chave sem permissão");throw new Error("chave sem permissão")}
-   temp=r.status===429?"muitos pedidos seguidos (limite grátis por minuto)":r.status>=500?"o Google está ocupado agora":(m||"erro "+r.status);continue}
-  const t=(((d.candidates||[])[0]||{}).content||{}).parts;const txt=(t||[]).map(x=>x.text||"").join("");
-  if(!txt){temp="a IA não mandou resposta";continue}
-  iaSit("ok");if(!json)return txt;try{return JSON.parse(txt.replace(/^```(json)?|```$/g,"").trim())}catch{temp="resposta estranha da IA";continue}
+  for(let tent=0;tent<2;tent++){
+   let r;try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${encodeURIComponent(k)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:partes}],generationConfig:json?{temperature:0,responseMimeType:"application/json"}:{temperature:0}})})}
+   catch(e){temp="sem internet ou conexão fraca";det.push(mod+": sem conexão");await espera(1200);continue}
+   if(r.status===404){det.push(mod+": não existe");break}
+   achou=true;const d=await r.json().catch(()=>({}));
+   if(!r.ok){const m=(d.error&&d.error.message)||"";det.push(`${mod}: ${r.status} ${m.slice(0,90)}`);
+    if((r.status===400&&/api key/i.test(m))||r.status===401){iaSit("erro");iaErro("chave inválida — "+det.join(" | "));throw new Error("chave inválida")}
+    if(r.status===403){iaSit("erro");iaErro("chave sem permissão — "+det.join(" | "));throw new Error("chave sem permissão")}
+    temp=r.status===429?"muitos pedidos seguidos (limite grátis por minuto)":r.status>=500?"o Google está ocupado agora":"o Google recusou ("+r.status+")";
+    if(r.status===429||r.status>=500){if(!tent)await espera(1500);continue}
+    break}
+   const t=(((d.candidates||[])[0]||{}).content||{}).parts;const txt=(t||[]).map(x=>x.text||"").join("");
+   if(!txt){const fr=((d.candidates||[])[0]||{}).finishReason||(d.promptFeedback&&d.promptFeedback.blockReason)||"vazio";det.push(mod+": sem texto ("+fr+")");temp="a IA não mandou resposta";break}
+   iaSit("ok");if(!json)return txt;try{return JSON.parse(txt.replace(/^```(json)?|```$/g,"").trim())}catch{det.push(mod+": resposta não era JSON");temp="resposta estranha da IA";break}
+  }
  }
- if(!achou&&!temp){iaSit("erro");iaErro("modelo da IA não encontrado");throw new Error("modelo da IA não encontrado")}
- iaSit("ocupada");iaErro(temp||"falhou");throw new Error(temp||"falhou");
+ if(!achou&&!temp){iaSit("erro");iaErro("modelo da IA não encontrado — "+det.join(" | "));throw new Error("modelo da IA não encontrado")}
+ iaSit("ocupada");iaErro((temp||"falhou")+" — "+det.join(" | "));throw new Error(temp||"falhou");
 }
 async function iaLerDocumento(file,tipo){
  const b64=await fotoParaIA(file);
@@ -4184,8 +4189,8 @@ Deixe vazio o que não estiver no cartaz. Não invente.`},{inline_data:{mime_typ
 }
 window.lerIdeiaFotoIA=lerIdeiaFotoIA;async function lerIdeiaFotoIA(e){
  if(typeof iaChave!=="function"||!iaChave())return lerIdeiaFoto(e);
- const f=e.target.files[0];if(!f)return;const st=$("ideiaStatus");st.style.display="block";st.textContent="🤖 A IA está lendo o cartaz…";
- let r;try{iaMenuAtualiza("lendo");r=await lerCartazIA(f);iaMenuAtualiza()}catch(err){iaMenuAtualiza();st.textContent="🤖 A IA não respondeu. Usando o leitor normal…";await lerIdeiaFoto(e);st.innerHTML+=`<br><small>🤖 Lido pelo leitor normal porque ${esc(err.message)}. Se ficou errado, toque na 🗑️ e leia de novo daqui a 1 minuto.</small>`;return}
+ const f=e.target.files[0];if(!f)return;window.__ultFotoIdeia=f;const st=$("ideiaStatus");st.style.display="block";st.textContent="🤖 A IA está lendo o cartaz…";
+ let r;try{iaMenuAtualiza("lendo");r=await lerCartazIA(f);iaMenuAtualiza()}catch(err){iaMenuAtualiza();st.textContent="🤖 A IA não respondeu. Usando o leitor normal…";await lerIdeiaFoto(e);st.innerHTML+=`<br><small>🤖 Lido pelo leitor normal porque ${esc(err.message)}.</small><br><button type="button" class="btn secondary" id="ideiaTentarIA" style="margin-top:6px">🤖 Tentar com a IA de novo</button>`;return}
  const ok=v=>typeof v==="string"&&v.trim();
  const cidade=ok(r.cidade)?(r.cidade.trim()+(ok(r.uf)?", "+r.uf.trim().toUpperCase():"")):"";
  const titulo=ok(r.titulo)?r.titulo.trim():"";
@@ -4336,6 +4341,22 @@ function chegadaLinha(t){
 }
 window.chegadaLinha=chegadaLinha;
 try{render()}catch(e){}
+/* v11.2: o app confere a IA sozinho ao abrir (ninguém precisa ir lá "validar") */
+(function(){
+ let ult=0;
+ async function conferir(forcar){
+  if(typeof iaChave!=="function"||!iaChave())return;
+  if(!forcar&&iaSit()==="ok")return;
+  if(Date.now()-ult<90000)return;ult=Date.now();
+  iaMenuAtualiza("lendo");
+  try{await iaPedir([{text:"Responda só com a palavra OK."}],false)}catch(e){}
+  iaMenuAtualiza();
+ }
+ setTimeout(()=>conferir(false),1500);
+ document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")setTimeout(()=>conferir(false),1500)});
+})();
+/* v11.3: tentar a IA de novo com a mesma foto */
+document.addEventListener("click",e=>{if(e.target.id!=="ideiaTentarIA")return;const f=window.__ultFotoIdeia;if(!f)return;$("ideiaObs").value="";lerIdeiaFotoIA({target:{files:[f],value:""}})});
 </script>
 </body>
 
