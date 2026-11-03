@@ -442,7 +442,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 /* v3.6: trocar cidade e fechar resultados */
 .trocaCidade{border:1px dashed var(--accent);background:transparent;color:var(--accent);border-radius:999px;padding:3px 10px;font-weight:800;font-size:12px;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trocaCidade small{font-size:12px;color:var(--accent)}
-.resBar{position:sticky;top:calc(6px + env(safe-area-inset-top));z-index:5;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--accent);color:#fff;border-radius:12px;padding:8px 8px 8px 12px;margin:4px 0 8px;box-shadow:0 4px 14px #0003}
+#resultados{grid-template-columns:minmax(0,1fr)}#resultados>*{min-width:0}.resBar{min-width:0;position:sticky;top:calc(6px + env(safe-area-inset-top));z-index:5;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--accent);color:#fff;border-radius:12px;padding:8px 8px 8px 12px;margin:4px 0 8px;box-shadow:0 4px 14px #0003}
 .resBar span{font-size:13px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .resBar button{flex:none;border:0;background:#fff;color:var(--accent);font-weight:900;border-radius:9px;padding:7px 11px;font-size:13px}
 #passeiosChips button.ativoPasseio{background:var(--accent);color:#fff;border-color:var(--accent)}
@@ -1159,7 +1159,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="11.6";
+const APP_VERSAO="11.8";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1323,7 +1323,7 @@ function renderAbasParcelas(){
  const hoje=localDate(),pagas=parcelasForm.filter(p=>p.pago).length;
  box.innerHTML=`<div class="abasResumo">${pagas} de ${parcelasForm.length} parcelas pagas</div>`+parcelasForm.map((p,i)=>{
   const atrasada=!p.pago&&p.vencimento<hoje,aberta=i===abaAberta,cls=p.pago?"paid":atrasada?"overdue":"";
-  return `<div class="abaParcela ${cls} ${aberta?"open":""}"><button type="button" class="abaHead" data-aba="${i}" aria-expanded="${aberta}"><span class="abaTit">${p.numero}ª • ${mesAno(p.vencimento)}${p.pago&&p.dataPago?`<small>pago ${dateBR(p.dataPago).slice(0,5)}${p.dataPago<p.vencimento?" • ⏩ antecipado":""}</small>`:""}</span><span>${money(p.valor)}${p.fixo?" ✏️":""} ${p.pago?"✅":atrasada?"🔴":"⚪"} <b class="abaSeta">${aberta?"︿":"﹀"}</b></span></button><div class="abaBody"><div class="installmentMeta">Vence em ${dataSem(p.vencimento)}${p.pago&&p.dataPago?" • pago em "+dateBR(p.dataPago)+(p.dataPago<p.vencimento?" (antecipado)":p.dataPago>p.vencimento?" (com atraso)":""):""}</div><div class="valorEdit"><label for="dtParc${i}">📅 Data do pagamento</label><input id="dtParc${i}" type="date" class="dataPagInput" value="${p.pago?(p.dataPago||""):(p.dataTmp||hoje)}" data-aba-data="${i}"></div><div class="valorEdit"><label for="valParc${i}">${p.pago?"Valor pago":"Valor da parcela"}</label><div class="valorEditRow"><span>R$</span><input id="valParc${i}" class="moneyInput" type="text" inputmode="decimal" value="${fmtBR(p.valor)}" data-aba-valor="${i}" autocomplete="off">${p.fixo?`<button type="button" class="smallBtn" data-aba-auto="${i}" title="Voltar ao valor automático">↺ Auto</button>`:""}</div>${p.fixo?`<div class="installmentMeta">✏️ Valor editado</div>`:""}</div><div class="installmentActions">${p.pago?`<button class="btn secondary" type="button" data-aba-pay="${i}" data-aba-acao="unpay">↩️ Desmarcar pago</button>`:`<button class="btn" type="button" data-aba-pay="${i}" data-aba-acao="pay">✅ Marcar pago</button>`}</div></div></div>`}).join("");
+  return `<div class="abaParcela ${cls} ${aberta?"open":""}"><button type="button" class="abaHead" data-aba="${i}" aria-expanded="${aberta}"><span class="abaTit">${p.numero}ª • ${mesAno(p.vencimento)}${p.pago&&p.dataPago?`<small>pago ${dateBR(p.dataPago).slice(0,5)}${p.dataPago<p.vencimento?" • ⏩ antecipado":""}</small>`:""}</span><span>${money(p.valor)}${p.fixo?" ✏️":""} ${p.pago?"✅":atrasada?"🔴":"⚪"} <b class="abaSeta">${aberta?"︿":"﹀"}</b></span></button><div class="abaBody"><div class="installmentMeta">Vence em ${dataSem(p.vencimento)}${p.pago&&p.dataPago?" • pago em "+dateBR(p.dataPago)+(p.dataPago<p.vencimento?" (antecipado)":p.dataPago>p.vencimento?" (com atraso)":""):""}</div>${p.pago?`<div class="valorEdit"><label for="dtParc${i}">📅 Dia em que você pagou <small style="font-weight:400">(se foi outro dia, troque aqui)</small></label><input id="dtParc${i}" type="date" class="dataPagInput" value="${p.dataPago||""}" data-aba-data="${i}"></div>`:""}<div class="valorEdit"><label for="valParc${i}">${p.pago?"Valor pago":"Valor da parcela"}</label><div class="valorEditRow"><span>R$</span><input id="valParc${i}" class="moneyInput" type="text" inputmode="decimal" value="${fmtBR(p.valor)}" data-aba-valor="${i}" autocomplete="off">${p.fixo?`<button type="button" class="smallBtn" data-aba-auto="${i}" title="Voltar ao valor automático">↺ Auto</button>`:""}</div>${p.fixo?`<div class="installmentMeta">✏️ Valor editado</div>`:""}</div><div class="installmentActions">${p.pago?`<button class="btn secondary" type="button" data-aba-pay="${i}" data-aba-acao="unpay">↩️ Desmarcar pago</button>`:`<button class="btn" type="button" data-aba-pay="${i}" data-aba-acao="pay">✅ Marcar pago</button>`}</div></div></div>`}).join("");
 }
 $("parcelasAbas").addEventListener("change",e=>{
  const dt=e.target.closest("[data-aba-data]");
@@ -1341,7 +1341,7 @@ $("parcelasAbas").addEventListener("click",e=>{
  if(pay){
   const i=Number(pay.dataset.abaPay),p=parcelasForm[i];if(!p)return;
   if(pay.dataset.abaAcao==="pay"){
-   const d=$("dtParc"+i)?.value||p.dataTmp||localDate();
+   const d=localDate();
    p.pago=true;p.dataPago=d;delete p.dataTmp;
    let prox=parcelasForm.findIndex((x,j)=>j>i&&!x.pago);
    if(prox<0)prox=parcelasForm.findIndex(x=>!x.pago);
@@ -3699,7 +3699,7 @@ async function iaPedir(partes,json=true){
    if(!r.ok){const m=(d.error&&d.error.message)||"";det.push(`${mod}: ${r.status} ${m.slice(0,90)}`);
     if((r.status===400&&/api key/i.test(m))||r.status===401){iaSit("erro");iaErro("chave inválida — "+det.join(" | "));throw new Error("chave inválida")}
     if(r.status===403){iaSit("erro");iaErro("chave sem permissão — "+det.join(" | "));throw new Error("chave sem permissão")}
-    temp=r.status===429?"muitos pedidos seguidos (limite grátis por minuto)":r.status>=500?"o Google está ocupado agora":"o Google recusou ("+r.status+")";
+    temp=r.status===429?"o limite grátis do Google acabou por agora (volta sozinho mais tarde)":r.status>=500?"o Google está ocupado agora":"o Google recusou ("+r.status+")";
     if(r.status===429)break;if(r.status>=500){if(!tent)await espera(1500);continue}
     break}
    const t=(((d.candidates||[])[0]||{}).content||{}).parts;const txt=(t||[]).map(x=>x.text||"").join("");
