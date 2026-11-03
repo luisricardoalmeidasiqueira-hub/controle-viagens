@@ -1155,7 +1155,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="9.9";
+const APP_VERSAO="10.1";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2566,7 +2566,7 @@ renderPasseios();
 /* ===== v4.0: 🧳 checklist da mala + contagem regressiva da viagem ===== */
 const MALA_CATS=["Antes de sair de casa","Avião","Documentos","Roupas","Higiene","Remédios","Eletrônicos","Praia","Frio","Ônibus","Criança","Parque / Piscina","Meus itens"];
 const MALA_MODELOS={
- base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Cabides","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Enxaguante bucal","Cortador de unha","Protetor labial","Lenço umedecido"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
+ base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Cabides","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Desodorante roll-on","Perfume","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Enxaguante bucal","Cortador de unha","Protetor labial","Lenço umedecido"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
  casa:{"Antes de sair de casa":["Desligar o registro do gás","Tirar aparelhos da tomada","Fechar janelas e portas","Deixar água e comida para os bichos (ou combinar quem cuida)","Tirar o lixo","Ligar o alarme","Ligar a cerca elétrica","Trancar portão e porta (conferir duas vezes)","Avisar um vizinho ou parente"]},
  m:{Roupas:["Cuecas"],Higiene:["Aparelho de barbear","Espuma / gel de barbear","Pós-barba"]},
  f:{Roupas:["Calcinhas","Sutiãs"],Higiene:["Absorventes","Maquiagem","Secador / prancha","Elástico / presilha de cabelo"]},
@@ -2859,20 +2859,19 @@ render();
 const TEMPO_COD=c=>c===0?["☀️","Sol"]:c<=2?["🌤️","Sol e nuvens"]:c===3?["☁️","Nublado"]:c<=48?["🌫️","Neblina"]:c<=57?["🌦️","Garoa"]:c<=67?["🌧️","Chuva"]:c<=77?["❄️","Neve"]:c<=82?["🌧️","Pancadas de chuva"]:["⛈️","Tempestade"];
 const UF_NOME={AC:"Acre",AL:"Alagoas",AP:"Amapá",AM:"Amazonas",BA:"Bahia",CE:"Ceará",DF:"Distrito Federal",ES:"Espírito Santo",GO:"Goiás",MA:"Maranhão",MT:"Mato Grosso",MS:"Mato Grosso do Sul",MG:"Minas Gerais",PA:"Pará",PB:"Paraíba",PR:"Paraná",PE:"Pernambuco",PI:"Piauí",RJ:"Rio de Janeiro",RN:"Rio Grande do Norte",RS:"Rio Grande do Sul",RO:"Rondônia",RR:"Roraima",SC:"Santa Catarina",SP:"São Paulo",SE:"Sergipe",TO:"Tocantins"};
 function addDias(iso,n){const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);const p=x=>String(x).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}
-function tempoCache(t){try{const c=JSON.parse(localStorage.getItem("cv_tempo_"+t.id)||"null");if(c&&c.dia===localDate()&&c.cid===t.cidade&&c.ini===t.data)return c}catch(e){}return null}
+function tempoCache(t){try{const c=JSON.parse(localStorage.getItem("cv_tempo_"+t.id)||"null");if(c&&c.v===2&&c.dia===localDate()&&c.cid===t.cidade&&c.ini===t.data)return c}catch(e){}return null}
 async function buscarTempo(t){
  if(!t||!t.data||!t.cidade)return {erro:"sem"};
  const d=diasPara(t.data),fimV=t.dataVolta||t.data;if(d>15)return {longe:d};if(diasPara(fimV)<0)return {erro:"passou"};
  const c=tempoCache(t);if(c)return c;
- const [nomeC,uf]=t.cidade.split(",").map(x=>x.trim());
- const g=await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nomeC)}&count=10&language=pt&countryCode=BR`)).json();
- let lugar=(g.results||[]).find(r=>uf&&UF_NOME[uf.toUpperCase()]&&r.admin1===UF_NOME[uf.toUpperCase()])||(g.results||[])[0];
+ let lugar=await resolverLugar(t.cidade,t);
  if(!lugar)return {erro:"cidade"};
  const ini=t.data<localDate()?localDate():t.data,fim=fimV>addDias(localDate(),15)?addDias(localDate(),15):fimV;
  const f=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lugar.latitude}&longitude=${lugar.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FSao_Paulo&start_date=${ini}&end_date=${fim}`)).json();
  if(!f.daily)return {erro:"api"};
- const dias=f.daily.time.map((dia,i)=>({dia,cod:f.daily.weather_code[i],max:Math.round(f.daily.temperature_2m_max[i]),min:Math.round(f.daily.temperature_2m_min[i]),chuva:f.daily.precipitation_probability_max[i]??0}));
- const r={dia:localDate(),cid:t.cidade,ini:t.data,lugar:`${lugar.name}${lugar.admin1?", "+lugar.admin1:""}`,dias,parcial:fim<fimV};
+ const dias=f.daily.time.map((dia,i)=>({dia,cod:f.daily.weather_code[i],max:Math.round(f.daily.temperature_2m_max[i]),min:Math.round(f.daily.temperature_2m_min[i]),chuva:f.daily.precipitation_probability_max[i]??0})).filter((x,i)=>f.daily.temperature_2m_max[i]!=null&&f.daily.temperature_2m_min[i]!=null);
+ if(!dias.length)return {erro:"cedo"};
+ const r={v:2,dia:localDate(),cid:t.cidade,ini:t.data,lugar:`${lugar.name}${lugar.admin1?", "+lugar.admin1:""}`,dias,parcial:fim<fimV};
  try{localStorage.setItem("cv_tempo_"+t.id,JSON.stringify(r))}catch(e){}
  return r;
 }
@@ -2893,6 +2892,7 @@ function tempoHTML(t,r){
  if(r.longe)return `<div class="tempoBox">🌤️ <b>Previsão do tempo:</b> aparece aqui quando faltar <b>15 dias ou menos</b> para a viagem (faltam ${r.longe}). Ela fica mais certa a partir de 7 dias antes.</div>`;
  if(r.erro==="sem")return `<div class="tempoBox">🌤️ Coloque a <b>cidade</b> da viagem para ver a previsão do tempo.</div>`;
  if(r.erro==="passou")return "";
+ if(r.erro==="cedo")return `<div class="tempoBox">🌤️ A previsão para os dias da viagem <b>ainda não saiu</b>. Volte amanhã: ela aparece aqui sozinha.</div>`;
  if(r.erro)return `<div class="tempoBox">🌤️ Não consegui buscar a previsão agora${r.erro==="cidade"?" (não achei a cidade — confira o nome, ex.: Peruíbe, SP)":" (sem internet?)"}.</div>`;
  const {dicas,acoes}=dicasTempo(r);
  return `<div class="tempoBox"><h4>🌤️ Previsão do tempo em ${esc(r.lugar)}</h4><div class="tempoDias">${r.dias.map(x=>{const [ic,txt]=TEMPO_COD(x.cod);return `<div class="tempoDia"><small>${dataSem(x.dia).split(",")[0]} ${dateBR(x.dia).slice(0,5)}</small><b>${ic}</b>${x.max}° / ${x.min}°<small>${txt}${x.chuva>=30?` • ☔ ${x.chuva}%`:""}</small></div>`}).join("")}</div>${dicas.length?`<div class="tempoDica">${dicas.join("<br>")}</div>`:""}${acoes.length?`<button type="button" class="btn secondary" style="margin-top:8px;width:100%" data-tempo-mala="${acoes.join(",")}">➕ Colocar as sugestões na mala</button>`:""}${r.parcial?`<div class="notice">Os últimos dias da viagem ainda não têm previsão. Volte mais perto da data.</div>`:""}<div class="notice">Previsão: Open-Meteo, atualizada todo dia. Pode mudar até a viagem.</div></div>`;
@@ -3034,7 +3034,7 @@ const APARELHOS=[
 const CATEGORIA_POR_PALAVRA=[
  [/receptor|hdmi|controle remoto|tv box|chromecast|fire ?stick|tablet|notebook|celular|carregador|tensao|tensão|testador|voltagem|aquecedor|secador|fone|power ?bank|camera|câmera|videogame|console|relogio|relógio|smartwatch|caixinha|cabo|pilha|bateria|extens|benjamim|kindle|ipad/i,"Eletrônicos"],
  [/term[oô]metro|gotas|remedio|remédio|pomada|vitamina|dipirona|paracetamol|curativo|band-?aid|termometro|termômetro|soro/i,"Remédios"],
- [/escova|pasta|desodorante|shampoo|xampu|sabonete|perfume|creme|hidratante|maquiagem|barbear|absorvente|cotonete|fio dental|enxaguante/i,"Higiene"],
+ [/escova|pasta|desodorante|shampoo|xampu|sabonete|perfume|creme|hidratante|maquiagem|barbear|absorvente|cotonete|fio dental|enxaguante|roll-?on/i,"Higiene"],
  [/camisa|camiseta|blusa|bermuda|short|calça|calca|cueca|calcinha|sutia|sutiã|meia|pijama|vestido|saia|jaqueta|moletom|casaco|chinelo|tenis|tênis|sapato|sandalia|sandália|bone|boné|cabide/i,"Roupas"],
  [/stanley|copo t[eé]rmico|garrafa t[eé]rmica|cooler|guarda-?sol|cadeira de praia|canga|pos-?sol|pós-?sol|boia|boia|snorkel|oculos de natacao|óculos de natação/i,"Praia"],
  [/\brg\b|cnh|caneta|bloquinho|caderninho|caderno|agenda de papel|documento|identidade|cartao|cartão|passagem|reserva|dinheiro|carteira|passaporte|cpf/i,"Documentos"]
@@ -3739,12 +3739,12 @@ async function geoCidade(txt){
  const g=await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nomeC)}&count=10&language=pt&countryCode=BR`)).json();
  return (g.results||[]).find(r=>uf&&UF_NOME[uf]&&r.admin1===UF_NOME[uf])||(g.results||[])[0]||null;
 }
-async function tempoNaHora(lugarTxt,dia,hora){
+async function tempoNaHora(lugarTxt,dia,hora,tv){
  if(!lugarTxt||!dia||!hora)return null;const d=diasPara(dia);if(d<0||d>15)return null;
- const ck="cv_roupa_"+[lugarTxt,dia,hora].join("|");try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&c.em===localDate())return c}catch(e){}
- const lugar=await geoCidade(lugarTxt);if(!lugar)return null;
+ const ck="cv_roupa2_"+[lugarTxt,dia,hora].join("|");try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&c.em===localDate())return c}catch(e){}
+ const lugar=await resolverLugar(lugarTxt,tv);if(!lugar)return null;
  const f=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lugar.latitude}&longitude=${lugar.longitude}&hourly=temperature_2m,precipitation_probability&timezone=America%2FSao_Paulo&start_date=${dia}&end_date=${dia}`)).json();
- if(!f.hourly)return null;const h=Math.min(23,Math.max(0,parseInt(hora,10)||0));
+ if(!f.hourly)return null;const h=Math.min(23,Math.max(0,parseInt(hora,10)||0));if(f.hourly.temperature_2m[h]==null)return null;
  const r={em:localDate(),temp:Math.round(f.hourly.temperature_2m[h]),chuva:f.hourly.precipitation_probability?(f.hourly.precipitation_probability[h]??0):0,lugar:lugar.name};
  try{localStorage.setItem(ck,JSON.stringify(r))}catch(e){}
  return r;
@@ -3789,7 +3789,7 @@ function roupaHTML(t,prev){
 async function mostrarRoupa(t){
  const box=$("malaRoupa");if(!box)return;box.innerHTML=roupaHTML(t,null);
  const prev={};
- for(const lado of ["ida","volta"]){const L=roupaLado(t,lado);try{const r=await tempoNaHora(L.lugar,L.dia,L.hora);if(r)prev[lado]=r}catch(e){}}
+ for(const lado of ["ida","volta"]){const L=roupaLado(t,lado);try{const r=await tempoNaHora(L.lugar,L.dia,L.hora,lado==="volta"?t:null);if(r)prev[lado]=r}catch(e){}}
  if(malaId===t.id&&(prev.ida||prev.volta))box.innerHTML=roupaHTML(t,prev);
 }
 (function(){const tb=$("malaTempo");if(tb&&!$("malaRoupa"))tb.insertAdjacentHTML("afterend",'<div id="malaRoupa"></div>')})();
@@ -4090,7 +4090,7 @@ function cadeadoHTML(t){
  return `<div class="cadBox"><b>🔒 Cadeado da mala</b>
  <div class="malaChips cadTipos"><button type="button" class="${tipo==="chave"?"on":""}" data-cad-tipo="chave">🔑 Com chave</button><button type="button" class="${tipo==="segredo"?"on":""}" data-cad-tipo="segredo">🔢 Com segredo</button></div>
  <label class="cadLb">Cor / como é o cadeado</label><input id="cadCor" class="cadInp" autocomplete="off" placeholder="Ex.: azul, pequeno" value="${esc(c.cor||"")}">
- ${tipo==="segredo"?`<label class="cadLb">Segredo (opcional)</label><div class="cadLinha"><input id="cadSegredo" type="password" inputmode="numeric" autocomplete="off" placeholder="Ex.: 000" value="${esc(c.segredo||"")}"><button type="button" class="cadOlho" id="cadOlho" aria-label="Mostrar segredo">👁️</button></div>`:""}
+ ${tipo==="segredo"?`<label class="cadLb">Segredo (opcional)</label><div class="cadLinha"><input id="cadSegredo" type="password" inputmode="numeric" autocomplete="off" placeholder="Ex.: 000" value="${esc(c.segredo||"")}"><button type="button" class="cadOlho" id="cadOlho" aria-label="Mostrar segredo">🔒</button></div>`:""}
  ${tipo==="chave"?`<label class="cadLb">Onde fica a chave? (opcional)</label><input id="cadChave" class="cadInp" autocomplete="off" placeholder="Ex.: na carteira, no bolso da mochila" value="${esc(c.chave||"")}">`:""}
  <small>${c.cor?`Para achar a sua mala: <b>mala com cadeado ${esc(c.cor)}</b>. `:""}Fica guardado só neste celular.${intl?"<br>✈️ Voo para fora do Brasil: use <b>cadeado TSA</b> (a fiscalização dos EUA abre sem quebrar).":""}</small></div>`;
 }
@@ -4107,7 +4107,28 @@ $("modalMala").addEventListener("input",e=>{
 });
 $("modalMala").addEventListener("change",e=>{if(["cadSegredo","cadCor","cadChave"].includes(e.target.id)){try{save()}catch(er){}avisar("🔒 Cadeado anotado.")}});
 $("modalMala").addEventListener("click",e=>{const b=e.target.closest("[data-cad-tipo]");if(!b)return;e.preventDefault();const t=viagens.find(x=>x.id===malaId);if(!t)return;t.cadeado=t.cadeado||{};t.cadeado.tipo=t.cadeado.tipo===b.dataset.cadTipo?"":b.dataset.cadTipo;try{save()}catch(er){}window.etqAberta=true;renderMala()});
-$("modalMala").addEventListener("click",e=>{if(e.target.id!=="cadOlho")return;e.preventDefault();const i=$("cadSegredo");if(!i)return;i.type=i.type==="password"?"text":"password";e.target.textContent=i.type==="password"?"👁️":"🙈"});
+$("modalMala").addEventListener("click",e=>{if(e.target.id!=="cadOlho")return;e.preventDefault();const i=$("cadSegredo");if(!i)return;i.type=i.type==="password"?"text":"password";e.target.textContent=i.type==="password"?"🔒":"🔓"});
+/* v10.0: previsão no lugar certo (estado → atração/capital) */
+const CAPITAIS={AC:"Rio Branco",AL:"Maceió",AP:"Macapá",AM:"Manaus",BA:"Salvador",CE:"Fortaleza",DF:"Brasília",ES:"Vitória",GO:"Goiânia",MA:"São Luís",MT:"Cuiabá",MS:"Campo Grande",MG:"Belo Horizonte",PA:"Belém",PB:"João Pessoa",PR:"Curitiba",PE:"Recife",PI:"Teresina",RJ:"Rio de Janeiro",RN:"Natal",RS:"Porto Alegre",RO:"Porto Velho",RR:"Boa Vista",SC:"Florianópolis",SP:"São Paulo",SE:"Aracaju",TO:"Palmas"};
+const ATRACOES=[[/beto ?carrero/i,"Penha, SC"],[/hopi ?hari/i,"Vinhedo, SP"],[/wet ?n'? ?wild/i,"Itupeva, SP"],[/thermas dos laranjais/i,"Olímpia, SP"],[/beach ?park/i,"Aquiraz, CE"],[/hot ?park|rio quente/i,"Rio Quente, GO"],[/snowland|mini ?mundo|lago negro/i,"Gramado, RS"],[/fazenda.*maravilha|parque da m[oô]nica/i,"São Paulo, SP"],[/aparecida|santu[aá]rio nacional/i,"Aparecida, SP"],[/balne[aá]rio cambori[uú]|unipraias/i,"Balneário Camboriú, SC"],[/foz do igua[cç]u|cataratas/i,"Foz do Iguaçu, PR"],[/beto|penha/i,"Penha, SC"]];
+async function geoBusca(nomeC,uf){
+ const g=await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nomeC)}&count=10&language=pt&countryCode=BR`)).json();
+ const R=g.results||[];return (uf&&UF_NOME[uf]?R.find(r=>r.admin1===UF_NOME[uf]):null)||(uf?null:R[0])||R[0]||null;
+}
+async function resolverLugar(txt,t){
+ txt=String(txt||"").trim();
+ const m=txt.match(/([A-Za-zÀ-ú' .]+?)\s*[,\-\/]\s*([A-Za-z]{2})\b/);let nomeC=(m?m[1]:txt.split(/[,\/]/)[0]).trim(),uf=m?m[2].toUpperCase():"";
+ const norm=x=>semAcento(String(x||"")).toLowerCase().trim();
+ const ehEstado=Object.keys(UF_NOME).find(k=>norm(UF_NOME[k])===norm(nomeC)||(!m&&norm(k)===norm(nomeC)));
+ if(ehEstado||!nomeC){
+  const pistas=[t&&t.nome,t&&t.hotel,t&&t.obs,txt].filter(Boolean).join(" ");
+  const at=ATRACOES.find(([re])=>re.test(pistas));
+  if(at&&(!ehEstado||at[1].endsWith(", "+ehEstado))){const [c,u]=at[1].split(",").map(x=>x.trim());const l=await geoBusca(c,u);if(l)return l}
+  if(ehEstado){const l=await geoBusca(CAPITAIS[ehEstado],ehEstado);if(l)return l}
+ }
+ if(!nomeC)return null;
+ return await geoBusca(nomeC,uf);
+}
 </script>
 </body>
 
