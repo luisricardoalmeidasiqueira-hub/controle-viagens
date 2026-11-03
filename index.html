@@ -814,7 +814,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
     <option value="">Categoria</option><option value="hotel">🏨 Hotéis</option><option value="restaurante">🍽️ Restaurantes</option><option value="padaria">🥖 Padarias</option><option value="mcdonalds">🍔 McDonald's</option><option value="habibs">🌯 Habib's</option><option value="pizzaria">🍕 Pizzarias</option><option value="lanchonete">🍟 Lanchonetes</option><option value="turismo">📸 Pontos turísticos</option><option value="praia">🏖️ Praias</option><option value="compras">🛍️ Compras</option><option value="posto">⛽ Postos</option><option value="farmacia">💊 Farmácias</option><option value="estacionamento">🅿️ Estacionamentos</option><option value="cafe">☕ Cafés</option><option value="outros">➕ Outros</option>
   </select></div>
   <div class="ratingRow" id="ratingRow" style="display:none"><label>⭐ Avaliação</label><select id="filtroRating"><option value="0">Qualquer avaliação</option><option value="3">⭐ 3,0+</option><option value="3.5">⭐ 3,5+</option><option value="4">⭐ 4,0+</option><option value="4.5">⭐ 4,5+</option></select></div>
-  <div class="field"><label>Cidade</label><div class="searchLine"><input id="cidadeBusca" list="listaCidades" placeholder="Digite a cidade (ex.: Peruíbe, SP)" autocomplete="off"><button type="button" class="btn secondary searchSmall" id="limparCidadeBusca" title="Apagar cidade" aria-label="Apagar cidade">✕</button></div><datalist id="listaCidades"></datalist></div>
+  <div class="field"><label>Cidade</label><div class="searchLine"><input id="cidadeBusca" list="listaCidades" placeholder="Digite a cidade (ex.: Peruíbe, SP)" autocomplete="off"><button type="button" class="btn secondary searchSmall" id="cidadeAqui" title="Usar a cidade onde estou agora" aria-label="Usar a cidade onde estou agora">📍</button><button type="button" class="btn secondary searchSmall" id="limparCidadeBusca" title="Apagar cidade" aria-label="Apagar cidade">✕</button></div><datalist id="listaCidades"></datalist></div>
   <div class="passeiosBox">
     <div class="passeiosHead"><span>🎡 Passeios na cidade</span><span class="trocaWrap"><button type="button" class="trocaCidade" id="trocarCidadePasseio" title="Trocar a cidade" tabindex="-1"><small id="passeioCidade"></small> ▾</button><select id="selCidadePasseio" aria-label="Escolher cidade dos passeios"></select></span></div>
     <div class="hotelChips" id="passeiosChips"></div>
@@ -1159,7 +1159,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="12.0";
+const APP_VERSAO="12.6";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2884,7 +2884,7 @@ render();
 const TEMPO_COD=c=>c===0?["☀️","Sol"]:c<=2?["🌤️","Sol e nuvens"]:c===3?["☁️","Nublado"]:c<=48?["🌫️","Neblina"]:c<=57?["🌦️","Garoa"]:c<=67?["🌧️","Chuva"]:c<=77?["❄️","Neve"]:c<=82?["🌧️","Pancadas de chuva"]:["⛈️","Tempestade"];
 const UF_NOME={AC:"Acre",AL:"Alagoas",AP:"Amapá",AM:"Amazonas",BA:"Bahia",CE:"Ceará",DF:"Distrito Federal",ES:"Espírito Santo",GO:"Goiás",MA:"Maranhão",MT:"Mato Grosso",MS:"Mato Grosso do Sul",MG:"Minas Gerais",PA:"Pará",PB:"Paraíba",PR:"Paraná",PE:"Pernambuco",PI:"Piauí",RJ:"Rio de Janeiro",RN:"Rio Grande do Norte",RS:"Rio Grande do Sul",RO:"Rondônia",RR:"Roraima",SC:"Santa Catarina",SP:"São Paulo",SE:"Sergipe",TO:"Tocantins"};
 function addDias(iso,n){const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);const p=x=>String(x).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}
-function tempoCache(t){try{const c=JSON.parse(localStorage.getItem("cv_tempo_"+t.id)||"null");if(c&&c.v===2&&c.dia===localDate()&&c.cid===t.cidade&&c.ini===t.data)return c}catch(e){}return null}
+function tempoCache(t){try{const c=JSON.parse(localStorage.getItem("cv_tempo_"+t.id)||"null");if(c&&c.v===3&&c.dia===localDate()&&c.cid===t.cidade&&c.ini===t.data)return c}catch(e){}return null}
 async function buscarTempo(t){
  if(!t||!t.data||!t.cidade)return {erro:"sem"};
  const d=diasPara(t.data),fimV=t.dataVolta||t.data;if(d>15)return {longe:d};if(diasPara(fimV)<0)return {erro:"passou"};
@@ -2896,7 +2896,7 @@ async function buscarTempo(t){
  if(!f.daily)return {erro:"api"};
  const dias=f.daily.time.map((dia,i)=>({dia,cod:f.daily.weather_code[i],max:Math.round(f.daily.temperature_2m_max[i]),min:Math.round(f.daily.temperature_2m_min[i]),chuva:f.daily.precipitation_probability_max[i]??0})).filter((x,i)=>f.daily.temperature_2m_max[i]!=null&&f.daily.temperature_2m_min[i]!=null);
  if(!dias.length)return {erro:"cedo"};
- const r={v:2,dia:localDate(),cid:t.cidade,ini:t.data,lugar:`${lugar.name}${lugar.admin1?", "+lugar.admin1:""}`,dias,parcial:fim<fimV};
+ const r={v:3,dia:localDate(),cid:t.cidade,ini:t.data,lugar:`${lugar.name}${lugar.admin1?", "+lugar.admin1:""}`,dias,parcial:fim<fimV};
  try{localStorage.setItem("cv_tempo_"+t.id,JSON.stringify(r))}catch(e){}
  return r;
 }
@@ -3803,7 +3803,7 @@ async function geoCidade(txt){
 }
 async function tempoNaHora(lugarTxt,dia,hora,tv){
  if(!lugarTxt||!dia||!hora)return null;const d=diasPara(dia);if(d<0||d>15)return null;
- const ck="cv_roupa2_"+[lugarTxt,dia,hora].join("|");try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&c.em===localDate())return c}catch(e){}
+ const ck="cv_roupa3_"+[lugarTxt,dia,hora].join("|");try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&c.em===localDate())return c}catch(e){}
  const lugar=await resolverLugar(lugarTxt,tv);if(!lugar)return null;
  const f=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lugar.latitude}&longitude=${lugar.longitude}&hourly=temperature_2m,precipitation_probability&timezone=America%2FSao_Paulo&start_date=${dia}&end_date=${dia}`)).json();
  if(!f.hourly)return null;const h=Math.min(23,Math.max(0,parseInt(hora,10)||0));if(f.hourly.temperature_2m[h]==null)return null;
@@ -4173,13 +4173,22 @@ $("modalMala").addEventListener("click",e=>{const b=e.target.closest("[data-cad-
 $("modalMala").addEventListener("click",e=>{if(e.target.id!=="cadOlho")return;e.preventDefault();const i=$("cadSegredo");if(!i)return;i.type=i.type==="password"?"text":"password";e.target.textContent=i.type==="password"?"🔒":"🔓"});
 /* v10.0: previsão no lugar certo (estado → atração/capital) */
 const CAPITAIS={AC:"Rio Branco",AL:"Maceió",AP:"Macapá",AM:"Manaus",BA:"Salvador",CE:"Fortaleza",DF:"Brasília",ES:"Vitória",GO:"Goiânia",MA:"São Luís",MT:"Cuiabá",MS:"Campo Grande",MG:"Belo Horizonte",PA:"Belém",PB:"João Pessoa",PR:"Curitiba",PE:"Recife",PI:"Teresina",RJ:"Rio de Janeiro",RN:"Natal",RS:"Porto Alegre",RO:"Porto Velho",RR:"Boa Vista",SC:"Florianópolis",SP:"São Paulo",SE:"Aracaju",TO:"Palmas"};
-const ATRACOES=[[/beto ?carrero/i,"Penha, SC"],[/hopi ?hari/i,"Vinhedo, SP"],[/wet ?n'? ?wild/i,"Itupeva, SP"],[/thermas dos laranjais/i,"Olímpia, SP"],[/beach ?park/i,"Aquiraz, CE"],[/hot ?park|rio quente/i,"Rio Quente, GO"],[/snowland|mini ?mundo|lago negro/i,"Gramado, RS"],[/fazenda.*maravilha|parque da m[oô]nica/i,"São Paulo, SP"],[/aparecida|santu[aá]rio nacional/i,"Aparecida, SP"],[/balne[aá]rio cambori[uú]|unipraias/i,"Balneário Camboriú, SC"],[/foz do igua[cç]u|cataratas/i,"Foz do Iguaçu, PR"],[/beto|penha/i,"Penha, SC"]];
+const ATRACOES=[[/beto ?carr?e?i?ro/i,"Penha, SC"],[/romaria|nossa senhora aparecida|bas[ií]lica de aparecida|aparecida do norte/i,"Aparecida, SP"],[/can[cç][aã]o nova/i,"Cachoeira Paulista, SP"],[/hopi ?hari/i,"Vinhedo, SP"],[/wet ?n'? ?wild/i,"Itupeva, SP"],[/thermas dos laranjais/i,"Olímpia, SP"],[/beach ?park/i,"Aquiraz, CE"],[/hot ?park|rio quente/i,"Rio Quente, GO"],[/snowland|mini ?mundo|lago negro/i,"Gramado, RS"],[/fazenda.*maravilha|parque da m[oô]nica/i,"São Paulo, SP"],[/aparecida|santu[aá]rio nacional/i,"Aparecida, SP"],[/balne[aá]rio cambori[uú]|unipraias/i,"Balneário Camboriú, SC"],[/foz do igua[cç]u|cataratas/i,"Foz do Iguaçu, PR"],[/beto|penha/i,"Penha, SC"]];
 async function geoBusca(nomeC,uf){
  const g=await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nomeC)}&count=10&language=pt&countryCode=BR`)).json();
- const R=g.results||[];return (uf&&UF_NOME[uf]?R.find(r=>r.admin1===UF_NOME[uf]):null)||(uf?null:R[0])||R[0]||null;
+ const R=g.results||[];
+ if(uf&&UF_NOME[uf]){const r=R.find(r=>r.admin1===UF_NOME[uf]);if(r)return r}
+ /* v12.1: sem estado → nome exato (não "Aparecida de Goiânia"), lugar turístico conhecido, depois São Paulo */
+ const n=x=>String(x||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z ]/g," ").replace(/\s+/g," ").trim();
+ const ex=R.filter(r=>n(r.name)===n(nomeC)&&r.feature_code!=="PPLX");
+ const conh=DEST_UF[n(nomeC)];
+ if(conh){const r=ex.find(r=>r.admin1===UF_NOME[conh])||R.find(r=>r.admin1===UF_NOME[conh]);if(r)return r}
+ if(ex.length)return ex.find(r=>r.admin1==="São Paulo")||ex.slice().sort((a,b)=>(b.population||0)-(a.population||0))[0];
+ return R.find(r=>r.admin1==="São Paulo"&&n(r.name).startsWith(n(nomeC)))||R[0]||null;
 }
+const DEST_UF={"aparecida":"SP","bonito":"MS","penha":"SC","gramado":"RS","canela":"RS","olimpia":"SP","brotas":"SP","holambra":"SP","socorro":"SP","cunha":"SP","paraty":"RJ","parati":"RJ","caldas novas":"GO","rio quente":"GO","trindade":"GO","porto seguro":"BA","capitolio":"MG","campos do jordao":"SP","serra negra":"SP","aguas de lindoia":"SP","pocos de caldas":"MG","foz do iguacu":"PR","bombinhas":"SC","piratuba":"SC","treze tilias":"SC","sao thome das letras":"MG","barra bonita":"SP","itu":"SP","embu das artes":"SP","santos":"SP","ubatuba":"SP","peruibe":"SP","monte verde":"MG","sao lourenco":"MG","aguas de sao pedro":"SP","cachoeira paulista":"SP","pirapora do bom jesus":"SP","juazeiro do norte":"CE","natal":"RN","salvador":"BA","fortaleza":"CE","maceio":"AL","recife":"PE","joao pessoa":"PB","florianopolis":"SC","curitiba":"PR","balneario camboriu":"SC","camboriu":"SC","rio de janeiro":"RJ","belo horizonte":"MG","sao paulo":"SP","cabo frio":"RJ","buzios":"RJ","armacao dos buzios":"RJ","arraial do cabo":"RJ","ilhabela":"SP","caraguatatuba":"SP","sao sebastiao":"SP","guaruja":"SP","bertioga":"SP","praia grande":"SP","itanhaem":"SP","mongagua":"SP","ilha comprida":"SP","maragogi":"AL","jijoca de jericoacoara":"CE","sao joaquim":"SC","urubici":"SC","bento goncalves":"RS","nova petropolis":"RS","petropolis":"RJ","penedo":"RJ","tiradentes":"MG","ouro preto":"MG","sao joao del rei":"MG","lencois":"BA","alto paraiso de goias":"GO","pirenopolis":"GO","barretos":"SP","ibitinga":"SP","avare":"SP","sorocaba":"SP","campinas":"SP","jundiai":"SP","atibaia":"SP","vinhedo":"SP","itapema":"SC","navegantes":"SC","garopaba":"SC","guarapari":"ES","vitoria":"ES","angra dos reis":"RJ","ilheus":"BA","aracaju":"SE","fernando de noronha":"PE","tatui":"SP","itapetininga":"SP","boituva":"SP","cesario lange":"SP","pereiras":"SP","porangaba":"SP","quadra":"SP","capela do alto":"SP","ipero":"SP"};
 async function resolverLugar(txt,t){
- txt=String(txt||"").trim();
+ txt=String(txt||"").trim().replace(/aparecida\s+do\s+norte/i,"Aparecida");
  const m=txt.match(/([A-Za-zÀ-ú' .]+?)\s*[,\-\/]\s*([A-Za-z]{2})\b/);let nomeC=(m?m[1]:txt.split(/[,\/]/)[0]).trim(),uf=m?m[2].toUpperCase():"";
  const norm=x=>semAcento(String(x||"")).toLowerCase().trim();
  const ehEstado=Object.keys(UF_NOME).find(k=>norm(UF_NOME[k])===norm(nomeC)||(!m&&norm(k)===norm(nomeC)));
@@ -4216,7 +4225,7 @@ async function lerCartazIA(f){
  const r=await iaPedir([{text:`Esta é a foto/print de um cartaz de excursão ou viagem no Brasil. Leia e responda SOMENTE com JSON:
 {"parcelasOnde":"","titulo":"","cidade":"","uf":"","data":"AAAA-MM-DD","dataVolta":"AAAA-MM-DD","horaSaida":"HH:MM","horaVolta":"HH:MM","localSaida":"","hotel":"","valor":0,"valorPorPessoa":true,"parcelasSemJuros":0,"inclusos":[],"contatos":[],"tipo":"excursao|aviao|viagem"}
 - titulo: nome do passeio como no cartaz (ex.: "Romaria pra Aparecida").
-- cidade/uf: cidade de DESTINO e sigla do estado (ex.: "Aparecida","SP"). Se for parque famoso, use a cidade dele (Beto Carrero = Penha, SC).
+- cidade/uf: cidade de DESTINO e sigla do estado. O "uf" NUNCA fica vazio: se o cartaz não disser o estado, deduza pelo contexto do cartaz inteiro. Exemplos: romaria, Nossa Senhora Aparecida, Basílica, Santuário Nacional, "Aparecida do Norte" = "Aparecida","SP" (nunca Aparecida de Goiânia); Beto Carrero = "Penha","SC"; Canção Nova = "Cachoeira Paulista","SP"; Hopi Hari = "Vinhedo","SP"; Thermas dos Laranjais = "Olímpia","SP"; Gramado/Natal Luz = "Gramado","RS"; Bonito (flutuação, grutas) = "Bonito","MS". Se ainda houver mais de uma cidade com esse nome, escolha a turística mais conhecida; as excursões saem de Tatuí-SP, então na dúvida prefira a que faz sentido para quem sai do interior de São Paulo.
 - data/dataVolta: datas de saída e retorno (ano com 4 dígitos). horaSaida/horaVolta: horários.
 - hotel: nome do hotel/pousada da hospedagem (ex.: "Fênix Hotel"). Não confunda com frases tipo "o hotel conta com".
 - valor: preço principal em reais (número, ex.: 750). parcelasSemJuros: número de vezes sem juros se tiver (ex.: 3), senão 0. parcelasOnde: onde vale esse parcelamento sem juros: "cartao" (no cartão de crédito), "direto" (direto com a agência/hotel, pix, boleto ou carnê) ou "" se não disser.
@@ -4349,7 +4358,7 @@ try{renderIdeias()}catch(e){}
 })();
 /* v11.0: 🕗 previsão de chegada (tempo de estrada + folga para ônibus/excursão) */
 const chegBusca=new Set();
-function chegChave(t){return ["v2",t.localSaida,t.cidade,t.nome,t.tipoViagem].join("|")}
+function chegChave(t){return ["v3",t.localSaida,t.cidade,t.nome,t.tipoViagem].join("|")}
 /* v11.9: local de saída — "Rodoviária", "Praça"... é em Tatuí; só usa outra cidade se estiver escrita */
 const CASA={name:"Tatuí",latitude:-23.3556,longitude:-47.8569,admin1:"São Paulo"};
 async function resolverSaida(txt){
@@ -4369,6 +4378,8 @@ async function resolverSaida(txt){
 function chegCache(t){try{const c=JSON.parse(localStorage.getItem("cv_cheg_"+t.id)||"null");if(c&&c.k===chegChave(t))return c}catch(e){}return null}
 async function chegCalcular(t){
  const a=await resolverSaida(t.localSaida),b=await resolverLugar(t.cidade,t);if(!a||!b)return {erro:1};
+ try{const n=x=>String(x||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();const uf=Object.keys(UF_NOME).find(k=>UF_NOME[k]===b.admin1);
+  if(uf&&!/[,\-\/]\s*[A-Za-z]{2}\s*$/.test(t.cidade||"")&&n(t.cidade)===n(b.name)){const v=viagens.find(x=>x.id===t.id);if(v){v.cidade=b.name+", "+uf;save()}}}catch(e){}
  const r=await (await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving/${a.longitude},${a.latitude};${b.longitude},${b.latitude}?overview=false&access_token=${MAPBOX_TOKEN}`)).json();
  const seg=r&&r.routes&&r.routes[0]&&r.routes[0].duration;if(!seg)return {erro:1};
  const c={k:chegChave(t),seg,km:Math.round((r.routes[0].distance||0)/1000),de:a.name,para:b.name};
@@ -4460,7 +4471,7 @@ document.addEventListener("click",e=>{if(e.target.id!=="ideiaTentarIA")return;co
  const K="cv_viagens_fechado";const seta=document.createElement("span");seta.className="setaViagens";seta.style.cssText="margin-left:8px;font-size:20px;color:var(--accent);font-weight:900";
  head.appendChild(seta);head.style.cursor="pointer";head.setAttribute("role","button");
  const aplicar=f=>{lista.style.display=f?"none":"";seta.textContent=f?"︾":"︽";try{f?localStorage.setItem(K,"1"):localStorage.removeItem(K)}catch(e){}};
- let fechado=false;try{fechado=localStorage.getItem(K)==="1"}catch(e){}aplicar(fechado);
+ let fechado=true;aplicar(true);
  head.addEventListener("click",()=>{fechado=!fechado;aplicar(fechado)});
  document.addEventListener("click",e=>{const m=e.target.closest('[data-menu="secViagens"]');if(m&&fechado){fechado=false;aplicar(false)}},true);
 })();
@@ -4503,6 +4514,94 @@ document.addEventListener("click",e=>{if(e.target.id!=="ideiaTentarIA")return;co
  },true);
  try{render()}catch(e){}
 })();
+</script>
+<script>
+/* v12.3: cidade = só o estado ("Santa Catarina") ou sem estado ("Aparecida") → o app arruma sozinho */
+(function(){
+ const n=x=>String(x||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z ]/g," ").replace(/\s+/g," ").trim();
+ function cidadeCerta(c,pistas){
+  c=String(c||"").trim();
+  const soEstado=Object.keys(UF_NOME).find(k=>n(UF_NOME[k])===n(c)||k===c.toUpperCase());
+  if(!c||soEstado){const at=ATRACOES.find(([re])=>re.test(pistas));if(at&&(!soEstado||at[1].endsWith(", "+soEstado)))return at[1];return null}
+  if(/[,\-\/]\s*[A-Za-z]{2}\s*$/.test(c))return null;
+  const base=c.replace(/aparecida\s+do\s+norte/i,"Aparecida");const uf=DEST_UF[n(base)];
+  if(uf)return base+", "+uf;
+  return null;
+ }
+ function corrigir(){let mud=false;
+  try{(viagens||[]).forEach(v=>{const c=cidadeCerta(v.cidade,[v.nome,v.hotel,v.obs,v.cidade].filter(Boolean).join(" "));if(c&&c!==v.cidade){v.cidade=c;mud=true}})}catch(e){}
+  try{(ideias||[]).forEach(i=>{const c=cidadeCerta(i.cidade,[i.destino,i.hotel,i.obs,i.cidade].filter(Boolean).join(" "));if(c&&c!==i.cidade){i.cidade=c;mud=true}})}catch(e){}
+  return mud;
+ }
+ const sv=save;save=function(){corrigir();return sv.apply(this,arguments)};
+ const si=saveIdeias;saveIdeias=function(){corrigir();return si.apply(this,arguments)};
+ if(corrigir()){try{sv();si();render();renderIdeias()}catch(e){}}
+ window.cidadeCerta=cidadeCerta;
+})();
+</script>
+<script>
+/* v12.3: a IA interpreta o destino (nome, cidade, hotel, obs) e completa a cidade com o estado */
+(function(){
+ const temUF=c=>/[,\-\/]\s*[A-Za-z]{2}\s*$/.test(String(c||"").trim());
+ let rodando=false;
+ async function iaCidade(x,ehIdeia){
+  const dados=ehIdeia?{nome:x.destino,cidade:x.cidade,hotel:x.hotel,obs:x.obs}:{nome:x.nome,cidade:x.cidade,hotel:x.hotel,obs:x.obs};
+  const r=await iaPedir([{text:`Uma pessoa de Tatuí-SP cadastrou esta viagem num app. Interprete o texto e diga qual é a cidade de DESTINO, com a sigla do estado.
+Dados: ${JSON.stringify(dados)}
+Regras: use tudo (nome, hotel, observação). Ex.: "Termas dos Laranjais" = Olímpia, SP; "Romaria" ou "Aparecida do Norte" = Aparecida, SP (nunca Aparecida de Goiânia); "Beto Carrero" = Penha, SC; "Santa Catarina / Beto Carrero" = Penha, SC. Se houver várias cidades com o mesmo nome, escolha a turística mais conhecida ou a que faz sentido para quem sai do interior de São Paulo. Se não der para saber, responda certeza "baixa".
+Responda SOMENTE com JSON: {"cidade":"","uf":"","certeza":"alta|media|baixa"}`}]);
+  if(r&&r.cidade&&/^[A-Za-z]{2}$/.test(r.uf||"")&&r.certeza!=="baixa")return `${String(r.cidade).trim()}, ${r.uf.toUpperCase()}`;
+  return null;
+ }
+ async function passar(){
+  if(rodando||typeof iaChave!=="function"||!iaChave())return;rodando=true;let mud=false;
+  try{
+   const fila=[...(viagens||[]).map(v=>[v,false]),...(ideias||[]).map(i=>[i,true])].filter(([x])=>!x.cidadeIA&&!temUF(x.cidade)&&(x.cidade||x.nome||x.destino));
+   for(const [x,eh] of fila.slice(0,6)){
+    try{const c=await iaCidade(x,eh);x.cidadeIA=1;if(c&&c!==x.cidade){x.cidade=c;mud=true}}catch(e){break}
+   }
+  }finally{rodando=false}
+  if(mud){try{save();saveIdeias();render();renderIdeias()}catch(e){}}
+ }
+ window.iaCidadePassar=passar;
+ setTimeout(passar,4000);
+ const sv=save;save=function(){const r=sv.apply(this,arguments);setTimeout(passar,800);return r};
+ const si=saveIdeias;saveIdeias=function(){const r=si.apply(this,arguments);setTimeout(passar,800);return r};
+})();
+</script>
+<script>
+/* v12.5: lista "Escolha a cidade" sem repetidas e sem nome só de estado */
+(function(){
+ const n=x=>String(x||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z ]/g," ").replace(/\s+/g," ").trim();
+ const ehEstado=c=>Object.keys(UF_NOME).some(k=>n(UF_NOME[k])===n(c)||k===String(c||"").trim().toUpperCase());
+ const arruma=c=>{c=String(c||"").trim();if(!c)return "";const x=window.cidadeCerta?cidadeCerta(c,c):null;return x||c};
+ try{const l=JSON.parse(localStorage.getItem(CID_SALVAS_KEY)||"[]");const v=new Set(),out=[];
+  l.map(arruma).filter(c=>c&&!ehEstado(c)).forEach(c=>{const k=n(c);if(!v.has(k)){v.add(k);out.push(c)}});
+  localStorage.setItem(CID_SALVAS_KEY,JSON.stringify(out))}catch(e){}
+ const orig=listaCidadesPasseio;
+ listaCidadesPasseio=function(){const v=new Set(),out=[];
+  orig().map(arruma).filter(c=>c&&!ehEstado(c)).forEach(c=>{const k=n(c);if(!v.has(k)){v.add(k);out.push(c)}});
+  return out.sort((a,b)=>a.localeCompare(b,"pt-BR",{sensitivity:"base"}))};
+ try{montarSeletorCidade()}catch(e){}
+})();
+</script>
+<script>
+/* v12.6: 📍 usar a cidade onde estou agora (Encontrar lugares) */
+$("cidadeAqui").addEventListener("click",()=>{
+ const b=$("cidadeAqui"),res=$("resultados");const diga=h=>{if(res)res.innerHTML=`<div class="empty">${h}</div>`};
+ if(!navigator.geolocation){diga("Este celular não deixou pegar a localização.");return}
+ b.disabled=true;b.textContent="⏳";const fim=()=>{b.disabled=false;b.textContent="📍"};
+ navigator.geolocation.getCurrentPosition(async pos=>{
+  try{const {latitude:la,longitude:lo}=pos.coords;
+   const g=await (await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lo},${la}.json?types=place&language=pt&limit=1&access_token=${MAPBOX_TOKEN}`)).json();
+   const f=g&&g.features&&g.features[0];if(!f)throw 0;
+   const reg=(f.context||[]).find(c=>/^region/.test(c.id));const uf=reg&&reg.short_code?String(reg.short_code).split("-").pop().toUpperCase():"";
+   const nome=(f.text||"").trim()+(uf?", "+uf:"");if(!nome.trim())throw 0;
+   window.__aquiCoords={la,lo,t:Date.now()};
+   usarCidadePasseio(nome);fim();if(typeof avisar==="function")avisar("📍 Você está em "+nome);
+  }catch(x){fim();diga("Não consegui descobrir a cidade agora (sem internet?). Tente de novo.")}
+ },err=>{fim();diga(err&&err.code===1?"📍 O celular não deu permissão de localização. No iPhone: <b>Ajustes → Privacidade → Localização</b>, e permita para o Safari.":"Não consegui pegar a localização agora. Tente de novo.")},{enableHighAccuracy:false,timeout:20000,maximumAge:300000});
+});
 </script>
 </body>
 
