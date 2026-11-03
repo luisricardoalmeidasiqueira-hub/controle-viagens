@@ -1159,7 +1159,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="11.9";
+const APP_VERSAO="12.0";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1451,7 +1451,7 @@ function renderProximaViagem(t){
  sec.style.display="block";
  const falta=faltanteViagem(t);
  const tipo={viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"}[t.tipoViagem]||"Viagem";
- const ic={viagem:"🏖️",excursao:"🚌",carro:"🚗",moto:"🏍️",aviao:"✈️",onibus:"🚌",outro:"➕"}[t.tipoViagem]||"🧳";
+ const ic=iconeViagem(t);
  const fixada=!!t.proximaFixada;
  box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">${window.faltamTexto?faltamTexto(t):""}📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta)+(t.horaVolta?" às "+esc(t.horaVolta):""):""} • 📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div></div><div class="nextTripActions"><button class="nextTripAction" type="button" data-mala="${t.id}" title="Mala" aria-label="Abrir a mala">🎒</button><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>`;
 }
@@ -1534,7 +1534,21 @@ function festasNaViagem(t){
  return festasDaCidade(t.cidade).filter(f=>f.meses.some(x=>m.has(x)));
 }
 const TIPO_NOME={viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"};
-const TIPO_IC={viagem:"🏖️",excursao:"🚌",carro:"🚗",moto:"🏍️",aviao:"✈️",onibus:"🚌",outro:"➕"};
+const TIPO_IC={viagem:"🗺️",excursao:"🚌",carro:"🚗",moto:"🏍️",aviao:"✈️",onibus:"🚌",outro:"➕"};
+/* v12.0: símbolo pelo destino (Aparecida ⛪, Beto Carrero 🤠, praia 🏖️ só em cidade de praia...) */
+const DESTINO_IC=[
+ [/beto\s*carre?i?ro/,"🤠"],
+ [/aparecida|cancao\s*nova|cachoeira\s*paulista|santuario|basilica|romaria|trindade.*go|juazeiro\s*do\s*norte|pirapora\s*do\s*bom/,"⛪"],
+ [/hopi\s*hari|wet\s*'?n?\s*wild|beach\s*park|playcenter|parque\s*(de\s*)?diversao|thermas|termas|olimpia|aguas\s*de\s*sao\s*pedro|rio\s*quente|caldas\s*novas|hot\s*park/,"🎢"],
+ [/holambra/,"🌷"],
+ [/campos\s*do\s*jordao|gramado|canela|monte\s*verde|sao\s*joaquim|urubici|serra\s*negra|cunha|visconde\s*de\s*maua|penedo|petropolis|bento\s*goncalves/,"🏔️"],
+ [/foz\s*do\s*iguacu|cataratas|brotas|bonito|chapada/,"🏞️"],
+ [/\bpraia\b|peruibe|ubatuba|santos|guaruja|praia\s*grande|caraguatatuba|sao\s*sebastiao|ilhabela|bertioga|itanhaem|mongagua|ilha\s*comprida|cananeia|camboriu|bombinhas|itapema|florianopolis|floripa|garopaba|porto\s*belo|penha|navegantes|guaratuba|matinhos|caioba|rio\s*de\s*janeiro|cabo\s*frio|buzios|arraial\s*do\s*cabo|angra|paraty|parati|porto\s*seguro|trancoso|arraial\s*d.ajuda|salvador|maceio|maragogi|porto\s*de\s*galinhas|recife|natal|fortaleza|jericoacoara|joao\s*pessoa|aracaju|vitoria|guarapari|ilheus|morro\s*de\s*sao\s*paulo|fernando\s*de\s*noronha|capitolio/,"🏖️"]];
+function iconeViagem(t){
+ if(!t)return "🧳";const txt=[t.nome,t.cidade,t.hotel].filter(Boolean).join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+ {const d=DESTINO_IC.find(([re])=>re.test(txt));if(d)return d[1]}
+ return TIPO_IC[t.tipoViagem]||"🧳";
+}
 const viagensAbertas=new Set();
 function card(t){
  const falta=faltanteViagem(t),hoje=localDate();
@@ -1549,7 +1563,7 @@ function card(t){
  const aberta=viagensAbertas.has(t.id);
  return `<div class="trip ${t.status==="paga"?"paga":""} ${passou?"passou":""} ${aberta?"open":""}" data-trip-id="${t.id}">
   <button type="button" class="tripHead" data-trip-toggle="${t.id}" aria-expanded="${aberta}">
-   <span class="tripIc">${TIPO_IC[t.tipoViagem]||"🧳"}</span>
+   <span class="tripIc">${iconeViagem(t)}</span>
    <span class="tripMain"><strong>${esc(t.nome)}</strong><small>📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta)+(t.horaVolta?" às "+esc(t.horaVolta):""):""}${t.cidade?" • "+esc(t.cidade):""}${passou?" • já realizada":""}</small></span>
    <span class="tripSide"><span class="tripSideTop">${!passou&&window.malaPendente?`<span class="malaRapida" role="button" tabindex="0" data-mala-rapida="${t.id}" aria-label="Abrir a mala" title="Mala">🎒${window.bolinhaMala?bolinhaMala(t,true):""}</span>`:""}<span class="badge ${bcls}">${badge}</span></span>${falta>0?`<span class="tripFalta financeValues">${atrasada&&parc?`Venceu ${dateBR(vencidas[0].vencimento).slice(0,5)}`:proxParc?`Próx. ${dateBR(proxParc.vencimento).slice(0,5)}`:`Falta ${money(falta)}`}</span>`:""}</span>
    <span class="tripSeta" aria-hidden="true">▾</span>
@@ -4428,6 +4442,66 @@ document.addEventListener("click",e=>{if(e.target.id!=="ideiaTentarIA")return;co
  });
  // ideias que já tinham plano guardado (antes desta versão) sobem sozinhas ao abrir
  setTimeout(()=>{try{ideias.filter(x=>x.plano&&x.data).map(x=>x.id).forEach(id=>subirIdeia(id,true))}catch(e){}},700);
+})();
+</script>
+<script>
+/* v12.0 (1): ideia de excursão vira viagem do tipo Excursão (🚌) — e arruma as que já subiram */
+(function(){
+ const ehExc=i=>!!(i&&(i.horaSaida||i.localSaida||/excurs|romaria|caravana|sa[ií]da/i.test((i.obs||"")+" "+(i.destino||""))));
+ const ab=abrirIdeiaComoViagem;
+ abrirIdeiaComoViagem=function(id){ab(id);const i=ideias.find(x=>x.id===id);if(ehExc(i)&&$("fTipoViagem").value==="viagem")$("fTipoViagem").value="excursao"};
+ try{if(!localStorage.getItem("cv_fix_tipo120")){let mud=false;
+  viagens.forEach(v=>{if(v.id>=1793736000000&&(v.tipoViagem||"viagem")==="viagem"&&v.horaSaida&&/,\s*[A-Z]{2}$/.test(v.nome||"")){v.tipoViagem="excursao";mud=true}});
+  if(mud){save();render()}localStorage.setItem("cv_fix_tipo120","1")}}catch(e){}
+})();
+/* v12.0 (2): setinha para recolher "Suas viagens" */
+(function(){
+ const sec=$("secViagens"),head=sec&&sec.querySelector(".tripsHead"),lista=$("listaViagens");if(!head||!lista)return;
+ const K="cv_viagens_fechado";const seta=document.createElement("span");seta.className="setaViagens";seta.style.cssText="margin-left:8px;font-size:20px;color:var(--accent);font-weight:900";
+ head.appendChild(seta);head.style.cursor="pointer";head.setAttribute("role","button");
+ const aplicar=f=>{lista.style.display=f?"none":"";seta.textContent=f?"︾":"︽";try{f?localStorage.setItem(K,"1"):localStorage.removeItem(K)}catch(e){}};
+ let fechado=false;try{fechado=localStorage.getItem(K)==="1"}catch(e){}aplicar(fechado);
+ head.addEventListener("click",()=>{fechado=!fechado;aplicar(fechado)});
+ document.addEventListener("click",e=>{const m=e.target.closest('[data-menu="secViagens"]');if(m&&fechado){fechado=false;aplicar(false)}},true);
+})();
+/* v12.0 (3): 📍 Onde estou? Recalcular chegada (durante a viagem, pela localização do celular) */
+(function(){
+ const orig=window.chegadaLinha;const p2=n=>String(n).padStart(2,"0");const hm=d=>p2(d.getHours())+":"+p2(d.getMinutes());
+ const K=id=>"cv_cheg_agora_"+id;
+ function saidaDe(t){const [h,m]=String(t.horaSaida||"0:0").split(":").map(Number);const d=new Date(t.data+"T00:00:00");d.setHours(h||0,m||0,0,0);return d}
+ function linhaAgora(t){let c=null;try{c=JSON.parse(localStorage.getItem(K(t.id))||"null")}catch(e){}
+  if(!c||Date.now()-c.t>12*3600000)return "";const a=new Date(c.ch1),b=new Date(c.ch2),feito=new Date(c.t);
+  const dia=a.toDateString()!==new Date().toDateString()?dataSem(`${a.getFullYear()}-${p2(a.getMonth()+1)}-${p2(a.getDate())}`).split(",")[0]+" ":"";
+  return `<div class="chegLinha" style="border-color:#2E9E44">📍 <b>Recalculado às ${hm(feito)}:</b> chegada ${dia}entre ${hm(a)} e ${hm(b)} <small>(faltam ≈ ${c.km} km)</small></div>`}
+ window.chegadaLinha=function(t){
+  if(t&&!t.localSaida&&["excursao","onibus"].includes(t.tipoViagem))t={...t,localSaida:"Tatuí"};
+  const base=orig(t);if(!base)return "";
+  return base+linhaAgora(t)+`<button type="button" class="btn" data-cheg-agora="${t.id}" style="width:100%;margin:6px 0 2px">📍 Onde estou? Recalcular chegada</button><div class="notice" style="display:none;margin-top:4px"></div>`;
+ };
+ chegadaLinha=window.chegadaLinha;
+ document.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-cheg-agora]");if(!b)return;e.stopPropagation();
+  const id=Number(b.dataset.chegAgora),t=viagens.find(x=>x.id===id),msg=b.nextElementSibling;if(!t)return;
+  const diga=h=>{if(msg){msg.style.display="block";msg.innerHTML=h}};
+  if(Date.now()<saidaDe(t).getTime()-30*60000){diga("🕗 Isso é para usar <b>durante a viagem</b>, numa parada. Antes da saída, vale a chegada prevista acima.");return}
+  if(!navigator.geolocation){diga("Este celular não deixou pegar a localização.");return}
+  b.disabled=true;b.textContent="📍 Pegando sua localização…";
+  const fim=()=>{b.disabled=false;b.textContent="📍 Onde estou? Recalcular chegada"};
+  navigator.geolocation.getCurrentPosition(async pos=>{
+   try{
+    const dest=await resolverLugar(t.cidade,t);if(!dest)throw 0;
+    const r=await (await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving/${pos.coords.longitude},${pos.coords.latitude};${dest.longitude},${dest.latitude}?overview=false&access_token=${MAPBOX_TOKEN}`)).json();
+    const rt=r&&r.routes&&r.routes[0];if(!rt)throw 0;
+    const onibus=["excursao","onibus"].includes(t.tipoViagem);let min=rt.duration/60*(onibus?1.2:1.05);min+=Math.floor(min/240)*(onibus?30:15);
+    const agora=Date.now(),ch1=agora+min*60000,ch2=ch1+(onibus?40:20)*60000,arr=x=>Math.round(x/(15*60000))*15*60000;
+    const km=Math.round((rt.distance||0)/1000);
+    if(km<3){diga("✅ Parece que você já chegou! Boa viagem 😊");fim();return}
+    localStorage.setItem(K(id),JSON.stringify({t:agora,ch1:arr(ch1),ch2:arr(ch2),km}));
+    fim();render();
+   }catch(x){diga("Não consegui calcular agora (sem internet na estrada?). Tente de novo na próxima parada.");fim()}
+  },err=>{diga(err&&err.code===1?"📍 O celular não deu permissão de localização. No iPhone: <b>Ajustes → Privacidade → Localização</b>, e permita para o Safari.":"Não consegui pegar a localização agora. Tente de novo daqui a pouco.");fim()},{enableHighAccuracy:false,timeout:20000,maximumAge:120000});
+ },true);
+ try{render()}catch(e){}
 })();
 </script>
 </body>
