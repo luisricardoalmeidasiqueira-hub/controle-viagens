@@ -753,6 +753,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .cadIco{margin-left:auto;margin-right:6px}
 .planoPessoas{background:var(--panel2,#f4f6f8);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:10px;font-size:14px}
 .badge.semValor{background:var(--panel2,#eef2f5)!important;color:var(--muted)!important;border:1px dashed var(--line)!important}
+.ideaLimparBtn{flex:none;width:48px;padding:0!important;font-size:18px!important;margin-left:6px}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
 </head>
@@ -800,7 +801,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
     <div id="ideiaStatus" class="notice" style="display:none"></div>
   </div>
   <div class="field"><label>Observação (opcional)</label>
-    <div class="searchLine"><input id="ideiaObs" placeholder="Quem indicou, o que fazer lá…"><button class="btn ideaSaveBtn" id="ideiaSalvar" type="button" title="Salvar ideia" aria-label="Salvar ideia">Salvar</button></div>
+    <div class="searchLine"><input id="ideiaObs" placeholder="Quem indicou, o que fazer lá…"><button class="btn ideaSaveBtn" id="ideiaSalvar" type="button" title="Salvar ideia" aria-label="Salvar ideia">Salvar</button><button class="btn secondary ideaLimparBtn" id="ideiaLimpar" type="button" title="Apagar o que foi lido" aria-label="Apagar o que foi lido" style="display:none">🗑️</button></div>
   </div>
   <div id="listaIdeias" class="ideasList"></div>
 </section>
@@ -1157,7 +1158,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="10.4";
+const APP_VERSAO="10.7";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1404,7 +1405,7 @@ function abrirIdeiaComoViagem(id){
  ideiaEmEdicao=id;
  $("modalTitulo").textContent="Nova viagem (a partir da ideia)";
  $("fNome").value=i.destino;$("fCidade").value=i.cidade||i.destino;$("fObs").value=i.obs||"";
- if(i.hotel)$("fHotel").value=i.hotel;if(i.data)$("fData").value=i.data;if(i.dataVolta)$("fDataVolta").value=i.dataVolta;if(i.valorTotal){$("fTotal").value=fmtBR(i.valorTotal);$("fTotal").dispatchEvent(new Event("input",{bubbles:true}))}
+ if(i.hotel)$("fHotel").value=i.hotel;if(i.horaSaida)$("fHoraSaida").value=i.horaSaida;if(i.horaVolta)$("fHoraVolta").value=i.horaVolta;if(i.localSaida)$("fLocalSaida").value=i.localSaida;if(i.data)$("fData").value=i.data;if(i.dataVolta)$("fDataVolta").value=i.dataVolta;if(i.valorTotal){$("fTotal").value=fmtBR(i.valorTotal);$("fTotal").dispatchEvent(new Event("input",{bubbles:true}))}
 }
 $("ideiaBuscar").onclick=buscarDestinoIdeia;
 $("ideiaDestino").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();buscarDestinoIdeia()}});
@@ -1417,7 +1418,7 @@ $("ideiaSugestoes").addEventListener("click",e=>{
 $("ideiaSalvar").onclick=()=>{
  const destino=$("ideiaDestino").value.trim();
  if(!destino){$("ideiaDestino").focus();$("ideiaSugestoes").innerHTML=`<div class="empty">Digite um destino para salvar.</div>`;return}
- ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:ideiaFotoDados.valorTotal||"",parcelasMax:ideiaFotoDados.parcelasMax||""});ideiaFotoDados={};$("ideiaStatus").style.display="none";
+ ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:ideiaFotoDados.valorTotal||"",parcelasMax:ideiaFotoDados.parcelasMax||"",horaSaida:ideiaFotoDados.horaSaida||"",horaVolta:ideiaFotoDados.horaVolta||"",localSaida:ideiaFotoDados.localSaida||""});ideiaFotoDados={};$("ideiaStatus").style.display="none";
  saveIdeias();$("ideiaDestino").value="";$("ideiaObs").value="";$("ideiaSugestoes").innerHTML="";ideiaSel=null;renderIdeias();
 };
 $("listaIdeias").addEventListener("click",e=>{
@@ -2309,6 +2310,7 @@ function carregarTesseract(){if(window.Tesseract)return Promise.resolve();if(__t
 function prepararImagem(file){return new Promise((ok,erro)=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const f=Math.min(2,2000/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*f);c.height=Math.round(img.height*f);const g=c.getContext("2d");g.drawImage(img,0,0,c.width,c.height);/* cinza + contraste para letras brancas em fundo colorido */const d=g.getImageData(0,0,c.width,c.height),px=d.data;for(let i=0;i<px.length;i+=4){let y=.299*px[i]+.587*px[i+1]+.114*px[i+2];y=y<128?Math.max(0,y-25):Math.min(255,y+25);px[i]=px[i+1]=px[i+2]=y}g.putImageData(d,0,0);ok(c)};img.onerror=erro;img.src=fr.result};fr.onerror=erro;fr.readAsDataURL(file)})}
 $("fPostImg").addEventListener("change",async e=>{
  const f=e.target.files[0];if(!f)return;const st=$("postStatus");
+ if(typeof iaChave==="function"&&iaChave()){st.textContent="🤖 A IA está lendo o post…";try{iaMenuAtualiza("lendo");const c=await lerCartazIA(f);iaMenuAtualiza();const r2=cartazParaPost(c);if(r2.nome||r2.cidade||r2.data){preencherPeloPost(r2);st.innerHTML="🤖 "+st.innerHTML;$("btnColarPost").style.display="block";e.target.value="";return}}catch(err){iaMenuAtualiza()}}
  st.textContent="📷 Preparando a leitura do post… (a 1ª vez demora um pouco)";
  try{await carregarTesseract()}catch(err){st.innerHTML="Não consegui carregar o leitor de imagem. Ele precisa de internet — confira a conexão e tente de novo.";return}
  try{
@@ -2343,10 +2345,10 @@ const lerIdeiaFoto=async e=>{
   let lugar="";{const ls=txtTodo.split("\n").map(l=>l.trim()).filter(Boolean);
    const i=ls.findIndex(l=>/\b(parques?|hot[eé]is|resort|thermas|clube)\b/i.test(l)&&l.length<45&&!/\d{4}/.test(l));
    if(i>=0){let t=ls[i];const ant=ls[i-1]||"";if(/^[A-Za-zÀ-ú]{3,20}$/.test(ant))t=ant+" "+t;lugar=tituloBonito(t.toLowerCase())}}
-  const nomeOk=r.nome&&!/\b(av|rua|rod|cep)\b\.?|\d{4,}|^de\s/i.test(r.nome);
+  const nomeOk=r.nome&&!/\b(av|rua|rod|cep)\b\.?|\d{4,}|^de\s/i.test(r.nome)&&!(window.pareceLixo&&pareceLixo(r.nome));
   const destino=r.cidade||(nomeOk?r.nome:"")||lugar||"";
   if(!destino){st.textContent="Não consegui achar o destino. Tente chegar mais perto, com boa luz e sem reflexo.";e.target.value="";return}
-  ideiaSel=null;ideiaFotoDados={cidade:r.cidade||"",data:r.data||"",dataVolta:r.dataVolta||"",hotel:r.hotel||"",valorTotal:r.valorTotal||"",parcelasMax:r.parcelasMax||""};
+  ideiaSel=null;ideiaFotoDados={cidade:r.cidade||"",data:r.data||"",dataVolta:r.dataVolta||"",hotel:r.hotel||"",valorTotal:r.valorTotal||"",parcelasMax:r.parcelasMax||"",horaSaida:r.horaSaida||"",horaVolta:r.horaVolta||"",localSaida:r.localSaida||""};
   $("ideiaDestino").value=destino;
   const linhas=[];const nomeLugar=lugar||(nomeOk&&r.nome!==destino?r.nome:"");if(nomeLugar&&nomeLugar!==destino)linhas.push("🏞️ "+nomeLugar);if(r.data)linhas.push("📅 "+dateBR(r.data)+(r.dataVolta?" a "+dateBR(r.dataVolta):""));if(r.hotel)linhas.push("🏨 "+r.hotel);if(r.valorTotal)linhas.push("💰 "+money(r.valorTotal));if(r.obs)linhas.push(r.obs.replace(/\n+/g," • "));
   $("ideiaObs").value=linhas.join(" • ");
@@ -2354,7 +2356,7 @@ const lerIdeiaFoto=async e=>{
  }catch(err){st.textContent="Não consegui ler essa foto. Tente de novo com mais luz e bem de frente."}
  e.target.value="";
 };
-$("ideiaFoto").addEventListener("change",lerIdeiaFoto);$("ideiaGaleria").addEventListener("change",lerIdeiaFoto);
+$("ideiaFoto").addEventListener("change",e=>(window.lerIdeiaFotoIA||lerIdeiaFoto)(e));$("ideiaGaleria").addEventListener("change",e=>(window.lerIdeiaFotoIA||lerIdeiaFoto)(e));
 
 /* ===== 👥 Pessoas que vão comigo ===== */
 let acompForm=[];
@@ -2961,13 +2963,14 @@ const __renderMala53=renderMala;
 renderMala=function(){__renderMala53();const t=viagens.find(x=>x.id===malaId);if(t&&$("malaEtiquetas"))$("malaEtiquetas").innerHTML=etiquetasHTML(t)};
 function salvarEtq(){try{save()}catch(e){alert("A memória do celular está cheia para fotos. Apague fotos de etiquetas de viagens antigas.")}renderMala();render()}
 $("modalMala").addEventListener("change",async e=>{
- const inp=e.target.closest("[data-etq-foto]");if(!inp||!inp.files[0])return;
+ const inp=e.target.closest("[data-etq-foto]");if(!inp||!inp.files[0])return;const arqEtq=inp.files[0];
  const t=viagens.find(x=>x.id===malaId);if(!t)return;const tipo=inp.dataset.etqFoto;
  let fotos;try{fotos=await reduzirFoto(inp.files[0])}catch(err){alert("Não consegui abrir essa foto.");return}
  const L=etiquetasDe(t);const item={tipo:tipo==="mala"?"Foto da mala":(L.some(x=>x.tipo&&x.tipo.startsWith("Etiqueta"))?"Etiqueta (volta)":"Etiqueta (ida)"),foto:fotos.pequena,numero:"",data:localDate(),lendo:tipo!=="mala"};
  L.push(item);salvarEtq();inp.value="";
  if(tipo==="mala")return;
- try{item.numero=await lerNumeroEtiqueta(fotos.original)}catch(err){}
+ try{item.numero=await lerEtiquetaIA(arqEtq)}catch(err){}
+ if(!item.numero)try{item.numero=await lerNumeroEtiqueta(fotos.original)}catch(err){}
  item.lendo=false;
  if(!item.numero){const v=prompt("Não consegui ler o número na foto. Digite o número da etiqueta (ou deixe vazio):","");if(v)item.numero=v.trim().toUpperCase()}
  else avisar(`🏷️ Número da etiqueta: ${item.numero}`);
@@ -3222,10 +3225,11 @@ $("bulaFotoCaixa").addEventListener("change",async e=>{
 });
 $("bulaFotoPapel").addEventListener("change",async e=>{
  const f=e.target.files[0];if(!f)return;$("bulaLido").innerHTML='<div class="notice">🔎 Lendo a bula… procure fotografar a parte "Como devo usar este medicamento".</div>';
- try{let txt="",tr="";for(const psm of [undefined,"6","4"]){txt=await ocrFoto(f,psm);tr=trechoComoUsar(txt);if(tr)break}
+ try{let txt="",tr="",porIA=false;if(typeof iaChave==="function"&&iaChave()){$("bulaLido").innerHTML='<div class="notice">🤖 A IA está lendo a bula…</div>';tr=await lerBulaIA(f);porIA=!!tr}
+  if(!tr)for(const psm of [undefined,"6","4"]){txt=await ocrFoto(f,psm);tr=trechoComoUsar(txt);if(tr)break}
   if(!tr&&bulaFrases(txt).some(x=>x.dose))tr=txt.trim();
   if(tr){const fr=bulaFrases(tr),temDose=fr.some(x=>x.dose);
-   $("bulaLido").innerHTML=`<div class="notice"><b>Texto lido da bula</b> — ⚠️ a leitura da foto pode trocar números (ex.: 1 por 7). <b>Confira no papel</b> antes de tomar.${temDose?"<br>🟧 As partes em destaque falam de dose. <b>Toque na que vale para você</b> (ou na receita do médico) para colocar em \"Como tomar\".":""}</div><div class="bulaLidoBox bulaFrasesBox">${fr.map((x,i)=>x.dose?`<button type="button" class="bulaDoseLinha" data-bula-frase="${i}">${esc(x.t)}</button>`:`<span>${esc(x.t)} </span>`).join("")}</div><button type="button" class="btn secondary" id="bulaUsarTexto" style="width:100%">📋 Colocar o trecho todo em "Como tomar" (eu conferi)</button>`;
+   $("bulaLido").innerHTML=`<div class="notice"><b>${porIA?"🤖 Texto da bula lido pela IA":"Texto lido da bula"}</b> — ⚠️ a leitura da foto pode trocar números (ex.: 1 por 7). <b>Confira no papel</b> antes de tomar.${temDose?"<br>🟧 As partes em destaque falam de dose. <b>Toque na que vale para você</b> (ou na receita do médico) para colocar em \"Como tomar\".":""}</div><div class="bulaLidoBox bulaFrasesBox">${fr.map((x,i)=>x.dose?`<button type="button" class="bulaDoseLinha" data-bula-frase="${i}">${esc(x.t)}</button>`:`<span>${esc(x.t)} </span>`).join("")}</div><button type="button" class="btn secondary" id="bulaUsarTexto" style="width:100%">📋 Colocar o trecho todo em "Como tomar" (eu conferi)</button>`;
    $("bulaUsarTexto").onclick=()=>{$("bulaComo").value=tr.replace(/\s+/g," ").slice(0,400);$("bulaComo").focus()};
    $("bulaLido").querySelectorAll("[data-bula-frase]").forEach(b=>b.onclick=()=>{const t=fr[Number(b.dataset.bulaFrase)].t.trim();const c=$("bulaComo");c.value=(c.value.trim()?c.value.trim()+"\n":"")+t;b.classList.add("usada");avisar("📋 Colocado em \"Como tomar\". Confira no papel.")})}
   else $("bulaLido").innerHTML='<div class="notice">Não achei a parte "Como devo usar" nessa foto. Fotografe bem de perto essa parte da bula, ou use o botão 📄 Bula oficial.</div>';
@@ -4149,6 +4153,80 @@ planoTexto=function(p){
 const __planoResumo102=planoResumo;planoResumo=function(p){const T=planoTot(p||{});return (T.pessoas>1?`<small class="planoLinha">👥 ${T.pessoas} passagens</small>`:"")+__planoResumo102(T)};
 const __planoResumoEnt102=planoResumoEnt;planoResumoEnt=function(p){return __planoResumoEnt102(planoTot(p||{}))};
 try{renderIdeias()}catch(e){}
+/* v10.5: 🤖 IA lê o cartaz da ideia de viagem (e o leitor normal ignora letra "bagunçada") */
+window.pareceLixo=pareceLixo;function pareceLixo(s){
+ s=String(s||"").trim();if(!s)return true;if(/[\[\]{}|_<>=~^]/.test(s))return true;
+ const ws=s.split(/\s+/).filter(Boolean);if(!ws.length)return true;
+ const bons=ws.filter(w=>{const l=w.replace(/[^A-Za-zÀ-ú]/g,"");return l.length>=3&&/[aeiouáéíóúâêôãõà]/i.test(l)&&/^[A-Za-zÀ-ú]+[!.,]?$/.test(w)});
+ return bons.length/ws.length<0.7;
+}
+async function lerCartazIA(f){
+ const b64=await fotoParaIA(f,1800);
+ const r=await iaPedir([{text:`Esta é a foto/print de um cartaz de excursão ou viagem no Brasil. Leia e responda SOMENTE com JSON:
+{"titulo":"","cidade":"","uf":"","data":"AAAA-MM-DD","dataVolta":"AAAA-MM-DD","horaSaida":"HH:MM","horaVolta":"HH:MM","localSaida":"","hotel":"","valor":0,"valorPorPessoa":true,"parcelasSemJuros":0,"inclusos":[],"contatos":[],"tipo":"excursao|aviao|viagem"}
+- titulo: nome do passeio como no cartaz (ex.: "Romaria pra Aparecida").
+- cidade/uf: cidade de DESTINO e sigla do estado (ex.: "Aparecida","SP"). Se for parque famoso, use a cidade dele (Beto Carrero = Penha, SC).
+- data/dataVolta: datas de saída e retorno (ano com 4 dígitos). horaSaida/horaVolta: horários.
+- hotel: nome do hotel/pousada da hospedagem (ex.: "Fênix Hotel"). Não confunda com frases tipo "o hotel conta com".
+- valor: preço principal em reais (número, ex.: 750). parcelasSemJuros: número de vezes sem juros se tiver (ex.: 3), senão 0.
+- inclusos: itens inclusos curtos. contatos: "Nome (DDD) número".
+Deixe vazio o que não estiver no cartaz. Não invente.`},{inline_data:{mime_type:"image/jpeg",data:b64}}]);
+ return r||{};
+}
+window.lerIdeiaFotoIA=lerIdeiaFotoIA;async function lerIdeiaFotoIA(e){
+ if(typeof iaChave!=="function"||!iaChave())return lerIdeiaFoto(e);
+ const f=e.target.files[0];if(!f)return;const st=$("ideiaStatus");st.style.display="block";st.textContent="🤖 A IA está lendo o cartaz…";
+ let r;try{iaMenuAtualiza("lendo");r=await lerCartazIA(f);iaMenuAtualiza()}catch(err){iaMenuAtualiza();st.textContent="🤖 A IA não respondeu. Usando o leitor normal…";return lerIdeiaFoto(e)}
+ const ok=v=>typeof v==="string"&&v.trim();
+ const cidade=ok(r.cidade)?(r.cidade.trim()+(ok(r.uf)?", "+r.uf.trim().toUpperCase():"")):"";
+ const titulo=ok(r.titulo)?r.titulo.trim():"";
+ const destino=cidade||titulo;
+ if(!destino){st.textContent="🤖 A IA não achou o destino. Usando o leitor normal…";return lerIdeiaFoto(e)}
+ const dt=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||"")?v:"",hr=v=>/^\d{1,2}:\d{2}$/.test(v||"")?v.padStart(5,"0"):"";
+ const valor=Number(String(r.valor||"").replace(",","."))||0,parc=Number(r.parcelasSemJuros)||0;
+ ideiaSel=null;ideiaFotoDados={cidade,data:dt(r.data),dataVolta:dt(r.dataVolta),hotel:ok(r.hotel)?r.hotel.trim():"",valorTotal:valor||"",parcelasMax:parc||"",horaSaida:hr(r.horaSaida),horaVolta:hr(r.horaVolta),localSaida:ok(r.localSaida)?r.localSaida.trim():""};
+ $("ideiaDestino").value=destino;
+ const L=[];
+ if(titulo)L.push("🏞️ "+titulo);
+ const d1=ideiaFotoDados.data,d2=ideiaFotoDados.dataVolta;if(d1)L.push("📅 "+dateBR(d1)+(ideiaFotoDados.horaSaida?" às "+ideiaFotoDados.horaSaida:"")+(d2?" a "+dateBR(d2)+(ideiaFotoDados.horaVolta?" às "+ideiaFotoDados.horaVolta:""):""));
+ if(ideiaFotoDados.hotel)L.push("🏨 "+ideiaFotoDados.hotel);
+ if(valor)L.push("💰 "+money(valor)+(r.valorPorPessoa!==false?" por pessoa":""));
+ if(parc)L.push(`💳 Até ${parc}x sem juros`);
+ if(Array.isArray(r.inclusos)&&r.inclusos.length)L.push("✅ Incluso: "+r.inclusos.slice(0,6).join(", "));
+ if(Array.isArray(r.contatos)&&r.contatos.length)L.push("📞 "+r.contatos.slice(0,3).join(" / "));
+ $("ideiaObs").value=L.join(" • ");
+ st.textContent="🤖 ✅ A IA leu o cartaz. Confira e toque em Salvar.";e.target.value="";
+}
+/* v10.5: apagar a leitura antes de salvar */
+function ideiaLimparVis(){const b=$("ideiaLimpar");if(b)b.style.display=($("ideiaDestino").value.trim()||$("ideiaObs").value.trim())?"":"none"}
+["ideiaDestino","ideiaObs"].forEach(id=>$(id).addEventListener("input",ideiaLimparVis));
+new MutationObserver(ideiaLimparVis).observe($("ideiaStatus"),{childList:true,characterData:true,subtree:true});
+$("ideiaSalvar").addEventListener("click",()=>setTimeout(ideiaLimparVis,50));
+$("ideiaLimpar").onclick=()=>{$("ideiaDestino").value="";$("ideiaObs").value="";$("ideiaSugestoes").innerHTML="";ideiaSel=null;ideiaFotoDados={};$("ideiaStatus").style.display="none";$("ideiaStatus").textContent="";ideiaLimparVis();avisar("🗑️ Leitura apagada. Pode ler o print de novo.")};
+/* v10.6: IA também no post da viagem e na etiqueta da bagagem */
+function cartazParaPost(c){
+ c=c||{};const ok=v=>typeof v==="string"&&v.trim()?v.trim():"";const dt=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||"")?v:"",hr=v=>/^\d{1,2}:\d{2}$/.test(v||"")?v.padStart(5,"0"):"";
+ const cidade=ok(c.cidade)?ok(c.cidade)+(ok(c.uf)?", "+ok(c.uf).toUpperCase():""):"";
+ const valor=Number(String(c.valor||"").replace(",","."))||0,parc=Number(c.parcelasSemJuros)||0;
+ const obs=[];if(parc)obs.push(`💳 Até ${parc}x sem juros`);if(Array.isArray(c.inclusos)&&c.inclusos.length)obs.push("✅ Incluso: "+c.inclusos.slice(0,8).join(", "));if(Array.isArray(c.contatos)&&c.contatos.length)obs.push("📞 Contato: "+c.contatos.slice(0,3).join(" / "));if(valor&&c.valorPorPessoa!==false)obs.push("💬 Valor por pessoa");
+ const tipo=["excursao","aviao","viagem","onibus","carro"].includes(c.tipo)?c.tipo:"";
+ return {nome:ok(c.titulo)||cidade,cidade,tipoViagem:tipo,hotel:ok(c.hotel),data:dt(c.data),dataVolta:dt(c.dataVolta),horaSaida:hr(c.horaSaida),horaVolta:hr(c.horaVolta),localSaida:ok(c.localSaida),valorTotal:valor||"",obs:obs.join("\n"),precos:[]};
+}
+async function lerEtiquetaIA(f){
+ if(typeof iaChave!=="function"||!iaChave()||!f)return "";
+ try{iaMenuAtualiza("lendo");const b64=await fotoParaIA(f,1600);
+  const r=await iaPedir([{text:`Esta é a foto de uma etiqueta de bagagem (de ônibus/excursão ou de companhia aérea) no Brasil. Responda SOMENTE com JSON: {"numero":""}
+- numero: o número/código que identifica a bagagem (geralmente perto do código de barras, ex.: "G3 123456", "0127123456" ou o número do canhoto). Só letras e números, como está escrito. Se não tiver, deixe vazio. Não invente.`},{inline_data:{mime_type:"image/jpeg",data:b64}}]);
+  iaMenuAtualiza();return String(r.numero||"").trim().toUpperCase();
+ }catch(e){iaMenuAtualiza();return ""}
+}
+/* v10.7: 🤖 IA transcreve a parte "Como usar" da bula (o app só destaca; quem escolhe é a pessoa) */
+async function lerBulaIA(f){
+ try{iaMenuAtualiza("lendo");const b64=await fotoParaIA(f,2000);
+  const r=await iaPedir([{text:`Esta é a foto de um pedaço da bula de um remédio. Copie EXATAMENTE, palavra por palavra, o trecho que fala de como usar / posologia / dose (ex.: "Como devo usar este medicamento", "Posologia", "Modo de usar"). Regras: não resuma, não complete o que não aparece, não corrija nem arredonde números, não acrescente nada seu. Se esse trecho não estiver na foto, deixe vazio. Responda SOMENTE com JSON: {"trecho":""}`},{inline_data:{mime_type:"image/jpeg",data:b64}}]);
+  iaMenuAtualiza();return String(r.trecho||"").trim();
+ }catch(e){iaMenuAtualiza();return ""}
+}
 </script>
 </body>
 
