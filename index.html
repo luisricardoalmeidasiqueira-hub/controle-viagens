@@ -1158,7 +1158,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="10.7";
+const APP_VERSAO="10.8";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -4163,12 +4163,12 @@ window.pareceLixo=pareceLixo;function pareceLixo(s){
 async function lerCartazIA(f){
  const b64=await fotoParaIA(f,1800);
  const r=await iaPedir([{text:`Esta é a foto/print de um cartaz de excursão ou viagem no Brasil. Leia e responda SOMENTE com JSON:
-{"titulo":"","cidade":"","uf":"","data":"AAAA-MM-DD","dataVolta":"AAAA-MM-DD","horaSaida":"HH:MM","horaVolta":"HH:MM","localSaida":"","hotel":"","valor":0,"valorPorPessoa":true,"parcelasSemJuros":0,"inclusos":[],"contatos":[],"tipo":"excursao|aviao|viagem"}
+{"parcelasOnde":"","titulo":"","cidade":"","uf":"","data":"AAAA-MM-DD","dataVolta":"AAAA-MM-DD","horaSaida":"HH:MM","horaVolta":"HH:MM","localSaida":"","hotel":"","valor":0,"valorPorPessoa":true,"parcelasSemJuros":0,"inclusos":[],"contatos":[],"tipo":"excursao|aviao|viagem"}
 - titulo: nome do passeio como no cartaz (ex.: "Romaria pra Aparecida").
 - cidade/uf: cidade de DESTINO e sigla do estado (ex.: "Aparecida","SP"). Se for parque famoso, use a cidade dele (Beto Carrero = Penha, SC).
 - data/dataVolta: datas de saída e retorno (ano com 4 dígitos). horaSaida/horaVolta: horários.
 - hotel: nome do hotel/pousada da hospedagem (ex.: "Fênix Hotel"). Não confunda com frases tipo "o hotel conta com".
-- valor: preço principal em reais (número, ex.: 750). parcelasSemJuros: número de vezes sem juros se tiver (ex.: 3), senão 0.
+- valor: preço principal em reais (número, ex.: 750). parcelasSemJuros: número de vezes sem juros se tiver (ex.: 3), senão 0. parcelasOnde: onde vale esse parcelamento sem juros: "cartao" (no cartão de crédito), "direto" (direto com a agência/hotel, pix, boleto ou carnê) ou "" se não disser.
 - inclusos: itens inclusos curtos. contatos: "Nome (DDD) número".
 Deixe vazio o que não estiver no cartaz. Não invente.`},{inline_data:{mime_type:"image/jpeg",data:b64}}]);
  return r||{};
@@ -4191,7 +4191,7 @@ window.lerIdeiaFotoIA=lerIdeiaFotoIA;async function lerIdeiaFotoIA(e){
  const d1=ideiaFotoDados.data,d2=ideiaFotoDados.dataVolta;if(d1)L.push("📅 "+dateBR(d1)+(ideiaFotoDados.horaSaida?" às "+ideiaFotoDados.horaSaida:"")+(d2?" a "+dateBR(d2)+(ideiaFotoDados.horaVolta?" às "+ideiaFotoDados.horaVolta:""):""));
  if(ideiaFotoDados.hotel)L.push("🏨 "+ideiaFotoDados.hotel);
  if(valor)L.push("💰 "+money(valor)+(r.valorPorPessoa!==false?" por pessoa":""));
- if(parc)L.push(`💳 Até ${parc}x sem juros`);
+ if(parc)L.push(r.parcelasOnde==="cartao"?`💳 Até ${parc}x sem juros no cartão`:r.parcelasOnde==="direto"?`🧾 Até ${parc}x sem juros direto (não é no cartão)`:`🧾 Até ${parc}x sem juros`);
  if(Array.isArray(r.inclusos)&&r.inclusos.length)L.push("✅ Incluso: "+r.inclusos.slice(0,6).join(", "));
  if(Array.isArray(r.contatos)&&r.contatos.length)L.push("📞 "+r.contatos.slice(0,3).join(" / "));
  $("ideiaObs").value=L.join(" • ");
@@ -4208,7 +4208,7 @@ function cartazParaPost(c){
  c=c||{};const ok=v=>typeof v==="string"&&v.trim()?v.trim():"";const dt=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||"")?v:"",hr=v=>/^\d{1,2}:\d{2}$/.test(v||"")?v.padStart(5,"0"):"";
  const cidade=ok(c.cidade)?ok(c.cidade)+(ok(c.uf)?", "+ok(c.uf).toUpperCase():""):"";
  const valor=Number(String(c.valor||"").replace(",","."))||0,parc=Number(c.parcelasSemJuros)||0;
- const obs=[];if(parc)obs.push(`💳 Até ${parc}x sem juros`);if(Array.isArray(c.inclusos)&&c.inclusos.length)obs.push("✅ Incluso: "+c.inclusos.slice(0,8).join(", "));if(Array.isArray(c.contatos)&&c.contatos.length)obs.push("📞 Contato: "+c.contatos.slice(0,3).join(" / "));if(valor&&c.valorPorPessoa!==false)obs.push("💬 Valor por pessoa");
+ const obs=[];if(parc)obs.push(c.parcelasOnde==="cartao"?`💳 Até ${parc}x sem juros no cartão`:c.parcelasOnde==="direto"?`🧾 Até ${parc}x sem juros direto (não é no cartão)`:`🧾 Até ${parc}x sem juros`);if(Array.isArray(c.inclusos)&&c.inclusos.length)obs.push("✅ Incluso: "+c.inclusos.slice(0,8).join(", "));if(Array.isArray(c.contatos)&&c.contatos.length)obs.push("📞 Contato: "+c.contatos.slice(0,3).join(" / "));if(valor&&c.valorPorPessoa!==false)obs.push("💬 Valor por pessoa");
  const tipo=["excursao","aviao","viagem","onibus","carro"].includes(c.tipo)?c.tipo:"";
  return {nome:ok(c.titulo)||cidade,cidade,tipoViagem:tipo,hotel:ok(c.hotel),data:dt(c.data),dataVolta:dt(c.dataVolta),horaSaida:hr(c.horaSaida),horaVolta:hr(c.horaVolta),localSaida:ok(c.localSaida),valorTotal:valor||"",obs:obs.join("\n"),precos:[]};
 }
@@ -4227,6 +4227,68 @@ async function lerBulaIA(f){
   iaMenuAtualiza();return String(r.trecho||"").trim();
  }catch(e){iaMenuAtualiza();return ""}
 }
+/* v10.8: 💳 terceira forma de pagar no plano da ideia: no cartão de crédito */
+function planoCalcCartao(p){
+ const hoje=localDate(),agora=ymNum(+hoje.slice(0,4),+hoje.slice(5,7));
+ const compra=Math.max(Number(p.compra)||agora,agora),n=Math.max(1,p.n||1),i=Math.max(0,Number(p.juros)||0)/100,valor=Number(p.valor)||0;
+ const parc=i?valor*i/(1-Math.pow(1+i,-n)):valor/n,total=parc*n,viag=ymNum(p.ano,p.mes);
+ return {compra,ini:compra+1,fim:compra+n,n,parc,total,juros:total-valor,viag,i};
+}
+function planoTextoCartao(T){
+ const r=planoCalcCartao(T);const L=[];for(let x=r.ini;x<=r.fim;x++)L.push(ymTxt(x,true));
+ const depois=r.fim>=r.viag;
+ return `<div class="planoRes ${depois?"ruim":"bom"}">💳 <b>Comprando no cartão em ${ymTxt(r.compra)}:</b><br>${r.n}× de <b>${money(r.parc)}</b> na fatura, de ${ymTxt(r.ini,true)} a ${ymTxt(r.fim,true)}.${r.i?`<br>Total com juros: <b>${money(r.total)}</b> (${money(r.juros)} de juros).`:" <small>Sem juros.</small>"}<small>${L.join(" • ")}</small>${depois?`<small>⚠️ A última parcela cai ${r.fim===r.viag?"no mês":"depois"} da viagem (${ymTxt(r.viag)}). Se não quiser pagar depois de voltar, compre antes ou em menos vezes.</small>`:`<small>✅ Termina antes da viagem (${ymTxt(r.viag)}).</small>`}${T.pessoas>1?`<small>👤 Cada pessoa: ${r.n}× de ${money(r.parc/T.pessoas)}.</small>`:""}</div>`;
+}
+const __planoTexto108=planoTexto;
+planoTexto=function(p){
+ if(!p||p.modo!=="cartao")return __planoTexto108(p);
+ const T=planoTot({...p,entrada:0});
+ return (T.pessoas>1?`<div class="planoPessoas">👥 <b>${T.pessoas} passagens</b> × ${money(T._porPessoa)} = <b>${money(T.valor)}</b> no total</div>`:"")+planoTextoCartao(T);
+};
+const __planoResumo108=planoResumo;
+planoResumo=function(p){
+ if(!p||p.modo!=="cartao")return __planoResumo108(p);
+ const T=planoTot({...p,entrada:0}),r=planoCalcCartao(T);
+ return (T.pessoas>1?`<small class="planoLinha">👥 ${T.pessoas} passagens</small>`:"")+`<small class="planoLinha">💳 No cartão: ${r.n}× de <span class="financeValues">${money(r.parc)}</span>${r.fim>=r.viag?' <i class="planoDot"></i>':""}</small>`;
+};
+const __planoResumoEnt108=planoResumoEnt;planoResumoEnt=function(p){return p&&p.modo==="cartao"?"":__planoResumoEnt108(p)};
+/* campos do cartão no formulário */
+const __planoForm108=planoForm;
+planoForm=function(i){
+ let h=__planoForm108(i);const p=i.plano||{};const cart=p.modo==="cartao";
+ const hoje=localDate(),agora=ymNum(+hoje.slice(0,4),+hoje.slice(5,7)),compra=Math.max(Number(p.compra)||agora,agora);
+ h=h.replace('data-plano-modo="parcelado">💳 Parcelado</button>',`data-plano-modo="parcelado">🧾 Parcelado direto</button><button type="button" class="${cart?"on":""}" data-plano-modo="cartao">💳 No cartão</button>`);
+ h=h.replace('<div><label class="lbAntes">','<div class="soAntes"'+(cart?' style="display:none"':'')+'><label class="lbAntes">');
+ const campos=`<div class="planoGrid soCartao"${cart?"":' style="display:none"'}><div><label>Comprar no cartão em</label><select data-plano="compra">${Array.from({length:18},(_,k)=>agora+k).map(x=>`<option value="${x}"${x===compra?" selected":""}>${ymTxt(x,true)}${x===agora?" (agora)":""}</option>`).join("")}</select></div><div><label>Juros ao mês (%) (opcional)</label><input data-plano="juros" inputmode="decimal" placeholder="Ex.: 2,99 (vazio = sem juros)" value="${p.juros?esc(String(p.juros).replace(".",",")):""}"></div></div>`;
+ h=h.replace('<div class="soAntes"',campos+'<div class="soAntes"');
+ if(cart)h=h.replace('<div class="soParc2"','<div class="soParc2" style="display:none"');
+ return h;
+};
+const __planoLer108=planoLer;
+planoLer=function(box){const p=__planoLer108(box);const g=k=>{const el=box.querySelector(`[data-plano="${k}"]`);return el?el.value:""};p.compra=Number(g("compra"))||0;p.juros=numBR(g("juros"))||0;if(p.modo==="cartao")p.entrada=0;return p};
+$("listaIdeias").addEventListener("click",e=>{
+ const md=e.target.closest("[data-plano-modo]");if(!md)return;const box=md.closest(".planoBox");if(!box)return;const v=md.dataset.planoModo,cart=v==="cartao";
+ box.querySelector('[data-plano="modo"]').value=v;box.querySelectorAll("[data-plano-modo]").forEach(x=>x.classList.toggle("on",x===md));
+ const vis=(sel,on)=>{const el=box.querySelector(sel);if(el)el.style.display=on?"":"none"};
+ vis(".planoCampos",true);vis(".soParc",v!=="vista");vis(".soParc2",v==="parcelado");vis(".soVista",v==="vista");vis(".soCartao",cart);vis(".soAntes",!cart);
+ const lb=box.querySelector(".lbAntes");if(lb)lb.textContent=v==="vista"?"Pagar quando":"Terminar de pagar";
+ box.querySelector(".planoSaida").innerHTML=planoTexto(planoLer(box));
+});
+/* passar para viagem: no cartão = parcelado na fatura */
+const __abrirIdeia108=abrirIdeiaComoViagem;
+abrirIdeiaComoViagem=function(id){
+ __abrirIdeia108(id);const i=ideias.find(x=>x.id===id);if(!i||!i.plano||i.plano.modo!=="cartao")return;
+ try{const T=planoTot({...i.plano,entrada:0}),r=planoCalcCartao(T);
+  $("fTotal").value=fmtBR(Math.round(r.total*100)/100);$("fTotal").dispatchEvent(new Event("input",{bubbles:true}));
+  if($("fEntrada")){$("fEntrada").value="";$("fEntrada").dispatchEvent(new Event("input",{bubbles:true}))}
+  if(r.n>=2){const rd=document.querySelector('input[name="modoPagamentoViagem"][value="parcelado"]');if(rd){rd.checked=true;rd.dispatchEvent(new Event("change",{bubbles:true}))}
+   $("fParcelas").value=r.n;$("fParcelas").dispatchEvent(new Event("input",{bubbles:true}));
+   const a=Math.floor(r.ini/12),m=r.ini%12+1;$("fPrimeiroVenc").value=`${a}-${String(m).padStart(2,"0")}-10`;$("fPrimeiroVenc").dispatchEvent(new Event("change",{bubbles:true}))}
+  else{const rd=document.querySelector('input[name="modoPagamentoViagem"][value="avista"]');if(rd){rd.checked=true;rd.dispatchEvent(new Event("change",{bubbles:true}))}}
+  const o=$("fObs");if(o&&!/cart[aã]o/i.test(o.value))o.value=(o.value?o.value+"\n":"")+"💳 Pago no cartão de crédito";
+ }catch(e){}
+};
+try{renderIdeias()}catch(e){}
 </script>
 </body>
 
