@@ -751,6 +751,8 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .cadLinha{display:flex;gap:6px;margin-top:6px}.cadLinha input{flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:9px}
 .cadLb{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:8px 0 3px}.cadInp{width:100%;box-sizing:border-box;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:9px}.cadTipos{margin-top:6px}.cadOlho{flex:none;width:44px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:18px}
 .cadIco{margin-left:auto;margin-right:6px}
+.planoPessoas{background:var(--panel2,#f4f6f8);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:10px;font-size:14px}
+.badge.semValor{background:var(--panel2,#eef2f5)!important;color:var(--muted)!important;border:1px dashed var(--line)!important}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
 </head>
@@ -1155,7 +1157,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="10.1";
+const APP_VERSAO="10.4";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1415,7 +1417,7 @@ $("ideiaSugestoes").addEventListener("click",e=>{
 $("ideiaSalvar").onclick=()=>{
  const destino=$("ideiaDestino").value.trim();
  if(!destino){$("ideiaDestino").focus();$("ideiaSugestoes").innerHTML=`<div class="empty">Digite um destino para salvar.</div>`;return}
- ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:ideiaFotoDados.valorTotal||""});ideiaFotoDados={};$("ideiaStatus").style.display="none";
+ ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:ideiaFotoDados.valorTotal||"",parcelasMax:ideiaFotoDados.parcelasMax||""});ideiaFotoDados={};$("ideiaStatus").style.display="none";
  saveIdeias();$("ideiaDestino").value="";$("ideiaObs").value="";$("ideiaSugestoes").innerHTML="";ideiaSel=null;renderIdeias();
 };
 $("listaIdeias").addEventListener("click",e=>{
@@ -1539,8 +1541,9 @@ function card(t){
  const atrasada=falta>0&&(parc?vencidas.length>0:!!(t.venc&&t.venc<hoje));
  const proxParc=parc?t.parcelas.find(p=>!p.pago):null;
  const passou=(t.dataVolta||t.data)&&(t.dataVolta||t.data)<hoje;
- const badge=t.status==="paga"||falta<=0?"Paga":atrasada?(parc?(vencidas.length>1?`${vencidas.length} parcelas atrasadas`:"Parcela atrasada"):"Pagamento atrasado"):"A pagar";
- const bcls=t.status==="paga"||falta<=0?"ok":atrasada?"late":"due";
+ const semValor=!(Number(t.valorTotal)>0)&&!parc;
+ const badge=semValor?"💭 Valor a definir":t.status==="paga"||falta<=0?"Paga":atrasada?(parc?(vencidas.length>1?`${vencidas.length} parcelas atrasadas`:"Parcela atrasada"):"Pagamento atrasado"):"A pagar";
+ const bcls=semValor?"semValor":t.status==="paga"||falta<=0?"ok":atrasada?"late":"due";
  const aberta=viagensAbertas.has(t.id);
  return `<div class="trip ${t.status==="paga"?"paga":""} ${passou?"passou":""} ${aberta?"open":""}" data-trip-id="${t.id}">
   <button type="button" class="tripHead" data-trip-toggle="${t.id}" aria-expanded="${aberta}">
@@ -2200,15 +2203,18 @@ function lerPost(texto){
  {const fer=N.match(/feriado\s+(?:de|da|do)\s+([a-z ]{4,25})/i);if(fer)r.feriado=tituloBonito("Feriado de "+fer[1].trim().split(/\s{2,}|\n/)[0])}
  /* hotel / pousada / resort */
  const PAL_HOT=/\b(hotel(?:\s+fazenda)?|pousada|resort|hostel|chal[eé]s?|flat|hospedagem\s+(?:no|na|em))\s+([A-ZÀ-Úa-zà-ú0-9'’&][A-ZÀ-Úa-zà-ú0-9'’&\s]{1,45})/gi;
- const ruimHotel=/^(a|à|ao|com|proximo|próximo|perto|de|da|do|e|em|no|na|incluso|inclusa|incluido|é|fica|localizado|metros|100|200|300)\b/i;
- for(const x of T.matchAll(PAL_HOT)){
+ const ruimHotel=/^(a|à|ao|com|proximo|próximo|perto|de|da|do|e|em|no|na|incluso|inclusa|incluido|é|fica|localizado|metros|100|200|300|conta|tem|possui|oferece|disponibiliza|disp[oõ]e|vai|ser[aá]|est[aá]|inclui)\b/i;
+ {const hm=T.match(/hospedagem\s*[:\-–]\s*([A-ZÀ-Úa-zà-ú0-9'’&][^\n;,|•]{2,45})/i);
+  if(hm){let h=hm[1].replace(/\s+(com|a|à|ao|perto|pr[oó]ximo|localizado|localizada|fica|em frente|de frente|no centro|na regi[aã]o)\b.*$/i,"").trim();if(h.length>=3&&!/^(inclusa|incluso|em|no|na|de)\b/i.test(h))r.hotel=tituloBonito(h)}}
+ if(!r.hotel)for(const x of T.matchAll(PAL_HOT)){
   let h=x[2].split(/[\n;,.(|•\-–—]/)[0].replace(/\s+(com|a|à|ao|perto|pr[oó]ximo|localizado|fica|em frente|de frente|no centro)\b.*$/i,"").trim();
   const est=(x[1]+" "+h).match(/(\d)\s*estrelas?/i);if(est)r.estrelas=Number(est[1]);
   if(/^(hotel\s*)?\d\s*estrelas?\b/i.test(h)||/^\d\s*estrelas?/i.test(h))continue;
-  if(!h||ruimHotel.test(h)||h.length<3)continue;
+  if(!h||h.length<3||(ruimHotel.test(h)&&!(/pousada|hotel/i.test(x[1])&&/^(do|da|dos|das)\s+[A-ZÀ-Ú]/.test(h))))continue;
   const pre=/hospedagem/i.test(x[1])?"":(/pousada/i.test(x[1])?"Pousada ":/resort/i.test(x[1])?"":/fazenda/i.test(x[1])?"Hotel Fazenda ":"");
-  r.hotel=(pre+tituloBonito(h)).trim();break;
+  r.hotel=(pre+tituloBonito(h)).trim().replace(/\s(Do|Da|Dos|Das|De)\s/g,m=>m.toLowerCase());break;
  }
+ if(!r.hotel){const nh=T.match(/\b([A-ZÀ-Ú][A-Za-zÀ-ú'’&]{2,20}(?:[ \t]+[A-ZÀ-Ú][A-Za-zÀ-ú'’&]{2,20})?)[ \t]+Hotel\b/);if(nh&&!/^(O|A|Do|Da|No|Na|Seu|Nosso|Hospedagem|Excurs[aã]o|Viagem|Pacote)$/i.test(nh[1]))r.hotel=tituloBonito(nh[1]+" Hotel")}
  /* valores (sem repetir) */
  const precos=[],vistos=new Set();
  let fimAnt=0;for(const x of T.matchAll(/(?:^|[^A-Za-z])R\s?[$S5]\s*([\d.]+,\d{2}|\d{2,5})[ \t]*([^\n]*)/gi)){const iniSeg=Math.max(fimAnt,x.index-40);fimAnt=x.index+x[0].length-x[2].length;
@@ -2268,6 +2274,7 @@ function lerPost(texto){
  if(r.feriado)obs.push("🎉 "+r.feriado);
  if(r.estrelas)obs.push(`🏨 Hotel ${r.estrelas} estrelas`);
  {const pc=(r.precos||[]).find(p=>p.parcelas);if(pc)obs.push(`💳 Parcelado em ${pc.parcelas}x de ${money(pc.parcela)}`);}
+ {const sj=N.match(/(?:em\s*)?(\d{1,2})\s*x\s*sem\s*juros/i);if(sj){r.parcelasMax=Number(sj[1]);if(!(r.precos||[]).some(p=>p.parcelas))obs.push(`💳 Até ${sj[1]}x sem juros`)}}
  if(/a partir de \d+ anos pagam normal/i.test(N))obs.push("👦 A partir de "+N.match(/a partir de (\d+) anos/i)[1]+" anos paga normal");
  if(r.reserva)obs.push("🔖 Reserva confirmada com "+money(r.reserva));
  const tel=T.match(/\(?\d{2}\)?\s*9\s?\d{4}[.\-\s]?\d{4}(?:\s*\/\s*9\s?\d{4}[.\-\s]?\d{4})?/);if(tel)obs.push("📞 Contato: "+tel[0].trim());
@@ -2339,7 +2346,7 @@ const lerIdeiaFoto=async e=>{
   const nomeOk=r.nome&&!/\b(av|rua|rod|cep)\b\.?|\d{4,}|^de\s/i.test(r.nome);
   const destino=r.cidade||(nomeOk?r.nome:"")||lugar||"";
   if(!destino){st.textContent="Não consegui achar o destino. Tente chegar mais perto, com boa luz e sem reflexo.";e.target.value="";return}
-  ideiaSel=null;ideiaFotoDados={cidade:r.cidade||"",data:r.data||"",dataVolta:r.dataVolta||"",hotel:r.hotel||"",valorTotal:r.valorTotal||""};
+  ideiaSel=null;ideiaFotoDados={cidade:r.cidade||"",data:r.data||"",dataVolta:r.dataVolta||"",hotel:r.hotel||"",valorTotal:r.valorTotal||"",parcelasMax:r.parcelasMax||""};
   $("ideiaDestino").value=destino;
   const linhas=[];const nomeLugar=lugar||(nomeOk&&r.nome!==destino?r.nome:"");if(nomeLugar&&nomeLugar!==destino)linhas.push("🏞️ "+nomeLugar);if(r.data)linhas.push("📅 "+dateBR(r.data)+(r.dataVolta?" a "+dateBR(r.dataVolta):""));if(r.hotel)linhas.push("🏨 "+r.hotel);if(r.valorTotal)linhas.push("💰 "+money(r.valorTotal));if(r.obs)linhas.push(r.obs.replace(/\n+/g," • "));
   $("ideiaObs").value=linhas.join(" • ");
@@ -3993,20 +4000,21 @@ function planoForm(i){
  const p=i.plano||{};const hoje=localDate();
  let ano=p.ano,mes=p.mes;if(!ano&&i.data){ano=+i.data.slice(0,4);mes=+i.data.slice(5,7)}if(!ano){const d=new Date();d.setMonth(d.getMonth()+6);ano=d.getFullYear();mes=d.getMonth()+1}
  const anoH=+hoje.slice(0,4);const anos=[anoH,anoH+1,anoH+2,anoH+3];if(!anos.includes(ano))anos.push(ano);
- const pp={ano,mes,valor:p.valor||i.valorTotal||"",n:p.n||5,antes:p.antes??1,modo:p.modo||(p.ano?"parcelado":""),desc:p.desc||"",entrada:p.entrada||""};
+ const pp={ano,mes,valor:p.valor||i.valorTotal||"",n:p.n||Number(i.parcelasMax)||5,antes:p.antes??1,modo:p.modo||(p.ano?"parcelado":""),desc:p.desc||"",entrada:p.entrada||"",pessoas:p.pessoas||1};
  return`<div class="planoBox" data-plano-box="${i.id}"><input type="hidden" data-plano="modo" value="${pp.modo}">
  <label>Como vai pagar?</label><div class="malaChips"><button type="button" class="${pp.modo==="vista"?"on":""}" data-plano-modo="vista">💵 À vista</button><button type="button" class="${pp.modo==="parcelado"?"on":""}" data-plano-modo="parcelado">💳 Parcelado</button></div>
  <div class="planoCampos" style="${pp.modo?"":"display:none"}">
  <div class="planoGrid"><div><label>Mês da viagem</label><select data-plano="mes">${MESES_N.map((m,k)=>`<option value="${k+1}"${k+1===pp.mes?" selected":""}>${m[0].toUpperCase()+m.slice(1)}</option>`).join("")}</select></div>
  <div><label>Ano</label><select data-plano="ano">${anos.sort().map(a=>`<option${a===pp.ano?" selected":""}>${a}</option>`).join("")}</select></div>
- <div><label>Valor da viagem (R$)</label><input data-plano="valor" inputmode="decimal" placeholder="Ex.: 2.000,00" value="${pp.valor?esc(fmtBR(Number(pp.valor))):""}"></div>
- <div class="soParc"${pp.modo==="vista"?' style="display:none"':""}><label>Em quantas vezes</label><select data-plano="n">${Array.from({length:24},(_,k)=>`<option value="${k+1}"${k+1===pp.n?" selected":""}>${k+1}×</option>`).join("")}</select></div><div class="soParc2"${pp.modo==="vista"?' style="display:none"':""}><label>Entrada (opcional)</label><input data-plano="entrada" inputmode="decimal" placeholder="Ex.: 50,00" value="${pp.entrada?esc(fmtBR(Number(pp.entrada))):""}"></div><div class="soVista"${pp.modo==="vista"?"":' style="display:none"'}><label>Desconto à vista (%)</label><input data-plano="desc" inputmode="decimal" placeholder="Ex.: 5 (opcional)" value="${esc(String(pp.desc||""))}"></div></div>
+ <div><label>Quantas passagens</label><select data-plano="pessoas">${Array.from({length:10},(_,k)=>`<option value="${k+1}"${k+1===(pp.pessoas||1)?" selected":""}>${k+1} ${k?"pessoas":"pessoa"}</option>`).join("")}</select></div>
+ <div><label>Valor por pessoa (R$)</label><input data-plano="valor" inputmode="decimal" placeholder="Ex.: 2.000,00" value="${pp.valor?esc(fmtBR(Number(pp.valor))):""}"></div>
+ <div class="soParc"${pp.modo==="vista"?' style="display:none"':""}><label>Em quantas vezes</label><select data-plano="n">${Array.from({length:24},(_,k)=>`<option value="${k+1}"${k+1===pp.n?" selected":""}>${k+1}×</option>`).join("")}</select></div><div class="soParc2"${pp.modo==="vista"?' style="display:none"':""}><label>Entrada por pessoa (opcional)</label><input data-plano="entrada" inputmode="decimal" placeholder="Ex.: 50,00" value="${pp.entrada?esc(fmtBR(Number(pp.entrada))):""}"></div><div class="soVista"${pp.modo==="vista"?"":' style="display:none"'}><label>Desconto à vista (%)</label><input data-plano="desc" inputmode="decimal" placeholder="Ex.: 5 (opcional)" value="${esc(String(pp.desc||""))}"></div></div>
  <div><label class="lbAntes">${pp.modo==="vista"?"Pagar quando":"Terminar de pagar"}</label><select data-plano="antes">${[[0,"no mês da viagem"],[1,"1 mês antes"],[2,"2 meses antes"],[3,"3 meses antes"]].map(([v,t])=>`<option value="${v}"${v===pp.antes?" selected":""}>${t}</option>`).join("")}</select></div>
  <div class="planoSaida">${pp.modo?planoTexto(pp):""}</div>
  <div class="actions" style="margin-top:6px"><button type="button" class="btn" data-plano-salvar="${i.id}">💾 Guardar o plano</button>${i.plano?`<button type="button" class="btn secondary" data-plano-tirar="${i.id}">🗑️ Tirar plano</button>`:""}</div>
  <div class="notice" style="margin-top:4px">Quando passar a ideia para viagem (✏️), o pagamento já vai preenchido.</div></div></div>`;
 }
-function planoLer(box){const g=k=>box.querySelector(`[data-plano="${k}"]`).value;return{modo:g("modo")||"parcelado",mes:+g("mes"),ano:+g("ano"),valor:numBR(g("valor"))||0,n:+g("n"),antes:+g("antes"),desc:numBR(g("desc"))||0,entrada:numBR(g("entrada"))||0}}
+function planoLer(box){const g=k=>box.querySelector(`[data-plano="${k}"]`).value;return{modo:g("modo")||"parcelado",mes:+g("mes"),ano:+g("ano"),valor:numBR(g("valor"))||0,n:+g("n"),antes:+g("antes"),desc:numBR(g("desc"))||0,entrada:numBR(g("entrada"))||0,pessoas:+g("pessoas")||1}}
 const __renderIdeias92=renderIdeias;
 renderIdeias=function(){
  __renderIdeias92();
@@ -4030,7 +4038,7 @@ try{renderIdeias()}catch(e){}
 /* ao passar a ideia para viagem: já vem parcelado */
 const __abrirIdeia92=abrirIdeiaComoViagem;
 abrirIdeiaComoViagem=function(id){
- __abrirIdeia92(id);const i=ideias.find(x=>x.id===id);if(!i||!i.plano)return;const p=i.plano;
+ __abrirIdeia92(id);const i=ideias.find(x=>x.id===id);if(!i||!i.plano)return;const p=planoTot(i.plano);
  if(p.modo==="vista"){const v=planoCalcVista(p);try{$("fTotal").value=fmtBR(Math.round(v.final*100)/100);$("fTotal").dispatchEvent(new Event("input",{bubbles:true}));const rd=document.querySelector('input[name="modoPagamentoViagem"][value="avista"]');if(rd){rd.checked=true;rd.dispatchEvent(new Event("change",{bubbles:true}))}if(!v.erro&&$("fVenc")){const a=Math.floor(v.fim/12),m=v.fim%12+1;$("fVenc").value=`${a}-${String(m).padStart(2,"0")}-10`}}catch(e){}return}
  const r=planoCalc(p);if(r.erro)return;
  try{
@@ -4129,6 +4137,18 @@ async function resolverLugar(txt,t){
  if(!nomeC)return null;
  return await geoBusca(nomeC,uf);
 }
+/* v10.2: plano de pagamento com mais de uma passagem */
+function planoTot(p){const k=Math.max(1,Number(p&&p.pessoas)||1);return {...p,pessoas:k,valor:(Number(p.valor)||0)*k,entrada:(Number(p.entrada)||0)*k,_porPessoa:Number(p.valor)||0}}
+const __planoTexto102=planoTexto;
+planoTexto=function(p){
+ const T=planoTot(p);let h=__planoTexto102(T);if(T.pessoas<2)return h;
+ const cab=`<div class="planoPessoas">👥 <b>${T.pessoas} passagens</b> × ${money(T._porPessoa)} = <b>${money(T.valor)}</b> no total${T.entrada&&T.modo!=="vista"?` (entrada: ${money(T.entrada)})`:""}</div>`;
+ let porMes="";try{if(T.modo==="vista"){const v=planoCalcVista(T);if(!v.erro)porMes=`<small>👤 Cada pessoa guarda ${money(v.porMes/T.pessoas)} por mês.</small>`}else{const r=planoCalc(T);if(r.ok)porMes=`<small>👤 Cada pessoa: ${r.n}× de ${money(r.parc/T.pessoas)}.</small>`;else if(r.atrasado)porMes=`<small>👤 Cada pessoa: ${r.n2}× de ${money(r.parc2/T.pessoas)}.</small>`}}catch(e){}
+ return cab+h.replace(/<\/div>\s*$/,porMes+"</div>");
+};
+const __planoResumo102=planoResumo;planoResumo=function(p){const T=planoTot(p||{});return (T.pessoas>1?`<small class="planoLinha">👥 ${T.pessoas} passagens</small>`:"")+__planoResumo102(T)};
+const __planoResumoEnt102=planoResumoEnt;planoResumoEnt=function(p){return __planoResumoEnt102(planoTot(p||{}))};
+try{renderIdeias()}catch(e){}
 </script>
 </body>
 
