@@ -1159,7 +1159,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="11.8";
+const APP_VERSAO="11.9";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -4335,13 +4335,31 @@ try{renderIdeias()}catch(e){}
 })();
 /* v11.0: 🕗 previsão de chegada (tempo de estrada + folga para ônibus/excursão) */
 const chegBusca=new Set();
-function chegChave(t){return [t.localSaida,t.cidade,t.nome,t.tipoViagem].join("|")}
+function chegChave(t){return ["v2",t.localSaida,t.cidade,t.nome,t.tipoViagem].join("|")}
+/* v11.9: local de saída — "Rodoviária", "Praça"... é em Tatuí; só usa outra cidade se estiver escrita */
+const CASA={name:"Tatuí",latitude:-23.3556,longitude:-47.8569,admin1:"São Paulo"};
+async function resolverSaida(txt){
+ txt=String(txt||"").trim();if(!txt)return CASA;
+ const n=x=>semAcento(String(x||"")).toLowerCase().replace(/[^a-z ]/g," ").replace(/\s+/g," ").trim();
+ const GEN=/\b(rodoviaria|terminal|onibus|pra[c]?a|praca|igreja|matriz|posto|frente|em|ao|lado|estacionamento|ponto|rua|r|avenida|av|esquina|largo|shopping|mercado|supermercado|escola|clube|ginasio|centro|saida|de|da|do|das|dos|na|no|e|perto|proximo|velha|nova|antiga|sp|s|p)\b/g;
+ const m=txt.match(/[,\-\/]\s*([A-Za-z]{2})\s*$/);const uf=m?m[1].toUpperCase():"";
+ const resto=n(txt.replace(/[,\-\/]\s*[A-Za-z]{2}\s*$/,"")).replace(GEN," ").replace(/\s+/g," ").trim();
+ if(resto.length<3||n(resto)==="tatui")return CASA;
+ try{const g=await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(resto)}&count=10&language=pt&countryCode=BR`)).json();
+  const R=(g.results||[]).filter(r=>n(r.name)===resto&&/^PPL/.test(r.feature_code||"PPL"));
+  const r=(uf&&UF_NOME[uf]?R.find(x=>x.admin1===UF_NOME[uf]):null)||R.find(x=>x.admin1==="São Paulo")||R[0];
+  if(r){const rad=x=>x*Math.PI/180,dLa=rad(r.latitude-CASA.latitude),dLo=rad(r.longitude-CASA.longitude),h=Math.sin(dLa/2)**2+Math.cos(rad(CASA.latitude))*Math.cos(rad(r.latitude))*Math.sin(dLo/2)**2;
+   if(2*6371*Math.asin(Math.sqrt(h))<=400)return r}}catch(e){}
+ return CASA;
+}
 function chegCache(t){try{const c=JSON.parse(localStorage.getItem("cv_cheg_"+t.id)||"null");if(c&&c.k===chegChave(t))return c}catch(e){}return null}
 async function chegCalcular(t){
- const a=await resolverLugar(t.localSaida,null),b=await resolverLugar(t.cidade,t);if(!a||!b)return {erro:1};
+ const a=await resolverSaida(t.localSaida),b=await resolverLugar(t.cidade,t);if(!a||!b)return {erro:1};
  const r=await (await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving/${a.longitude},${a.latitude};${b.longitude},${b.latitude}?overview=false&access_token=${MAPBOX_TOKEN}`)).json();
  const seg=r&&r.routes&&r.routes[0]&&r.routes[0].duration;if(!seg)return {erro:1};
  const c={k:chegChave(t),seg,km:Math.round((r.routes[0].distance||0)/1000),de:a.name,para:b.name};
+ {const R=6371,rad=x=>x*Math.PI/180,dLa=rad(b.latitude-a.latitude),dLo=rad(b.longitude-a.longitude),h=Math.sin(dLa/2)**2+Math.cos(rad(a.latitude))*Math.cos(rad(b.latitude))*Math.sin(dLo/2)**2,reta=2*R*Math.asin(Math.sqrt(h));
+  if(c.km>reta*2.2+80)return {erro:1}}
  try{localStorage.setItem("cv_cheg_"+t.id,JSON.stringify(c))}catch(e){}
  return c;
 }
