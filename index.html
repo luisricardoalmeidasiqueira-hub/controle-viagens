@@ -1159,7 +1159,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="12.9";
+const APP_VERSAO="13.0";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -4617,14 +4617,14 @@ $("cidadeAqui").addEventListener("click",()=>{
  renderMala=function(){orig();const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
   document.querySelectorAll("#malaLista .malaItem").forEach(li=>{const cb=li.querySelector("input[data-mala-item]");if(!cb||!ehRep(cb.dataset.malaItem))return;
    const sp=li.querySelector("span:not(.dragAlca)");if(!sp||sp.querySelector(".repBox"))return;
-   const tp=m.repTipo||"",n=noites(t);
+   const tp=m.repTipo||"pastilha",n=noites(t);li.classList.add("temRep");
    const txt=tp==="pastilha"?`🔢 Levar <b>${n+1} pastilhas</b> (1 por noite: ${n} ${n>1?"noites":"noite"} + 1 de reserva)`:tp==="liquido"?"🧴 1 refil líquido dá para a viagem toda (dura umas 45 noites)":"";
    sp.insertAdjacentHTML("beforeend",`<span class="quemItemBox repBox"><span class="repOpc"><button type="button" class="${tp==="pastilha"?"on":""}" data-rep-tipo="pastilha">🦟 Pastilha</button><button type="button" class="${tp==="liquido"?"on":""}" data-rep-tipo="liquido">🧴 Líquido</button></span>${txt?`<small class="repTxt">${txt}</small>`:""}</span>`);
   });
  };
  $("modalMala").addEventListener("click",e=>{const b=e.target.closest("[data-rep-tipo]");if(!b)return;e.preventDefault();e.stopPropagation();
-  const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);m.repTipo=m.repTipo===b.dataset.repTipo?"":b.dataset.repTipo;try{save()}catch(er){}renderMala()},true);
- const st=document.createElement("style");st.textContent=`.repOpc{display:flex;gap:6px;margin-top:4px}.repOpc button{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:4px;white-space:nowrap;width:auto!important;min-height:0!important;border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700;color:inherit}.repOpc button.on{background:var(--accent);color:#fff;border-color:var(--accent)}.repTxt{display:block;margin-top:4px;font-size:12px;line-height:1.35}`;document.head.appendChild(st);
+  const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);m.repTipo=b.dataset.repTipo;if(m.qtd)delete m.qtd[b.closest(".malaItem").querySelector("input[data-mala-item]").dataset.malaItem];try{save()}catch(er){}renderMala()},true);
+ const st=document.createElement("style");st.textContent=`.temRep>span:not(.dragAlca){min-width:0}.repBox,.repOpc{flex:none!important}.repOpc{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.repOpc button{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:4px;white-space:nowrap;width:auto!important;min-height:0!important;border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700;color:inherit}.repOpc button.on{background:var(--accent);color:#fff;border-color:var(--accent)}.repTxt{display:block;margin-top:4px;font-size:12px;line-height:1.35}`;document.head.appendChild(st);
 })();
 /* v12.8: 💳 forma de pagamento nos gastos */
 (function(){
@@ -4639,6 +4639,16 @@ $("cidadeAqui").addEventListener("click",()=>{
  renderGastos=function(){or();const t=viagens.find(x=>x.id===gastosId);if(!t)return;const L=gastosDe(t),por={};
   L.forEach(g=>{if(g.pag)por[g.pag]=(por[g.pag]||0)+(Number(g.valor)||0)});
   const tb=$("gastoTotal");if(tb&&Object.keys(por).length)tb.insertAdjacentHTML("beforeend",`<div class="gastoCats">${PAG.filter(p=>por[p[0]]).map(p=>`<span>${p[1]} ${p[2]}: ${money(por[p[0]])}</span>`).join("")}</div>`)};
+})();
+</script>
+<script>
+/* v13.0: quantidade do repelente — pastilha já vem com o número certo */
+(function(){
+ const ehRep=n=>/repelente el[eé]trico/i.test(n);const oq=qtdItem;
+ qtdItem=function(m,n,d){
+  if(ehRep(n)&&!(m.qtd&&m.qtd[n]!=null)){if((m.repTipo||"pastilha")==="liquido")return 1;const t=viagens.find(x=>x.id===malaId);return (window.noitesHotel?noitesHotel(t):Math.max(1,d-1))+1}
+  return oq(m,n,d)};
+ try{if(document.getElementById("modalMala").classList.contains("open"))renderMala()}catch(e){}
 })();
 </script>
 </body>
