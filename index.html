@@ -1159,7 +1159,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="12.7";
+const APP_VERSAO="12.9";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2591,7 +2591,7 @@ renderPasseios();
 /* ===== v4.0: 🧳 checklist da mala + contagem regressiva da viagem ===== */
 const MALA_CATS=["Antes de sair de casa","Avião","Documentos","Roupas","Higiene","Remédios","Eletrônicos","Praia","Frio","Ônibus","Criança","Parque / Piscina","Meus itens"];
 const MALA_MODELOS={
- base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Cabides","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Desodorante roll-on","Perfume","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Enxaguante bucal","Cortador de unha","Protetor labial","Lenço umedecido"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
+ base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Cabides","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Desodorante roll-on","Perfume","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Enxaguante bucal","Cortador de unha","Protetor labial","Lenço umedecido"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Repelente elétrico (de tomada)","Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
  casa:{"Antes de sair de casa":["Desligar o registro do gás","Tirar aparelhos da tomada","Fechar janelas e portas","Deixar água e comida para os bichos (ou combinar quem cuida)","Tirar o lixo","Ligar o alarme","Ligar a cerca elétrica","Trancar portão e porta (conferir duas vezes)","Avisar um vizinho ou parente"]},
  m:{Roupas:["Cuecas"],Higiene:["Aparelho de barbear","Espuma / gel de barbear","Pós-barba"]},
  f:{Roupas:["Calcinhas","Sutiãs"],Higiene:["Absorventes","Maquiagem","Secador / prancha","Elástico / presilha de cabelo"]},
@@ -2600,7 +2600,7 @@ const MALA_MODELOS={
  frio:{Frio:["Casaco","Gorro","Luvas","Cachecol","Meia grossa","Hidratante / protetor labial"]},
  onibus:{Ônibus:["Travesseiro de pescoço","Cobertor / manta","Garrafinha de água","Lanche para a viagem","Lenço / álcool em gel"]},
  aviao:{"Avião":["Documento original com foto","Cartão de embarque no celular","Saquinho transparente para líquidos","Etiqueta com nome na mala","Cadeado para a mala despachada"]},
- parque:{"Parque / Piscina":["Roupa de banho","Toalha","Protetor solar","Capa de chuva","Pochete / bolsinha","Sapato confortável","Copo térmico (tipo Stanley)","Garrafinha de água","Capinha à prova d'água para o celular","Óculos de natação","Chinelo para a área molhada","Saco plástico para roupa molhada"]}
+ parque:{"Parque / Piscina":["Roupa de banho","Canga / saída de praia","Toalha","Protetor solar","Capa de chuva","Pochete / bolsinha","Sapato confortável","Copo térmico (tipo Stanley)","Garrafinha de água","Capinha à prova d'água para o celular","Óculos de natação","Chinelo para a área molhada","Saco plástico para roupa molhada"]}
 };
 const MALA_QUEM=[["m","👨 Masculino"],["f","👩 Feminino"],["c","🧒 Criança"]];
 const MALA_TIPOS=[["aviao","✈️ Avião"],["praia","🏖️ Praia"],["frio","❄️ Frio"],["onibus","🚌 Ônibus / excursão"],["parque","🎢 Parque / piscina"]];
@@ -3358,7 +3358,7 @@ function renderGastos(){
  const t=viagens.find(x=>x.id===gastosId);if(!t)return;const L=gastosDe(t);const tot=totalGastos(t);
  const porCat={};L.forEach(g=>{porCat[g.cat]=(porCat[g.cat]||0)+(Number(g.valor)||0)});
  $("gastoTotal").innerHTML=`<small>Total gasto na viagem</small><b>${money(tot)}</b>${Object.keys(porCat).length?`<div class="gastoCats">${Object.entries(porCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>${catInfo(k)[1]} ${money(v)}</span>`).join("")}</div>`:""}`;
- $("gastoLista").innerHTML=L.length?[...L].map((g,i)=>({g,i})).sort((a,b)=>(b.g.data||"").localeCompare(a.g.data||"")||b.i-a.i).map(({g,i})=>`<div class="gastoItem">${g.foto?`<img src="${g.foto}" alt="Notinha" data-gasto-foto="${i}">`:`<span class="gastoIc">${catInfo(g.cat)[1]}</span>`}<div class="gastoInfo"><b>${esc(g.desc||catInfo(g.cat)[2])}</b><small>${catInfo(g.cat)[1]} ${catInfo(g.cat)[2]}${g.data?" • "+dataSem(g.data):""}</small></div><span class="gastoValor">${money(g.valor)}</span><div class="gastoBtns"><button type="button" data-gasto-edit="${i}" aria-label="Editar">✏️</button><button type="button" data-gasto-del="${i}" aria-label="Apagar">🗑️</button></div></div>`).join(""):`<div class="empty">Nenhum gasto ainda. Tire foto da notinha (posto, restaurante, pedágio...) e o app vai somando.</div>`;
+ $("gastoLista").innerHTML=L.length?[...L].map((g,i)=>({g,i})).sort((a,b)=>(b.g.data||"").localeCompare(a.g.data||"")||b.i-a.i).map(({g,i})=>`<div class="gastoItem">${g.foto?`<img src="${g.foto}" alt="Notinha" data-gasto-foto="${i}">`:`<span class="gastoIc">${catInfo(g.cat)[1]}</span>`}<div class="gastoInfo"><b>${esc(g.desc||catInfo(g.cat)[2])}</b><small>${catInfo(g.cat)[1]} ${catInfo(g.cat)[2]}${g.data?" • "+dataSem(g.data):""}${g.pag&&window.pagTxt?" • "+pagTxt(g.pag):""}</small></div><span class="gastoValor">${money(g.valor)}</span><div class="gastoBtns"><button type="button" data-gasto-edit="${i}" aria-label="Editar">✏️</button><button type="button" data-gasto-del="${i}" aria-label="Apagar">🗑️</button></div></div>`).join(""):`<div class="empty">Nenhum gasto ainda. Tire foto da notinha (posto, restaurante, pedágio...) e o app vai somando.</div>`;
 }
 function salvarGastos(){try{save()}catch(e){alert("A memória do celular está cheia. Apague fotos de notinhas antigas.")}renderGastos();render()}
 function lerNotinha(txt){
@@ -3508,14 +3508,15 @@ async function lerNotinhaFoto(f){
  if(typeof iaChave==="function"&&iaChave()){
   try{iaMenuAtualiza("lendo");const b64=await fotoParaIA(f);
    const r=await iaPedir([{text:`Esta é a foto de uma notinha/cupom fiscal/comprovante de gasto numa viagem no Brasil. Responda SOMENTE com JSON:
-{"valor":0,"data":"AAAA-MM-DD","desc":"","cat":""}
+{"valor":0,"data":"AAAA-MM-DD","desc":"","cat":"","pag":""}
 - valor: o TOTAL pago (número com ponto decimal, ex.: 154.75). Não use troco nem valor recebido.
 - data: data da compra.
 - desc: nome do lugar (ex.: "Posto Graal", "Restaurante X"), curto.
 - cat: uma destas: comida, combustivel, pedagio, passeio, compras, transporte, farmacia, hotel, outros.
+- pag: como foi pago, se a notinha disser: "ticket" (vale/ticket refeição ou alimentação: VR, Ticket, Alelo, Sodexo, Pluxee, Ben, Flash, Caju, VA), "debito", "credito", "dinheiro" ou "pix". Vazio se não disser.
 Se não conseguir ler algum campo, deixe vazio. Não invente.`},{inline_data:{mime_type:"image/jpeg",data:b64}}]);
    iaMenuAtualiza();const valor=Number(String(r.valor||"").replace(",","."));
-   if(valor>0){const o={valor,ia:true};if(/^\d{4}-\d{2}-\d{2}$/.test(r.data||""))o.data=r.data;if(r.desc)o.desc=String(r.desc).slice(0,40);o.cat=GASTO_CATS.some(c=>c[0]===r.cat)?r.cat:"outros";return o}
+   if(valor>0){const o={valor,ia:true};if(/^\d{4}-\d{2}-\d{2}$/.test(r.data||""))o.data=r.data;if(r.desc)o.desc=String(r.desc).slice(0,40);o.cat=GASTO_CATS.some(c=>c[0]===r.cat)?r.cat:"outros";if(["ticket","debito","credito","dinheiro","pix"].includes(r.pag))o.pag=r.pag;return o}
   }catch(err){iaMenuAtualiza()}
  }
  let melhor={};
@@ -4604,6 +4605,41 @@ $("cidadeAqui").addEventListener("click",()=>{
   }catch(x){fim();diga("Não consegui descobrir a cidade agora (sem internet?). Tente de novo.")}
  },err=>{fim();diga(err&&err.code===1?"📍 O celular não deu permissão de localização. No iPhone: <b>Ajustes → Privacidade → Localização</b>, e permita para o Safari.":"Não consegui pegar a localização agora. Tente de novo.")},{enableHighAccuracy:false,timeout:20000,maximumAge:300000});
 });
+</script>
+<script>
+/* v12.8: 🦟 repelente elétrico — pastilha ou líquido; na pastilha o app já diz quantas levar */
+(function(){
+ const ehRep=n=>/repelente el[eé]trico/i.test(n);
+ function noites(t){if(!t||!t.data)return 1;const ida=new Date(t.data+"T12:00:00"),volta=new Date((t.dataVolta||t.data)+"T12:00:00");let n=Math.round((volta-ida)/86400000);
+  if(["excursao","onibus"].includes(t.tipoViagem)&&String(t.horaSaida||"")>="18:00")n-=1;return Math.max(1,n)}
+ window.noitesHotel=noites;
+ const orig=renderMala;
+ renderMala=function(){orig();const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
+  document.querySelectorAll("#malaLista .malaItem").forEach(li=>{const cb=li.querySelector("input[data-mala-item]");if(!cb||!ehRep(cb.dataset.malaItem))return;
+   const sp=li.querySelector("span:not(.dragAlca)");if(!sp||sp.querySelector(".repBox"))return;
+   const tp=m.repTipo||"",n=noites(t);
+   const txt=tp==="pastilha"?`🔢 Levar <b>${n+1} pastilhas</b> (1 por noite: ${n} ${n>1?"noites":"noite"} + 1 de reserva)`:tp==="liquido"?"🧴 1 refil líquido dá para a viagem toda (dura umas 45 noites)":"";
+   sp.insertAdjacentHTML("beforeend",`<span class="quemItemBox repBox"><span class="repOpc"><button type="button" class="${tp==="pastilha"?"on":""}" data-rep-tipo="pastilha">🦟 Pastilha</button><button type="button" class="${tp==="liquido"?"on":""}" data-rep-tipo="liquido">🧴 Líquido</button></span>${txt?`<small class="repTxt">${txt}</small>`:""}</span>`);
+  });
+ };
+ $("modalMala").addEventListener("click",e=>{const b=e.target.closest("[data-rep-tipo]");if(!b)return;e.preventDefault();e.stopPropagation();
+  const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);m.repTipo=m.repTipo===b.dataset.repTipo?"":b.dataset.repTipo;try{save()}catch(er){}renderMala()},true);
+ const st=document.createElement("style");st.textContent=`.repOpc{display:flex;gap:6px;margin-top:4px}.repOpc button{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:4px;white-space:nowrap;width:auto!important;min-height:0!important;border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700;color:inherit}.repOpc button.on{background:var(--accent);color:#fff;border-color:var(--accent)}.repTxt{display:block;margin-top:4px;font-size:12px;line-height:1.35}`;document.head.appendChild(st);
+})();
+/* v12.8: 💳 forma de pagamento nos gastos */
+(function(){
+ const PAG=[["ticket","🍽️","Ticket"],["debito","💳","Débito"],["credito","💳","Crédito"],["dinheiro","💵","Dinheiro"],["pix","⚡","Pix"]];
+ window.pagTxt=k=>{const p=PAG.find(x=>x[0]===k);return p?p[1]+" "+p[2]:""};
+ const of=mostrarFormGasto;
+ mostrarFormGasto=function(g,idx){of(g,idx);const ch=document.querySelector("#gastoForm .gastoChips");if(!ch)return;
+  ch.insertAdjacentHTML("afterend",`<div><label style="font-size:12px;color:var(--muted)">Como pagou?</label><div class="gastoChips">${PAG.map(p=>`<button type="button" class="${gastoRascunho.pag===p[0]?"on":""}" data-gf-pag="${p[0]}">${p[1]} ${p[2]}</button>`).join("")}</div></div>`)};
+ $("modalGastos").addEventListener("click",e=>{const b=e.target.closest("[data-gf-pag]");if(!b||!gastoRascunho)return;
+  gastoRascunho.pag=gastoRascunho.pag===b.dataset.gfPag?"":b.dataset.gfPag;document.querySelectorAll("[data-gf-pag]").forEach(x=>x.classList.toggle("on",x.dataset.gfPag===gastoRascunho.pag))});
+ const or=renderGastos;
+ renderGastos=function(){or();const t=viagens.find(x=>x.id===gastosId);if(!t)return;const L=gastosDe(t),por={};
+  L.forEach(g=>{if(g.pag)por[g.pag]=(por[g.pag]||0)+(Number(g.valor)||0)});
+  const tb=$("gastoTotal");if(tb&&Object.keys(por).length)tb.insertAdjacentHTML("beforeend",`<div class="gastoCats">${PAG.filter(p=>por[p[0]]).map(p=>`<span>${p[1]} ${p[2]}: ${money(por[p[0]])}</span>`).join("")}</div>`)};
+})();
 </script>
 </body>
 
