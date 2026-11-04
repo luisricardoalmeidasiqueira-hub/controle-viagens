@@ -1159,7 +1159,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="13.0";
+const APP_VERSAO="13.1";
 const APP_DATA_VERSAO="14/10/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2591,7 +2591,7 @@ renderPasseios();
 /* ===== v4.0: 🧳 checklist da mala + contagem regressiva da viagem ===== */
 const MALA_CATS=["Antes de sair de casa","Avião","Documentos","Roupas","Higiene","Remédios","Eletrônicos","Praia","Frio","Ônibus","Criança","Parque / Piscina","Meus itens"];
 const MALA_MODELOS={
- base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Cabides","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Desodorante roll-on","Perfume","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Enxaguante bucal","Cortador de unha","Protetor labial","Lenço umedecido"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Repelente elétrico (de tomada)","Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
+ base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Cabides","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Desodorante roll-on","Perfume","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Enxaguante bucal","Cortador de unha","Protetor labial","Lenço umedecido"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Repelente de tomada","Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
  casa:{"Antes de sair de casa":["Desligar o registro do gás","Tirar aparelhos da tomada","Fechar janelas e portas","Deixar água e comida para os bichos (ou combinar quem cuida)","Tirar o lixo","Ligar o alarme","Ligar a cerca elétrica","Trancar portão e porta (conferir duas vezes)","Avisar um vizinho ou parente"]},
  m:{Roupas:["Cuecas"],Higiene:["Aparelho de barbear","Espuma / gel de barbear","Pós-barba"]},
  f:{Roupas:["Calcinhas","Sutiãs"],Higiene:["Absorventes","Maquiagem","Secador / prancha","Elástico / presilha de cabelo"]},
@@ -4609,7 +4609,7 @@ $("cidadeAqui").addEventListener("click",()=>{
 <script>
 /* v12.8: 🦟 repelente elétrico — pastilha ou líquido; na pastilha o app já diz quantas levar */
 (function(){
- const ehRep=n=>/repelente el[eé]trico/i.test(n);
+ const ehRep=n=>/repelente (el[eé]trico|de tomada)/i.test(n);
  function noites(t){if(!t||!t.data)return 1;const ida=new Date(t.data+"T12:00:00"),volta=new Date((t.dataVolta||t.data)+"T12:00:00");let n=Math.round((volta-ida)/86400000);
   if(["excursao","onibus"].includes(t.tipoViagem)&&String(t.horaSaida||"")>="18:00")n-=1;return Math.max(1,n)}
  window.noitesHotel=noites;
@@ -4618,13 +4618,13 @@ $("cidadeAqui").addEventListener("click",()=>{
   document.querySelectorAll("#malaLista .malaItem").forEach(li=>{const cb=li.querySelector("input[data-mala-item]");if(!cb||!ehRep(cb.dataset.malaItem))return;
    const sp=li.querySelector("span:not(.dragAlca)");if(!sp||sp.querySelector(".repBox"))return;
    const tp=m.repTipo||"pastilha",n=noites(t);li.classList.add("temRep");
-   const txt=tp==="pastilha"?`🔢 Levar <b>${n+1} pastilhas</b> (1 por noite: ${n} ${n>1?"noites":"noite"} + 1 de reserva)`:tp==="liquido"?"🧴 1 refil líquido dá para a viagem toda (dura umas 45 noites)":"";
+   const txt=tp==="pastilha"?`🔢 <b>${n+1} pastilhas</b> (${n} ${n>1?"noites":"noite"} + 1 reserva)`:tp==="liquido"?"🧴 1 refil dá para a viagem toda":"";
    sp.insertAdjacentHTML("beforeend",`<span class="quemItemBox repBox"><span class="repOpc"><button type="button" class="${tp==="pastilha"?"on":""}" data-rep-tipo="pastilha">🦟 Pastilha</button><button type="button" class="${tp==="liquido"?"on":""}" data-rep-tipo="liquido">🧴 Líquido</button></span>${txt?`<small class="repTxt">${txt}</small>`:""}</span>`);
   });
  };
  $("modalMala").addEventListener("click",e=>{const b=e.target.closest("[data-rep-tipo]");if(!b)return;e.preventDefault();e.stopPropagation();
   const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);m.repTipo=b.dataset.repTipo;if(m.qtd)delete m.qtd[b.closest(".malaItem").querySelector("input[data-mala-item]").dataset.malaItem];try{save()}catch(er){}renderMala()},true);
- const st=document.createElement("style");st.textContent=`.temRep>span:not(.dragAlca){min-width:0}.repBox,.repOpc{flex:none!important}.repOpc{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.repOpc button{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:4px;white-space:nowrap;width:auto!important;min-height:0!important;border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700;color:inherit}.repOpc button.on{background:var(--accent);color:#fff;border-color:var(--accent)}.repTxt{display:block;margin-top:4px;font-size:12px;line-height:1.35}`;document.head.appendChild(st);
+ const st=document.createElement("style");st.textContent=`.temRep>span:not(.dragAlca){min-width:0}.repBox,.repOpc{flex:none!important}.repOpc{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.repOpc button{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:4px;white-space:nowrap;width:auto!important;min-height:0!important;border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700;color:inherit}.repOpc button.on{background:var(--accent);color:#fff;border-color:var(--accent)}.repTxt{display:block;margin-top:4px;font-size:12px;line-height:1.35}`;document.head.appendChild(st);
 })();
 /* v12.8: 💳 forma de pagamento nos gastos */
 (function(){
@@ -4644,11 +4644,28 @@ $("cidadeAqui").addEventListener("click",()=>{
 <script>
 /* v13.0: quantidade do repelente — pastilha já vem com o número certo */
 (function(){
- const ehRep=n=>/repelente el[eé]trico/i.test(n);const oq=qtdItem;
+ const ehRep=n=>/repelente (el[eé]trico|de tomada)/i.test(n);const oq=qtdItem;
  qtdItem=function(m,n,d){
   if(ehRep(n)&&!(m.qtd&&m.qtd[n]!=null)){if((m.repTipo||"pastilha")==="liquido")return 1;const t=viagens.find(x=>x.id===malaId);return (window.noitesHotel?noitesHotel(t):Math.max(1,d-1))+1}
   return oq(m,n,d)};
  try{if(document.getElementById("modalMala").classList.contains("open"))renderMala()}catch(e){}
+})();
+</script>
+<script>
+/* v13.1: iPhone — a rolagem da mala travava depois de marcar/desmarcar; e nome mais curto do repelente */
+(function(){
+ const VELHO="Repelente elétrico (de tomada)",NOVO="Repelente de tomada";
+ try{let mud=false;(viagens||[]).forEach(t=>{if(t.mala){const j=JSON.stringify(t.mala);if(j.indexOf(VELHO)>=0){t.mala=JSON.parse(j.split(VELHO).join(NOVO));mud=true}}});if(mud)save();
+  const o=localStorage.getItem(ORDEM_KEY);if(o&&o.indexOf(VELHO)>=0)localStorage.setItem(ORDEM_KEY,o.split(VELHO).join(NOVO))}catch(e){}
+ const sh=()=>document.querySelector("#modalMala .sheet");
+ const orig=renderMala;
+ renderMala=function(){
+  const s=sh(),top=s?s.scrollTop:0;const r=orig.apply(this,arguments);
+  if(s){s.scrollTop=top;
+   /* "cutucão" para o Safari do iPhone voltar a rolar a janela depois de redesenhar a lista */
+   s.style.overflowY="hidden";void s.offsetHeight;s.style.overflowY="";requestAnimationFrame(()=>{s.scrollTop=top})}
+  return r};
+ const st=document.createElement("style");st.textContent=`#modalMala .sheet{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}`;document.head.appendChild(st);
 })();
 </script>
 </body>
