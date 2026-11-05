@@ -869,7 +869,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 <section class="card compactCard" id="secHotel">
   <button type="button" class="collapseBtn" id="hotelShortcut" aria-expanded="false">📍 Perto do hotel <span id="setaHotel">︾</span></button>
   <div id="hotelPainel" style="display:none">
-    <div class="notice" id="hotelNome" style="margin:6px 0 10px"></div>
+    <div class="notice" id="hotelNome" style="margin:6px 0 10px"></div><div id="hotelOnde" class="hotelOnde"></div>
     <div class="hotelChips">
       <button type="button" data-perto="restaurante">🍽️ Restaurante</button>
       <button type="button" data-perto="pizzaria">🍕 Pizzaria</button>
@@ -1159,8 +1159,8 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="13.1";
-const APP_DATA_VERSAO="14/10/2026";
+const APP_VERSAO="13.2";
+const APP_DATA_VERSAO="04/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
 const CIDADES=["Tatuí, SP","São Paulo, SP","Aparecida, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
@@ -2131,6 +2131,7 @@ async function abrirMapa(titulo,pontos){
  $("mapaStatus").textContent="🗺️ Carregando mapa…";
  $("modalMapa").classList.add("open");
  try{await carregarMapbox()}catch(e){$("mapaStatus").textContent="Não foi possível carregar o mapa. Verifique a internet e tente de novo.";return}
+ if(typeof mapboxgl==="undefined"){$("mapaStatus").textContent="Não foi possível carregar o mapa. Verifique a internet e tente de novo.";return}
  const validos=(pontos||[]).filter(p=>p&&isFinite(Number(p.lat))&&isFinite(Number(p.lon))&&Number(p.lat)!==0);
  if(!validos.length){$("mapaStatus").textContent="Nenhum local com endereço no mapa ainda.";}
  else $("mapaStatus").textContent=validos.length>1?`📍 ${validos.length} locais no mapa`:"";
@@ -2920,7 +2921,7 @@ function tempoHTML(t,r){
  if(r.erro==="cedo")return `<div class="tempoBox">🌤️ A previsão para os dias da viagem <b>ainda não saiu</b>. Volte amanhã: ela aparece aqui sozinha.</div>`;
  if(r.erro)return `<div class="tempoBox">🌤️ Não consegui buscar a previsão agora${r.erro==="cidade"?" (não achei a cidade — confira o nome, ex.: Peruíbe, SP)":" (sem internet?)"}.</div>`;
  const {dicas,acoes}=dicasTempo(r);
- return `<div class="tempoBox"><h4>🌤️ Previsão do tempo em ${esc(r.lugar)}</h4><div class="tempoDias">${r.dias.map(x=>{const [ic,txt]=TEMPO_COD(x.cod);return `<div class="tempoDia"><small>${dataSem(x.dia).split(",")[0]} ${dateBR(x.dia).slice(0,5)}</small><b>${ic}</b>${x.max}° / ${x.min}°<small>${txt}${x.chuva>=30?` • ☔ ${x.chuva}%`:""}</small></div>`}).join("")}</div>${dicas.length?`<div class="tempoDica">${dicas.join("<br>")}</div>`:""}${acoes.length?`<button type="button" class="btn secondary" style="margin-top:8px;width:100%" data-tempo-mala="${acoes.join(",")}">➕ Colocar as sugestões na mala</button>`:""}${r.parcial?`<div class="notice">Os últimos dias da viagem ainda não têm previsão. Volte mais perto da data.</div>`:""}<div class="notice">Previsão: Open-Meteo, atualizada todo dia. Pode mudar até a viagem.</div></div>`;
+ return `<div class="tempoBox"><h4>🌤️ Previsão do tempo em ${esc(r.lugar)}</h4><div class="tempoDias">${r.dias.map(x=>{const [ic,txt]=TEMPO_COD(x.cod);return `<div class="tempoDia" role="button" data-tempo-dia="${x.dia}" data-tempo-v="${t&&t.id}"><small>${dataSem(x.dia).split(",")[0]} ${dateBR(x.dia).slice(0,5)}</small><b>${ic}</b>${x.max}° / ${x.min}°<small>${txt}${x.chuva>=30?` • ☔ ${x.chuva}%`:""}</small></div>`}).join("")}</div>${dicas.length?`<div class="tempoDica">${dicas.join("<br>")}</div>`:""}${acoes.length?`<button type="button" class="btn secondary" style="margin-top:8px;width:100%" data-tempo-mala="${acoes.join(",")}">➕ Colocar as sugestões na mala</button>`:""}${r.parcial?`<div class="notice">Os últimos dias da viagem ainda não têm previsão. Volte mais perto da data.</div>`:""}<div class="notice">Previsão: Open-Meteo, atualizada todo dia. Pode mudar até a viagem.</div></div>`;
 }
 function tempoResumoHTML(t){
  const d=t&&t.data?diasPara(t.data):99;if(d<0||d>15||!t.cidade)return "";
@@ -4666,6 +4667,74 @@ $("cidadeAqui").addEventListener("click",()=>{
    s.style.overflowY="hidden";void s.offsetHeight;s.style.overflowY="";requestAnimationFrame(()=>{s.scrollTop=top})}
   return r};
  const st=document.createElement("style");st.textContent=`#modalMala .sheet{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}`;document.head.appendChild(st);
+})();
+</script>
+<script>
+/* v13.2: 🌦️ previsão de hora em hora — toque no dia */
+(function(){
+ const cache={};
+ async function horas(t,dia){
+  const k=t.id+"|"+dia;if(cache[k])return cache[k];
+  const l=await resolverLugar(t.cidade,t);if(!l)throw 0;
+  const f=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${l.latitude}&longitude=${l.longitude}&hourly=temperature_2m,precipitation_probability,weather_code&timezone=America%2FSao_Paulo&start_date=${dia}&end_date=${dia}`)).json();
+  if(!f.hourly||!f.hourly.time)throw 0;
+  const H=f.hourly.time.map((h,i)=>({h:+h.slice(11,13),t:f.hourly.temperature_2m[i],p:f.hourly.precipitation_probability?(f.hourly.precipitation_probability[i]??0):0,c:f.hourly.weather_code?f.hourly.weather_code[i]:0})).filter(x=>x.t!=null);
+  return cache[k]=H;
+ }
+ function resumo(H){
+  const dia=H.filter(x=>x.h>=6&&x.h<=22),chuva=dia.filter(x=>x.p>=40||(x.c>=51&&x.p>=30));
+  if(!chuva.length){const mx=Math.max(0,...dia.map(x=>x.p));return mx<20?"☀️ <b>Sem chuva prevista</b> nesse dia.":`🌤️ <b>Pouca chance de chuva</b> (até ${mx}%).`}
+  const ini=chuva[0].h,fim=chuva[chuva.length-1].h+1,mx=Math.max(...chuva.map(x=>x.p));
+  const livre=dia.filter(x=>x.p<30&&x.h<ini);
+  return `🌂 <b>Chuva mais provável entre ${ini}h e ${fim}h</b> (até ${mx}%).${livre.length?` Antes das ${ini}h dá para sair sem chuva.`:""}`;
+ }
+ document.addEventListener("click",async e=>{
+  const d=e.target.closest("[data-tempo-dia]");if(!d)return;
+  const t=viagens.find(x=>String(x.id)===d.dataset.tempoV);if(!t)return;const dia=d.dataset.tempoDia;
+  const box=d.closest(".tempoBox");if(!box)return;let h=box.querySelector(".tempoHoras");
+  box.querySelectorAll("[data-tempo-dia]").forEach(x=>x.classList.toggle("on",x===d&&!(h&&h.dataset.dia===dia)));
+  if(h&&h.dataset.dia===dia){h.remove();return}
+  if(!h){h=document.createElement("div");h.className="tempoHoras";box.querySelector(".tempoDias").after(h)}
+  h.dataset.dia=dia;h.innerHTML="⏳ Buscando hora a hora…";
+  try{const H=await horas(t,dia);const sel=H.filter(x=>x.h>=6&&x.h<=21&&x.h%3===0);
+   if(!sel.length){h.innerHTML="A previsão de hora em hora desse dia ainda não saiu.";return}
+   h.innerHTML=`<div class="tempoHorasT">🕒 ${dataSem(dia).split(",")[0]} ${dateBR(dia).slice(0,5)} — hora a hora</div><div class="tempoHorasL">${sel.map(x=>{let [ic]=TEMPO_COD(x.c);if((x.h>=19||x.h<6)&&x.c<=2)ic="🌙";return `<div><small>${String(x.h).padStart(2,"0")}h</small><b>${ic}</b>${Math.round(x.t)}°${x.p>=20?`<small class="hp">☔ ${x.p}%</small>`:`<small class="hp">&nbsp;</small>`}</div>`}).join("")}</div><div class="tempoHorasR">${resumo(H)}</div>`;
+  }catch(er){h.innerHTML="Não consegui buscar a previsão de hora em hora agora (sem internet?)."}
+ });
+ const st=document.createElement("style");st.textContent=`.tempoDia[data-tempo-dia]{cursor:pointer}.tempoDia.on{outline:2px solid var(--accent)}.tempoHoras{margin-top:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px}.tempoHorasT{font-weight:800;font-size:13px;margin-bottom:6px}.tempoHorasL{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;text-align:center;font-size:13px}.tempoHorasL div{display:flex;flex-direction:column;align-items:center;gap:1px}.tempoHorasL b{font-size:18px}.tempoHorasL small{font-size:11px;color:var(--muted)}.tempoHorasL .hp{color:#1565C0;font-weight:700}.tempoHorasR{margin-top:6px;font-size:13px}.tempoDicaHora{font-size:12px;color:var(--muted);margin-top:4px}`;document.head.appendChild(st);
+ const ot=tempoHTML;tempoHTML=function(t,r){const h=ot(t,r);if(!r||!r.dias)return h;return h.replace('</div><div class="tempoDica">','</div><div class="tempoDicaHora">👆 Toque no dia para ver a previsão de hora em hora.</div><div class="tempoDica">')};
+})();
+/* v13.2: 🏨 Perto do hotel — cidade do hotel separada + escolher onde procurar (hotel / viagem / 📍 onde estou) */
+(function(){
+ let modo="hotel",aqui=null,flag=false;
+ const n=x=>String(x||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+ function cidHotelRegra(t){const h=n(t.hotel);if(/cambori/.test(h))return "Balneário Camboriú, SC";return ""}
+ async function cidHotel(t){
+  if(t.cidadeHotel)return t.cidadeHotel;let c=cidHotelRegra(t);
+  if(!c&&typeof iaChave==="function"&&iaChave()){try{const r=await iaPedir([{text:`Uma pessoa vai ficar no hotel "${t.hotel}" numa viagem chamada "${t.nome}" (destino: ${t.cidade}). Em que cidade fica esse hotel? Responda SOMENTE com JSON: {"cidade":"","uf":"","certeza":"alta|media|baixa"}`}]);if(r&&r.cidade&&/^[A-Za-z]{2}$/.test(r.uf||"")&&r.certeza!=="baixa")c=`${String(r.cidade).trim()}, ${r.uf.toUpperCase()}`}catch(e){}}
+  if(c){const v=viagens.find(x=>x.id===t.id);if(v){v.cidadeHotel=c;try{save()}catch(e){}}}
+  return c||t.cidade;
+ }
+ function cidadeEscolhida(t){return modo==="aqui"&&aqui?aqui:modo==="viagem"?t.cidade:(t.cidadeHotel||cidHotelRegra(t)||t.cidade)}
+ function chips(t){
+  const box=$("hotelOnde");if(!box||!t)return;const ch=t.cidadeHotel||cidHotelRegra(t)||t.cidade;
+  const op=[["hotel","🏨",ch+" (hotel)"]];if(n(ch)!==n(t.cidade))op.push(["viagem",iconeViagem?iconeViagem(t):"📍",t.cidade+" (viagem)"]);op.push(["aqui","📍",aqui?aqui+" (onde estou)":"Onde estou"]);
+  box.innerHTML=`<small>Procurar em:</small><div class="hotelOndeL">${op.map(o=>`<button type="button" class="${modo===o[0]?"on":""}" data-onde="${o[0]}">${o[1]} ${esc(o[2])}</button>`).join("")}</div>`;
+ }
+ const orefH=hotelReferencia;
+ hotelReferencia=function(){const t=orefH();if(!t||!flag)return t;const c=cidadeEscolhida(t);return {...t,cidade:c,hotel:modo==="hotel"?t.hotel:c}};
+ $("hotelPainel").addEventListener("click",e=>{if(e.target.closest("[data-perto]")){flag=true;setTimeout(()=>{flag=false},0)}},true);
+ $("hotelShortcut").addEventListener("click",async()=>{if($("hotelPainel").style.display==="none")return;const t=orefH();if(!t)return;chips(t);
+  if(!t.cidadeHotel){await cidHotel(t);const t2=orefH();chips(t2);mostrarNome(t2)}else mostrarNome(t)});
+ function mostrarNome(t){if(t&&$("hotelNome"))$("hotelNome").innerHTML=`🏨 <b>${esc(t.hotel)}</b> • ${esc(t.cidadeHotel||t.cidade)} <span style="opacity:.8">(viagem ${esc(t.nome)})</span>`}
+ $("hotelOnde").addEventListener("click",e=>{const b=e.target.closest("[data-onde]");if(!b)return;const t=orefH();if(!t)return;
+  if(b.dataset.onde!=="aqui"){modo=b.dataset.onde;chips(t);return}
+  if(!navigator.geolocation){alert("Este celular não deixou pegar a localização.");return}
+  b.textContent="⏳ Pegando sua localização…";
+  navigator.geolocation.getCurrentPosition(async pos=>{try{const g=await (await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${pos.coords.longitude},${pos.coords.latitude}.json?types=place&language=pt&limit=1&access_token=${MAPBOX_TOKEN}`)).json();const f=g&&g.features&&g.features[0];if(!f)throw 0;const reg=(f.context||[]).find(c=>/^region/.test(c.id));const uf=reg&&reg.short_code?String(reg.short_code).split("-").pop().toUpperCase():"";aqui=f.text+(uf?", "+uf:"");modo="aqui";chips(t);if(typeof avisar==="function")avisar("📍 Você está em "+aqui)}catch(x){chips(t);alert("Não consegui descobrir a cidade agora (sem internet?).")}},
+   err=>{chips(t);alert(err&&err.code===1?"O celular não deu permissão de localização. No iPhone: Ajustes → Privacidade → Localização, e permita para o Safari.":"Não consegui pegar a localização agora.")},{timeout:20000,maximumAge:300000});
+ });
+ const st=document.createElement("style");st.textContent=`.hotelOnde{margin:-4px 0 10px}.hotelOnde small{color:var(--muted);font-size:12px}.hotelOndeL{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.hotelOndeL button{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:6px 10px;font-size:13px;font-weight:700;color:inherit;max-width:100%}.hotelOndeL button.on{background:var(--accent);color:#fff;border-color:var(--accent)}`;document.head.appendChild(st);
 })();
 </script>
 </body>
