@@ -757,6 +757,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .chegLinha{font-size:13.5px;margin:6px 0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2,#f4f6f8)}.chegLinha small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
+<style>/* v13.4: sem número de contagem — só uma bolinha */ .payCount{font-size:0!important;padding:0!important;min-width:0!important}.payCount:not(:empty){display:inline-block!important;width:10px!important;height:10px!important;border-radius:50%!important;background:#FF9100!important;vertical-align:middle;margin-left:6px}</style>
 </head>
 <body>
 
@@ -993,6 +994,14 @@ input,textarea,select{font-size:14px;padding:9px 10px}
     <div class="field"><label>💳 Forma de pagamento</label><div class="paymentModeRow"><label class="paymentModeCard"><input type="radio" name="modoPagamentoViagem" value="avista"> <span>À vista</span></label><label class="paymentModeCard"><input type="radio" name="modoPagamentoViagem" value="parcelado"> <span>Parcelado mensal</span></label></div><div id="parcelamentoConfig" class="installmentBox" style="display:none"><div class="installmentGrid" style="margin-bottom:10px"><div class="field" style="margin:0"><label>💵 Entrada (opcional)</label><input id="fEntrada" class="moneyInput" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"></div><div class="field" style="margin:0"><label>Data da entrada</label><input id="fDataEntrada" type="date"></div></div><div class="installmentGrid"><div class="field" style="margin:0"><label>Nº de parcelas</label><input id="fParcelas" type="number" min="2" max="60" step="1" placeholder="Ex.: 6"></div><div class="field" style="margin:0"><label>1º vencimento</label><input id="fPrimeiroVenc" type="date"></div></div><div class="notice" id="parcelamentoInfo" style="margin-top:8px">As parcelas serão geradas automaticamente, mês a mês.</div><div id="parcelasAbas" class="installmentList"></div></div></div>
     <div class="field"><label>Falta pagar</label><input id="fFaltante" disabled></div>
     <div class="field">
+      <details class="payDetails" id="acompDet">
+        <summary>👥 Pessoas que vão comigo (opcional) <span class="payCount" id="acompCount"></span><span class="paySeta">▾</span></summary>
+        <div id="acompLista"></div>
+        <button type="button" class="btn secondary full" id="btnAddAcomp" style="margin:4px 0 8px">➕ Adicionar pessoa</button>
+        <div class="notice" style="margin:0 0 10px">Para quem você reservou junto e vai te pagar. Fica só para o seu controle.</div>
+      </details>
+    </div>
+    <div class="field">
       <label>🔔 Lembretes</label>
       <select id="fLembretes" multiple style="min-height:105px">
         <option value="7">7 dias antes</option>
@@ -1060,14 +1069,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
       </details>
     </div>
     
-    <div class="field">
-      <details class="payDetails" id="acompDet">
-        <summary>👥 Pessoas que vão comigo (opcional) <span class="payCount" id="acompCount"></span><span class="paySeta">▾</span></summary>
-        <div id="acompLista"></div>
-        <button type="button" class="btn secondary full" id="btnAddAcomp" style="margin:4px 0 8px">➕ Adicionar pessoa</button>
-        <div class="notice" style="margin:0 0 10px">Para quem você reservou junto e vai te pagar. Fica só para o seu controle.</div>
-      </details>
-    </div>
+    
     <div class="field"><label>Observações</label><textarea id="fObs"></textarea></div>
     <div class="actions">
       <button class="btn secondary" type="button" id="cancelar">Cancelar</button>
@@ -1159,7 +1161,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="13.3";
+const APP_VERSAO="13.4";
 const APP_DATA_VERSAO="05/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -4735,6 +4737,26 @@ $("cidadeAqui").addEventListener("click",()=>{
    err=>{chips(t);alert(err&&err.code===1?"O celular não deu permissão de localização. No iPhone: Ajustes → Privacidade → Localização, e permita para o Safari.":"Não consegui pegar a localização agora.")},{timeout:20000,maximumAge:300000});
  });
  const st=document.createElement("style");st.textContent=`.hotelOnde{margin:-4px 0 10px}.hotelOnde small{color:var(--muted);font-size:12px}.hotelOndeL{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.hotelOndeL button{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:6px 10px;font-size:13px;font-weight:700;color:inherit;max-width:100%}.hotelOndeL button.on{background:var(--accent);color:#fff;border-color:var(--accent)}`;document.head.appendChild(st);
+})();
+</script>
+<script>
+/* v13.4: 👥 quem já pagou — ✅ Pago na pessoa e bolinha verde quando todos pagaram */
+(function(){
+ const num=v=>typeof v==="number"?v:numBR(v);
+ function status(){
+  const rows=document.querySelectorAll("#acompLista .acompRow");let devendo=0,comValor=0;
+  acompForm.forEach((p,i)=>{const val=num(p.valor)||0,pg=num(p.pago)||0,ok=val>0&&pg>=val-0.005;if(val>0&&String(p.nome||"").trim()){comValor++;if(!ok)devendo++}
+   const r=rows[i];if(!r)return;let tag=r.querySelector(".acompPagoTag");
+   if(ok){if(!tag){tag=document.createElement("div");tag.className="acompPagoTag";r.insertBefore(tag,r.firstChild)}tag.textContent="✅ Pago";}
+   else if(val>0&&pg>0){if(!tag){tag=document.createElement("div");tag.className="acompPagoTag";r.insertBefore(tag,r.firstChild)}tag.textContent=`🟠 Falta ${money(val-pg)}`;tag.classList.add("falta")}
+   else if(tag)tag.remove();
+   if(tag)tag.classList.toggle("falta",!ok);
+  });
+  const c=$("acompCount");c.classList.toggle("ok",comValor>0&&devendo===0);c.title=comValor>0&&devendo===0?"Todos já pagaram":devendo?"Tem gente devendo":"";
+ }
+ const orig=renderAcompForm;renderAcompForm=function(){orig.apply(this,arguments);status()};
+ $("acompLista").addEventListener("input",()=>status());
+ const st=document.createElement("style");st.textContent=`#acompCount.ok{background:#2E9E44!important}.acompPagoTag{font-size:13px;font-weight:800;color:#2E9E44;margin:0 0 6px}.acompPagoTag.falta{color:#E65100}`;document.head.appendChild(st);
 })();
 </script>
 </body>
