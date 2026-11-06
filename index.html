@@ -1160,7 +1160,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="14.0";
+const APP_VERSAO="14.1";
 const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1369,6 +1369,7 @@ $("formViagem").onsubmit=e=>{
  lembretes:[...$("fLembretes").selectedOptions].map(o=>o.value),gastos:Math.max(numBR($("fGastos").value),0),roteiro:$("fRoteiro").value.trim(),pagamentos:[...document.querySelectorAll('input[name="pagamento"]:checked')].map(x=>x.value),origemTransporte:$("fOrigemTransporte").value.trim(),destinoTransporte:$("fDestinoTransporte").value.trim(),status:pago>=total&&total>0?"paga":"pagar"};
  if(obj.modoPagamento==="parcelado"){if(obj.numeroParcelas<2){alert("Informe pelo menos 2 parcelas.");return}if(!obj.primeiroVencimento){alert("Informe o primeiro vencimento.");return}obj.entrada=entradaForm();obj.dataEntrada=obj.entrada?($("fDataEntrada").value||""):"";if(obj.entrada>obj.valorTotal){alert("A entrada não pode ser maior que o valor total.");return}obj.parcelas=gerarParcelas(Math.max(obj.valorTotal-obj.entrada,0),obj.numeroParcelas,obj.primeiroVencimento,parcelasForm);obj.valorPago=somaPagoViagem(obj);obj.status=obj.valorTotal>0&&faltanteViagem(obj)<=0?"paga":"pagar"}else{obj.parcelas=[]}if(obj.dataVolta&&obj.dataVolta<obj.data){alert("A data de volta não pode ser anterior à ida.");return}
  if(window.lerAcompForm)obj.acompanhantes=lerAcompForm();
+ if(window.precoLer)Object.assign(obj,precoLer());
  {const velha=editId&&viagens.find(x=>x.id===editId);if(velha)["mala","proximaFixada","etiquetas","nota","despesas","cadeado"].forEach(k=>{if(velha[k]!==undefined&&obj[k]===undefined)obj[k]=velha[k]})}
  if(editId) viagens=viagens.map(x=>x.id===editId?obj:x);else viagens.push(obj);
  save();const ideiaOrigem=ideiaEmEdicao;closeModal();if(ideiaOrigem){ideias=ideias.filter(x=>x.id!==ideiaOrigem);saveIdeias();renderIdeias()}render();
@@ -1420,7 +1421,7 @@ $("ideiaSugestoes").addEventListener("click",e=>{
 $("ideiaSalvar").onclick=()=>{
  const destino=$("ideiaDestino").value.trim();
  if(!destino){$("ideiaDestino").focus();$("ideiaSugestoes").innerHTML=`<div class="empty">Digite um destino para salvar.</div>`;return}
- ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:ideiaFotoDados.valorTotal||"",parcelasMax:ideiaFotoDados.parcelasMax||"",horaSaida:ideiaFotoDados.horaSaida||"",horaVolta:ideiaFotoDados.horaVolta||"",localSaida:ideiaFotoDados.localSaida||""});ideiaFotoDados={};$("ideiaStatus").style.display="none";
+ ideias.unshift({id:Date.now(),destino,cidade:ideiaSel?.cidade||ideiaFotoDados.cidade||"",lat:ideiaSel?.lat||"",lon:ideiaSel?.lon||"",obs:$("ideiaObs").value.trim(),criado:localDate(),data:ideiaFotoDados.data||"",dataVolta:ideiaFotoDados.dataVolta||"",hotel:ideiaFotoDados.hotel||"",valorTotal:ideiaFotoDados.valorTotal||"",parcelasMax:ideiaFotoDados.parcelasMax||"",horaSaida:ideiaFotoDados.horaSaida||"",horaVolta:ideiaFotoDados.horaVolta||"",localSaida:ideiaFotoDados.localSaida||"",tabela:ideiaFotoDados.tabela||null});ideiaFotoDados={};$("ideiaStatus").style.display="none";
  saveIdeias();$("ideiaDestino").value="";$("ideiaObs").value="";$("ideiaSugestoes").innerHTML="";ideiaSel=null;renderIdeias();
 };
 $("listaIdeias").addEventListener("click",e=>{
@@ -2328,7 +2329,7 @@ function carregarTesseract(){if(window.Tesseract)return Promise.resolve();if(__t
 function prepararImagem(file){return new Promise((ok,erro)=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const f=Math.min(2,2000/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*f);c.height=Math.round(img.height*f);const g=c.getContext("2d");g.drawImage(img,0,0,c.width,c.height);/* cinza + contraste para letras brancas em fundo colorido */const d=g.getImageData(0,0,c.width,c.height),px=d.data;for(let i=0;i<px.length;i+=4){let y=.299*px[i]+.587*px[i+1]+.114*px[i+2];y=y<128?Math.max(0,y-25):Math.min(255,y+25);px[i]=px[i+1]=px[i+2]=y}g.putImageData(d,0,0);ok(c)};img.onerror=erro;img.src=fr.result};fr.onerror=erro;fr.readAsDataURL(file)})}
 $("fPostImg").addEventListener("change",async e=>{
  const f=e.target.files[0];if(!f)return;const st=$("postStatus");
- if(typeof iaChave==="function"&&iaChave()){st.textContent="🤖 A IA está lendo o post…";try{iaMenuAtualiza("lendo");const c=await lerCartazIA(f);iaMenuAtualiza();const r2=cartazParaPost(c);if(r2.nome||r2.cidade||r2.data){preencherPeloPost(r2);st.innerHTML="🤖 "+st.innerHTML;$("btnColarPost").style.display="block";e.target.value="";return}}catch(err){iaMenuAtualiza()}}
+ if(typeof iaChave==="function"&&iaChave()){st.textContent="🤖 A IA está lendo o post…";try{iaMenuAtualiza("lendo");const c=await lerCartazIA(f);iaMenuAtualiza();const r2=cartazParaPost(c);if(r2.nome||r2.cidade||r2.data){preencherPeloPost(r2);if(window.precoDoCartaz)precoDoCartaz(c);st.innerHTML="🤖 "+st.innerHTML;$("btnColarPost").style.display="block";e.target.value="";return}}catch(err){iaMenuAtualiza()}}
  st.textContent="📷 Preparando a leitura do post… (a 1ª vez demora um pouco)";
  try{await carregarTesseract()}catch(err){st.innerHTML="Não consegui carregar o leitor de imagem. Ele precisa de internet — confira a conexão e tente de novo.";return}
  try{
@@ -2383,7 +2384,7 @@ function renderAcompForm(){
  $("acompCount").textContent=acompForm.length?String(acompForm.length):"";
  $("acompLista").innerHTML=acompForm.map((p,i)=>`<div class="acompRow"><input class="acompNome" data-ac-i="${i}" data-ac-k="nome" placeholder="Nome (ex.: Adriana)" value="${esc(p.nome||"")}"><div class="acompVals"><label>Valor da parte<input type="text" inputmode="decimal" placeholder="0,00" data-ac-i="${i}" data-ac-k="valor" value="${p.valor?fmtBR(p.valor):""}"></label><label>Já me pagou<input type="text" inputmode="decimal" placeholder="0,00" data-ac-i="${i}" data-ac-k="pago" value="${p.pago?fmtBR(p.pago):""}"></label><button type="button" class="iconBtn trashBtn" data-ac-del="${i}" aria-label="Tirar pessoa" title="Tirar pessoa">🗑️</button></div></div>`).join("");
 }
-function lerAcompForm(){return acompForm.map(p=>({nome:String(p.nome||"").trim(),valor:Math.max(numBR(p.valor),0),pago:Math.max(numBR(p.pago),0),historico:p.historico||[]})).filter(p=>p.nome)}
+function lerAcompForm(){return acompForm.map(p=>({nome:String(p.nome||"").trim(),valor:Math.max(numBR(p.valor),0),pago:Math.max(numBR(p.pago),0),historico:p.historico||[],tipo:p.tipo||"",idade:p.idade!==undefined&&p.idade!==""?Number(p.idade):""})).filter(p=>p.nome)}
 $("acompLista").addEventListener("input",e=>{const el=e.target.closest("[data-ac-i]");if(!el)return;acompForm[Number(el.dataset.acI)][el.dataset.acK]=el.value;$("acompCount").textContent=acompForm.length?String(acompForm.length):""});
 $("acompLista").addEventListener("click",e=>{const d=e.target.closest("[data-ac-del]");if(!d)return;const p=acompForm[Number(d.dataset.acDel)];if(p&&p.nome&&!confirm(`Tirar ${p.nome} desta viagem?`))return;acompForm.splice(Number(d.dataset.acDel),1);renderAcompForm()});
 $("btnAddAcomp").onclick=()=>{acompForm.push({nome:"",valor:numBR($("fTotal").value)||0,pago:0,historico:[]});renderAcompForm();const ins=$("acompLista").querySelectorAll(".acompNome");ins[ins.length-1]?.focus()};
@@ -4226,13 +4227,14 @@ window.pareceLixo=pareceLixo;function pareceLixo(s){
 async function lerCartazIA(f){
  const b64=await fotoParaIA(f,1800);
  const r=await iaPedir([{text:`Esta é a foto/print de um cartaz de excursão ou viagem no Brasil. Leia e responda SOMENTE com JSON:
-{"parcelasOnde":"","titulo":"","cidade":"","uf":"","data":"AAAA-MM-DD","dataVolta":"AAAA-MM-DD","horaSaida":"HH:MM","horaVolta":"HH:MM","localSaida":"","hotel":"","valor":0,"valorPorPessoa":true,"parcelasSemJuros":0,"inclusos":[],"contatos":[],"tipo":"excursao|aviao|viagem"}
+{"parcelasOnde":"","titulo":"","cidade":"","uf":"","data":"AAAA-MM-DD","dataVolta":"AAAA-MM-DD","horaSaida":"HH:MM","horaVolta":"HH:MM","localSaida":"","hotel":"","valor":0,"valorPorPessoa":true,"parcelasSemJuros":0,"inclusos":[],"contatos":[],"tipo":"excursao|aviao|viagem","tabela":{"precos":[{"quarto":"duplo","normal":0,"desconto":0}],"descontoPara":[],"criancas":[{"de":0,"ate":0,"valor":0,"pagaPercentual":0,"gratis":false,"texto":""}],"reserva":0,"reservaPorPessoa":true,"obs":""}}
 - titulo: nome do passeio como no cartaz (ex.: "Romaria pra Aparecida").
 - cidade/uf: cidade de DESTINO e sigla do estado. O "uf" NUNCA fica vazio: se o cartaz não disser o estado, deduza pelo contexto do cartaz inteiro. Exemplos: romaria, Nossa Senhora Aparecida, Basílica, Santuário Nacional, "Aparecida do Norte" = "Aparecida","SP" (nunca Aparecida de Goiânia); Beto Carrero = "Penha","SC"; Canção Nova = "Cachoeira Paulista","SP"; Hopi Hari = "Vinhedo","SP"; Thermas dos Laranjais = "Olímpia","SP"; Gramado/Natal Luz = "Gramado","RS"; Bonito (flutuação, grutas) = "Bonito","MS". Se ainda houver mais de uma cidade com esse nome, escolha a turística mais conhecida; as excursões saem de Tatuí-SP, então na dúvida prefira a que faz sentido para quem sai do interior de São Paulo.
 - data/dataVolta: datas de saída e retorno (ano com 4 dígitos). horaSaida/horaVolta: horários.
 - hotel: nome do hotel/pousada da hospedagem (ex.: "Fênix Hotel"). Não confunda com frases tipo "o hotel conta com".
 - valor: preço principal em reais (número, ex.: 750). parcelasSemJuros: número de vezes sem juros se tiver (ex.: 3), senão 0. parcelasOnde: onde vale esse parcelamento sem juros: "cartao" (no cartão de crédito), "direto" (direto com a agência/hotel, pix, boleto ou carnê) ou "" se não disser.
 - inclusos: itens inclusos curtos. contatos: "Nome (DDD) número".
+- tabela: leia a TABELA DE PREÇOS inteira do cartaz. precos: uma linha por tipo de quarto/apartamento ("individual","duplo","triplo","quadruplo","quintuplo"; use "unico" se só houver um preço), com normal = preço cheio por pessoa e desconto = preço com desconto por pessoa (0 se não tiver). descontoPara: quem tem direito ao desconto, do jeito que o cartaz escreve (ex.: "melhor idade", "estudantes", "PCD", "acompanhante", "professores", "funcionário público"). criancas: cada faixa de idade de criança: de/ate (anos), valor em reais, ou pagaPercentual (quantos % do preço de adulto ela paga), ou gratis:true; texto = a frase curta do cartaz. reserva: valor da reserva/sinal/entrada se o cartaz disser (reservaPorPessoa true se for por pessoa). obs: regras curtas (ex.: "desconto mediante comprovante"). Se o cartaz não falar de desconto ou de criança, deixe a lista vazia — NUNCA invente desconto, preço de criança ou reserva.
 Deixe vazio o que não estiver no cartaz. Não invente.`},{inline_data:{mime_type:"image/jpeg",data:b64}}]);
  return r||{};
 }
@@ -4247,7 +4249,7 @@ window.lerIdeiaFotoIA=lerIdeiaFotoIA;async function lerIdeiaFotoIA(e){
  if(!destino){st.textContent="🤖 A IA não achou o destino. Usando o leitor normal…";return lerIdeiaFoto(e)}
  const dt=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||"")?v:"",hr=v=>/^\d{1,2}:\d{2}$/.test(v||"")?v.padStart(5,"0"):"";
  const valor=Number(String(r.valor||"").replace(",","."))||0,parc=Number(r.parcelasSemJuros)||0;
- ideiaSel=null;ideiaFotoDados={cidade,data:dt(r.data),dataVolta:dt(r.dataVolta),hotel:ok(r.hotel)?r.hotel.trim():"",valorTotal:valor||"",parcelasMax:parc||"",horaSaida:hr(r.horaSaida),horaVolta:hr(r.horaVolta),localSaida:ok(r.localSaida)?r.localSaida.trim():""};
+ ideiaSel=null;ideiaFotoDados={cidade,data:dt(r.data),dataVolta:dt(r.dataVolta),hotel:ok(r.hotel)?r.hotel.trim():"",valorTotal:valor||"",parcelasMax:parc||"",horaSaida:hr(r.horaSaida),horaVolta:hr(r.horaVolta),localSaida:ok(r.localSaida)?r.localSaida.trim():"",tabela:(window.normTabela?normTabela(r.tabela,valor):null)};
  $("ideiaDestino").value=destino;
  const L=[];
  if(titulo)L.push("🏞️ "+titulo);
@@ -4257,6 +4259,7 @@ window.lerIdeiaFotoIA=lerIdeiaFotoIA;async function lerIdeiaFotoIA(e){
  if(parc)L.push(r.parcelasOnde==="cartao"?`💳 Até ${parc}x sem juros no cartão`:r.parcelasOnde==="direto"?`🧾 Até ${parc}x sem juros direto (não é no cartão)`:`🧾 Até ${parc}x sem juros`);
  if(Array.isArray(r.inclusos)&&r.inclusos.length)L.push("✅ Incluso: "+r.inclusos.slice(0,6).join(", "));
  if(Array.isArray(r.contatos)&&r.contatos.length)L.push("📞 "+r.contatos.slice(0,3).join(" / "));
+ if(ideiaFotoDados.tabela&&window.tabelaResumo)L.push(...tabelaResumo(ideiaFotoDados.tabela));
  $("ideiaObs").value=L.join(" • ");
  st.textContent="🤖 ✅ A IA leu o cartaz. Confira e toque em Salvar.";e.target.value="";
 }
@@ -4926,6 +4929,129 @@ $("cidadeAqui").addEventListener("click",()=>{
  document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(r=>r.addEventListener("change",()=>{marcaSem();info("");if(r.checked&&r.value==="parcelado"&&!$("fParcelas").value)calc(true)}));
  const om=openModal;openModal=function(){const r=om.apply(this,arguments);try{info("");marcaSem()}catch(e){}return r};
  const st=document.createElement("style");st.textContent=`.autoParc{margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--line)}.autoParcL{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.autoParcL label{font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}.autoParcL select{width:auto;padding:6px 8px;font-size:14px}#apSemEntrada{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;color:inherit}#apSemEntrada.on{background:var(--accent);color:#fff;border-color:var(--accent)}.apInfo{font-size:13px;margin-top:6px}.apInfo:empty{display:none}`;document.head.appendChild(st);
+})();
+</script>
+<script>
+/* v14.1: tabela de preços do cartaz (quarto, desconto, criança, reserva) e tipo de cada pessoa */
+(function(){
+ const NRM=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();
+ const NUM=v=>{if(typeof v==="number")return isFinite(v)?v:0;let t=String(v??"").replace(/[^\d,.-]/g,"");if(/,\d{1,2}$/.test(t))t=t.replace(/\./g,"").replace(",",".");else t=t.replace(/,/g,"");return Number(t)||0};
+ const TIPOS=[["normal","🧑 Normal"],["idoso","👴 Melhor idade"],["estudante","🎓 Estudante"],["professor","👩‍🏫 Professor / func. público"],["pcd","♿ PCD"],["crianca","🧒 Criança"]];
+ const TIPO_NOME={normal:"Normal",idoso:"Melhor idade",estudante:"Estudante",professor:"Professor / func. público",pcd:"PCD",crianca:"Criança"};
+ const TIPO_RE={idoso:/idos|melhor idade|terceira idade|aposentad|\b6[05]\b|60\+|65\+/,estudante:/estudant|universitari/,professor:/professor|docente|funcionari|servidor|publico/,pcd:/pcd|deficien|necessidades especiais|portador/};
+ const QUARTOS=["individual","duplo","triplo","quadruplo","quintuplo"];
+ const Q_NOME={individual:"Individual",duplo:"Duplo",triplo:"Triplo",quadruplo:"Quádruplo",quintuplo:"Quíntuplo",unico:"Preço único"};
+ function chaveQuarto(q){q=NRM(q);if(/indiv|single|sozinh/.test(q))return"individual";if(/dupl|casal|double|\b2\b/.test(q))return"duplo";if(/tripl|\b3\b/.test(q))return"triplo";if(/quadr|\b4\b/.test(q))return"quadruplo";if(/quint|\b5\b/.test(q))return"quintuplo";return"unico"}
+ window.normTabela=function(t,valor){
+  if(!t||typeof t!=="object")return null;
+  const precos={};let P=t.precos;if(P&&!Array.isArray(P)&&typeof P==="object")P=Object.keys(P).map(k=>({quarto:k,...(typeof P[k]==="object"?P[k]:{normal:P[k]})}));
+  (Array.isArray(P)?P:[]).forEach(r=>{if(!r)return;const n=NUM(r.normal),d=NUM(r.desconto);if(n>0){const k=chaveQuarto(r.quarto);if(!precos[k])precos[k]={normal:n,desconto:d>0&&d<n?d:0}}});
+  const val=NUM(valor);if(!Object.keys(precos).length&&val>0)precos.unico={normal:val,desconto:0};
+  const descontoPara=(Array.isArray(t.descontoPara)?t.descontoPara:[]).map(x=>String(x||"").trim()).filter(Boolean).slice(0,10);
+  const criancas=(Array.isArray(t.criancas)?t.criancas:[]).map(c=>{if(!c)return null;const valor=NUM(c.valor),pct=NUM(c.pagaPercentual),gratis=c.gratis===true||/gratis|free|cortesia|nao paga/.test(NRM(c.texto));if(!(valor>0||pct>0||gratis))return null;const de=Math.max(0,Math.floor(NUM(c.de)));let ate=Math.floor(NUM(c.ate));if(!(ate>=de))ate=de?de+5:11;return{de,ate,valor:gratis?0:valor,pagaPercentual:gratis?0:pct,gratis,texto:String(c.texto||"").trim().slice(0,120)}}).filter(Boolean).sort((a,b)=>a.de-b.de);
+  const reserva=NUM(t.reserva);
+  if(!Object.keys(precos).length&&!descontoPara.length&&!criancas.length&&!(reserva>0))return null;
+  return{precos,descontoPara,criancas,reserva:reserva>0?reserva:0,reservaPorPessoa:t.reservaPorPessoa!==false,obs:String(t.obs||"").trim().slice(0,200)};
+ };
+ const R=v=>"R$ "+fmtBR(v);
+ function criancaTxt(c){return c.texto||`${c.de} a ${c.ate} anos: ${c.gratis?"grátis":c.valor>0?R(c.valor):`paga ${c.pagaPercentual}%`}`}
+ window.tabelaResumo=function(t){
+  if(!t)return[];const L=[];
+  const ks=QUARTOS.concat("unico").filter(k=>t.precos&&t.precos[k]);
+  if(ks.length)L.push("🏷️ Por pessoa: "+ks.map(k=>`${Q_NOME[k]} ${R(t.precos[k].normal)}${t.precos[k].desconto?` (c/ desconto ${R(t.precos[k].desconto)})`:""}`).join(", "));
+  if(t.descontoPara.length)L.push("🎟️ Desconto para: "+t.descontoPara.join(", "));
+  if(t.criancas.length)L.push("🧒 Crianças: "+t.criancas.map(criancaTxt).join("; "));
+  if(t.reserva)L.push("💵 Reserva "+R(t.reserva)+(t.reservaPorPessoa?" por pessoa":""));
+  return L;
+ };
+ let tab=null,meuTipo="normal",meuIdade="",quarto="";
+ function descTem(tipo){return tab.descontoPara.some(x=>TIPO_RE[tipo]&&TIPO_RE[tipo].test(NRM(x)))}
+ function quartoAuto(n){return n<=1?"duplo":n===2?"duplo":n===3?"triplo":n===4?"quadruplo":"quintuplo"}
+ function linhaQuarto(n){
+  const ps=tab.precos,av=[];
+  if(ps.unico&&!QUARTOS.some(k=>ps[k]))return{k:"unico",row:ps.unico,av};
+  let q=quarto||(n===1&&ps.individual?"individual":quartoAuto(n));
+  if(!ps[q]){const i=QUARTOS.indexOf(q);let alt="";for(let d=1;d<5&&!alt;d++){if(ps[QUARTOS[i-d]])alt=QUARTOS[i-d];else if(ps[QUARTOS[i+d]])alt=QUARTOS[i+d]}if(!alt&&ps.unico)alt="unico";if(!alt)return null;av.push(`O cartaz não tem preço de quarto ${Q_NOME[q].toLowerCase()}; usei ${Q_NOME[alt].toLowerCase()}. ⚠️ Confirme com a agência.`);q=alt}
+  if(n===1&&q!=="individual")av.push("Sozinho no quarto costuma ter outro preço. ⚠️ Confirme com a agência.");
+  return{k:q,row:ps[q],av};
+ }
+ function precoPessoa(p,row){
+  const base=row.normal,t=p.tipo||"normal";
+  if(t==="normal")return{v:base};
+  if(t==="crianca"){
+   const id=p.idade===""||p.idade==null?NaN:Number(p.idade);
+   if(!tab.criancas.length)return{v:base,av:"O cartaz não fala de preço de criança — usei o preço normal. ⚠️ Confirme com a agência."};
+   if(!isFinite(id))return{v:base,av:"Coloque a idade da criança para ver o preço dela."};
+   const c=tab.criancas.find(c=>id>=c.de&&id<=c.ate);
+   if(!c){const max=Math.max(...tab.criancas.map(c=>c.ate));if(id>max)return{v:base,ob:`${id} anos já paga como adulto`};return{v:base,av:`O cartaz não diz o preço para ${id} anos — usei o normal. ⚠️ Confirme com a agência.`}}
+   const v=c.gratis?0:c.valor>0?c.valor:Math.round(base*c.pagaPercentual)/100;
+   return{v,ob:`${id} anos — ${criancaTxt(c)}`};
+  }
+  if(row.desconto>0&&descTem(t))return{v:row.desconto,ob:"com desconto"};
+  if(row.desconto>0&&!tab.descontoPara.length)return{v:base,av:"O cartaz tem preço com desconto mas não diz para quem — usei o normal. ⚠️ Confirme com a agência."};
+  return{v:base,av:`O cartaz não mostra desconto para ${TIPO_NOME[t].toLowerCase()} — usei o normal. ⚠️ Confirme com a agência.`};
+ }
+ function pessoas(){return[{nome:"Eu",tipo:meuTipo,idade:meuIdade}].concat(acompForm.map((p,i)=>({nome:String(p.nome||"").trim()||`Pessoa ${i+2}`,tipo:p.tipo||"normal",idade:p.idade??""})))}
+ function calcular(){
+  const L=pessoas(),q=linhaQuarto(L.length);if(!q)return null;
+  const itens=L.map(p=>({p,...precoPessoa(p,q.row)}));
+  return{q,itens,total:itens.reduce((s,x)=>s+x.v,0)};
+ }
+ const opts=sel=>TIPOS.map(([k,r])=>`<option value="${k}"${k===(sel||"normal")?" selected":""}>${r}</option>`).join("");
+ function reservaValor(){if(!tab||!tab.reserva)return 0;return tab.reservaPorPessoa?tab.reserva*(1+acompForm.length):tab.reserva}
+ function render(){
+  const box=$("precoField");if(!box)return;box.style.display=tab?"":"none";
+  const rb=$("apReserva");
+  if(rb){const rv=reservaValor();rb.style.display=rv?"":"none";if(rv){rb.textContent=`💵 Entrada de ${R(rv)} (reserva do cartaz${tab.reservaPorPessoa&&acompForm.length?`, ${R(tab.reserva)}/pessoa`:""})`;rb.classList.toggle("on",Math.abs(numBR($("fEntrada").value)-rv)<0.01)}}
+  if(!tab)return;
+  $("prMeuTipo").value=meuTipo;$("prMeuIdade").style.display=meuTipo==="crianca"?"":"none";if(document.activeElement!==$("prMeuIdade"))$("prMeuIdade").value=meuIdade;
+  const n=1+acompForm.length,ps=tab.precos,soUnico=ps.unico&&!QUARTOS.some(k=>ps[k]);
+  $("prQuartoL").style.display=soUnico?"none":"";
+  if(!soUnico){const auto=n===1&&ps.individual?"individual":quartoAuto(n);$("prQuarto").innerHTML=`<option value="">Automático (${n} ${n>1?"pessoas":"pessoa"} → ${Q_NOME[auto].toLowerCase()})</option>`+QUARTOS.filter(k=>ps[k]).map(k=>`<option value="${k}"${k===quarto?" selected":""}>${Q_NOME[k]} — ${R(ps[k].normal)}${ps[k].desconto?" / "+R(ps[k].desconto):""}</option>`).join("")}
+  const c=calcular();
+  if(!c){$("prLista").innerHTML=`<div class="prAv">⚠️ Não achei os preços no cartaz. Coloque o valor à mão e confirme com a agência.</div>`;return}
+  $("prLista").innerHTML=c.q.av.map(a=>`<div class="prAv">${esc(a)}</div>`).join("")+c.itens.map(x=>`<div class="prLin"><span>${x.p.nome==="Eu"?"👤 <b>Eu</b>":"👤 "+esc(x.p.nome)} <small>${TIPOS.find(t=>t[0]===(x.p.tipo||"normal"))[1]}${x.ob?" · "+esc(x.ob):""}</small></span><b>${R(x.v)}</b></div>${x.av?`<div class="prAv">${esc(x.av)}</div>`:""}`).join("")+`<div class="prLin prTot"><span>Total (${Q_NOME[c.q.k].toLowerCase()}) → vai no Valor total</span><b>${R(c.total)}</b></div>`+(tab.descontoPara.length?`<small class="prMini">🎟️ Desconto para: ${esc(tab.descontoPara.join(", "))}</small>`:"")+(tab.criancas.length?`<small class="prMini">🧒 ${esc(tab.criancas.map(criancaTxt).join("; "))}</small>`:"")+(tab.obs?`<small class="prMini">ℹ️ ${esc(tab.obs)}</small>`:"");
+ }
+ function aplicar(){
+  if(!tab)return render();const c=calcular();if(!c)return render();
+  $("fTotal").value=fmtBR(c.total);["input","change"].forEach(ev=>$("fTotal").dispatchEvent(new Event(ev,{bubbles:true})));
+  c.itens.slice(1).forEach((x,i)=>{if(acompForm[i])acompForm[i].valor=x.v});
+  renderAcompForm();
+  if(document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value==="parcelado"&&$("fParcelas").value&&$("apCalc"))$("apCalc").click();
+ }
+ window.precoAplicar=aplicar;
+ window.precoDoCartaz=function(c){const t=normTabela(c&&c.tabela,c&&c.valor);if(!t)return;tab=t;quarto="";aplicar()};
+ window.precoLer=function(){return tab?{tabela:tab,meuTipo,meuIdade:meuTipo==="crianca"&&meuIdade!==""?Number(meuIdade):"",quarto}:{}};
+ // caixa no formulário
+ const ad=$("acompDet");const fld=ad&&ad.closest(".field");
+ if(fld)fld.insertAdjacentHTML("beforebegin",`<div class="field" id="precoField" style="display:none"><div class="precoBox"><b>🏷️ Preço do cartaz por pessoa</b><div class="prRow"><label>Eu vou como <select id="prMeuTipo">${opts("normal")}</select></label><input id="prMeuIdade" type="number" inputmode="numeric" min="0" max="17" placeholder="idade" style="display:none"></div><div class="prRow" id="prQuartoL"><label>Quarto <select id="prQuarto"></select></label></div><div id="prLista"></div><button type="button" class="prLink" id="prAbrirAcomp">👥 Quem vai junto? Escolha o tipo de cada pessoa</button></div></div>`);
+ $("prMeuTipo").addEventListener("change",e=>{meuTipo=e.target.value;aplicar()});
+ $("prMeuIdade").addEventListener("change",e=>{meuIdade=e.target.value;aplicar()});
+ $("prQuarto").addEventListener("change",e=>{quarto=e.target.value;aplicar()});
+ $("prAbrirAcomp").addEventListener("click",()=>{$("acompDet").open=true;if(!acompForm.length)$("btnAddAcomp").click();else $("acompDet").scrollIntoView({block:"start",behavior:"smooth"})});
+ // tipo de cada pessoa que vai junto
+ const oR=renderAcompForm;renderAcompForm=function(){
+  const r=oR.apply(this,arguments);
+  document.querySelectorAll("#acompLista .acompRow").forEach((row,i)=>{const p=acompForm[i];if(!p)return;const nm=row.querySelector(".acompNome");const h=`<div class="prRow acTipo"><select data-ac-i="${i}" data-ac-k="tipo" aria-label="Tipo">${opts(p.tipo)}</select><input data-ac-i="${i}" data-ac-k="idade" type="number" inputmode="numeric" min="0" max="17" placeholder="idade" value="${p.idade??""}" style="${p.tipo==="crianca"?"":"display:none"}"></div>`;if(nm)nm.insertAdjacentHTML("afterend",h);else row.insertAdjacentHTML("afterbegin",h)});
+  render();return r};
+ $("acompLista").addEventListener("change",e=>{const el=e.target.closest('[data-ac-k="tipo"],[data-ac-k="idade"]');if(!el)return;acompForm[Number(el.dataset.acI)][el.dataset.acK]=el.value;if(tab)aplicar();else renderAcompForm()});
+ $("acompLista").addEventListener("click",e=>{if(e.target.closest("[data-ac-del]")&&tab)setTimeout(aplicar,0)});
+ $("acompLista").addEventListener("input",e=>{if(tab&&e.target.closest('[data-ac-k="nome"]'))render()});
+ $("btnAddAcomp").addEventListener("click",()=>{if(tab)aplicar()});
+ // carregar ao abrir/editar
+ const oC=carregarAcompForm;carregarAcompForm=function(t){tab=t&&t.tabela?normTabela(t.tabela):null;meuTipo=t&&t.meuTipo||"normal";meuIdade=t&&t.meuIdade!=null?String(t.meuIdade):"";quarto=t&&t.quarto||"";return oC.apply(this,arguments)};
+ window.carregarAcompForm=carregarAcompForm;
+ const oI=abrirIdeiaComoViagem;abrirIdeiaComoViagem=function(id){const r=oI.apply(this,arguments);const i=ideias.find(x=>x.id===id);if(i&&i.tabela){tab=normTabela(i.tabela);if(tab)aplicar()}return r};
+ window.abrirIdeiaComoViagem=abrirIdeiaComoViagem;
+ // entrada sugerida pela reserva
+ const L=document.querySelector(".autoParcL");
+ if(L){L.insertAdjacentHTML("beforeend",`<button type="button" id="apReserva" style="display:none"></button>`);
+  $("apReserva").addEventListener("click",()=>{const v=reservaValor();if(!v)return;$("fEntrada").value=fmtBR(v);["input","change"].forEach(ev=>$("fEntrada").dispatchEvent(new Event(ev,{bubbles:true})));render();if($("fData").value&&numBR($("fTotal").value))$("apCalc").click()});
+  $("fEntrada").addEventListener("input",()=>render());
+  let tm;$("fEntrada").addEventListener("change",e=>{if(!e.isTrusted)return;clearTimeout(tm);tm=setTimeout(()=>{if(document.querySelector('input[name="modoPagamentoViagem"]:checked')?.value==="parcelado"&&$("fData").value&&numBR($("fTotal").value)&&$("fParcelas").value)$("apCalc").click()},100)});
+ }
+ render();
+ const st=document.createElement("style");st.textContent=`.precoBox{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--panel2)}.prRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}.prRow label{font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0}.prRow select{width:auto;max-width:100%;padding:6px 8px;font-size:14px}.prRow input[type=number]{width:80px;padding:6px 8px;font-size:14px}.acTipo{margin:6px 0}#prLista{margin-top:8px}.prLin{display:flex;justify-content:space-between;gap:8px;align-items:baseline;padding:4px 0;font-size:14px;border-bottom:1px dashed var(--line)}.prLin small{opacity:.75;display:block}.prLin>b{white-space:nowrap}.prTot{border-bottom:0;font-size:15px}.prAv{font-size:12.5px;color:#b45309;margin:2px 0 4px}.prMini{display:block;font-size:12px;opacity:.75;margin-top:4px}.prLink{background:none;border:0;color:var(--accent);font-weight:700;font-size:13px;padding:8px 0 0;text-align:left}#apReserva{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;color:inherit}#apReserva.on{background:var(--accent);color:#fff;border-color:var(--accent)}`;document.head.appendChild(st);
 })();
 </script>
 </body>
