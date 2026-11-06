@@ -1160,7 +1160,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="14.2";
+const APP_VERSAO="14.3";
 const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -5061,6 +5061,32 @@ $("cidadeAqui").addEventListener("click",()=>{
  render();
  const st=document.createElement("style");st.textContent=`.precoBox{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--panel2)}.prRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}.prRow label{font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0}.prRow select{width:auto;max-width:100%;padding:6px 8px;font-size:14px}.prRow input[type=number]{width:80px;padding:6px 8px;font-size:14px}.acTipo{margin:6px 0}#prLista{margin-top:8px}.prLin{display:flex;justify-content:space-between;gap:8px;align-items:baseline;padding:4px 0;font-size:14px;border-bottom:1px dashed var(--line)}.prLin small{opacity:.75;display:block}.prLin>b{white-space:nowrap}.prTot{border-bottom:0;font-size:15px}.prAv{font-size:12.5px;color:#b45309;margin:2px 0 4px}.prMini{display:block;font-size:12px;opacity:.75;margin-top:4px}.prLink{background:none;border:0;color:var(--accent);font-weight:700;font-size:13px;padding:8px 0 0;text-align:left}#apReserva{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;color:inherit}#apReserva.on{background:var(--accent);color:#fff;border-color:var(--accent)}`;document.head.appendChild(st);
 })();
+</script>
+<script>
+/* v14.3: card da ideia compacto — resumo curto e o resto do cartaz numa setinha; contador da ideia vira bolinha */
+(function(){
+ const CURTO=/^(🏞️|📅|🏨|💰)/;
+ const o=renderIdeias;renderIdeias=function(){
+  const r=o.apply(this,arguments);
+  try{
+   const q=$("ideiasQtd");if(q){q.textContent="";q.classList.toggle("ideiaDotOn",ideias.length>0);q.title=ideias.length?"Tem ideia salva":""}
+   document.querySelectorAll("#listaIdeias .ideaItem").forEach(it=>{
+    const b=it.querySelector("[data-idea-edit],[data-idea-del]");if(!b)return;const id=Number(b.dataset.ideaEdit||b.dataset.ideaDel),i=ideias.find(x=>x.id===id);if(!i||!i.obs)return;
+    const sm=[...it.querySelectorAll(".ideaInfo small")].find(s=>s.textContent===i.obs);if(!sm)return;
+    let partes=i.obs.split(" • ").map(x=>x.trim()).filter(Boolean);
+    if(i.tabela&&window.tabelaResumo){const tr=tabelaResumo(i.tabela);const tem=tr.map(x=>x.slice(0,4));partes=partes.filter(p=>!/^(🏷️|🎟️|🧒|💵)/.test(p));partes.push(...tr)}
+    const curto=partes.filter(p=>CURTO.test(p)),resto=partes.filter(p=>!CURTO.test(p));
+    if(!resto.length||partes.length<3)return;
+    const menor=i.tabela&&Object.values(i.tabela.precos||{}).reduce((m,x)=>Math.min(m,x.desconto||x.normal),Infinity);
+    const extra=isFinite(menor)&&menor>0?`<small>🏷️ A partir de ${money(menor)} por pessoa</small>`:"";
+    sm.outerHTML=`<small class="ideiaCurto">${curto.map(esc).join("<br>")}</small>${extra}<details class="ideiaCartaz"><summary>📄 Ver tudo do cartaz <span class="paySeta">▾</span></summary><ul>${resto.map(p=>{if(i.tabela&&/^🏷️ Por pessoa/.test(p)){const Q={individual:"Individual",duplo:"Duplo",triplo:"Triplo",quadruplo:"Quádruplo",quintuplo:"Quíntuplo",unico:"Preço"};const ps=i.tabela.precos||{};return `<li>🏷️ <b>Preço por pessoa</b><table class="ideiaTab"><tr><th></th><th>Normal</th><th>Desconto</th></tr>${Object.keys(Q).filter(k=>ps[k]).map(k=>`<tr><td>${Q[k]}</td><td>${money(ps[k].normal)}</td><td>${ps[k].desconto?money(ps[k].desconto):"—"}</td></tr>`).join("")}</table></li>`}return `<li>${esc(p)}</li>`}).join("")}</ul></details>`;
+   });
+  }catch(e){}
+  return r};
+ const st=document.createElement("style");st.textContent=`#ideiasQtd.ideiaDotOn{display:inline-block;width:12px;height:12px;min-width:0;padding:0;border-radius:50%;background:#f59e0b;border:0}#ideiasQtd:empty:not(.ideiaDotOn){display:none}.ideiaCartaz{margin-top:6px;font-size:13px}.ideiaCartaz summary{list-style:none;cursor:pointer;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:6px}.ideiaCartaz summary::-webkit-details-marker{display:none}.ideiaCartaz[open] .paySeta{transform:rotate(180deg)}.ideiaCartaz ul{margin:6px 0 0;padding-left:0;list-style:none}.ideiaCartaz li{padding:3px 0;border-bottom:1px dashed var(--line);overflow-wrap:anywhere}.ideiaCartaz li:last-child{border-bottom:0}.ideiaCurto{line-height:1.45}.ideaInfo{min-width:0}.ideiaCartaz{max-width:100%;overflow-x:auto}.ideiaTab{width:100%;border-collapse:collapse;margin-top:4px;font-size:12.5px}.ideiaTab th{font-weight:600;opacity:.7;text-align:right;padding:2px 4px}.ideiaTab td{padding:3px 2px;text-align:right;white-space:nowrap}.ideiaTab td:first-child{text-align:left}`;document.head.appendChild(st);
+ renderIdeias();
+})();
+
 </script>
 </body>
 
