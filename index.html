@@ -1161,7 +1161,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="13.6";
+const APP_VERSAO="13.7";
 const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -4833,6 +4833,51 @@ $("cidadeAqui").addEventListener("click",()=>{
 (function(){const V="Bloqueador de odor para o vaso (tipo Mágico)",N="Bloqueador de odor para o vaso (tipo Magicô)";
  try{let mud=false;(viagens||[]).forEach(t=>{if(t.mala){const j=JSON.stringify(t.mala);if(j.indexOf(V)>=0){t.mala=JSON.parse(j.split(V).join(N));mud=true}}});if(mud)save();
   const o=localStorage.getItem(ORDEM_KEY);if(o&&o.indexOf(V)>=0)localStorage.setItem(ORDEM_KEY,o.split(V).join(N))}catch(e){}})();
+</script>
+<script>
+/* v13.7: mala mais compacta — botão 🎒 mão / 🧳 mala no lugar do "Guardado em"; Ônibus tudo vai com você; aparelhos em grupos */
+(function(){
+ const COM_VOCE=new Set(["Ônibus","Avião"]);const aberto={};
+ function pos(){
+  const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
+  document.querySelectorAll("#malaLista .malaItem").forEach(li=>{
+   const cb=li.querySelector("[data-mala-item]");if(!cb)return;const n=cb.dataset.malaItem;
+   const cat=(li.closest(".malaCat")||{}).dataset?li.closest(".malaCat").dataset.cat:"";
+   const tag=li.querySelector(".naMalaTag");if(tag&&tag.querySelector(".ondeEscolha"))tag.remove();
+   const b=li.querySelector("[data-mala-onde]");if(!b)return;
+   if(COM_VOCE.has(cat)){b.remove();if(m.onde&&m.onde[n]==="mala")delete m.onde[n];return}
+   const mo=ondeItem(m,cat,n)==="mochila";b.innerHTML=`${mo?"🎒":"🧳"}<small>${mo?"mão":"mala"}</small>`;b.title=mo?"Vai na mão (mochila) — toque para mandar para a mala":"Vai na mala de rodinha — toque para levar na mão";
+  });
+  document.querySelectorAll("#malaLista .malaCat").forEach(c=>{if(COM_VOCE.has(c.dataset.cat)){const h=c.querySelector(".catTit span");if(h&&!h.querySelector(".comVoce"))h.insertAdjacentHTML("beforeend",` <small class="comVoce">• 🎒 tudo vai com você</small>`)}});
+  /* grupos dos aparelhos */
+  const ce=document.querySelector('#malaLista .malaCat[data-cat="Eletrônicos"] .catCorpo');if(!ce)return;
+  const ap=ce.querySelector(".aparelhosNaLista");const usados=new Set();let depois=ap;
+  (m.aparelhos||[]).forEach(k=>{const a=APARELHOS.find(x=>x[0]===k);if(!a||a[2].length<2)return;
+   const lis=[...ce.querySelectorAll(":scope>.malaItem")].filter(li=>{const n=li.querySelector("[data-mala-item]").dataset.malaItem;return a[2].includes(n)&&!usados.has(n)});
+   if(!lis.length)return;lis.forEach(li=>usados.add(li.querySelector("[data-mala-item]").dataset.malaItem));
+   const ok=lis.every(li=>li.classList.contains("ok"));
+   const d=document.createElement("details");d.className="grpAp";d.dataset.grp=k;if(aberto[k]!==undefined?aberto[k]:!ok)d.open=true;
+   d.innerHTML=`<summary><span>${a[1]}</span>${ok?'<span class="grpOk">✅</span>':'<span class="grpDot"></span>'}<span class="grpSeta">▾</span></summary><div class="grpL"></div>`;
+   lis.forEach(li=>{const al=li.querySelector(".dragAlca");if(al)al.style.visibility="hidden";d.querySelector(".grpL").appendChild(li)});
+   d.addEventListener("toggle",()=>{aberto[k]=d.open});
+   depois.after(d);depois=d;
+  });
+ }
+ const orig=renderMala;
+ renderMala=function(){const sh=document.querySelector("#modalMala .sheet"),top=sh?sh.scrollTop:0;const r=orig.apply(this,arguments);try{pos()}catch(e){}if(sh)sh.scrollTop=top;return r};
+ const st=document.createElement("style");st.textContent=`
+ #malaLista .ondeBtn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;padding:3px 6px;min-width:44px}
+ #malaLista .ondeBtn small{font-size:10px;font-weight:800;margin-top:2px;color:var(--muted)}
+ .comVoce{font-size:12px;font-weight:600;color:var(--muted)}
+ .grpAp{border:1px solid var(--line);border-radius:12px;background:var(--panel2);margin:8px 0;overflow:hidden}
+ .grpAp summary{list-style:none;display:flex;align-items:center;gap:8px;padding:9px 12px;font-weight:800;cursor:pointer}
+ .grpAp summary::-webkit-details-marker{display:none}
+ .grpAp summary span:first-child{flex:1}
+ .grpAp[open] .grpSeta{transform:rotate(180deg)}
+ .grpDot{width:10px;height:10px;border-radius:50%;background:#FF9100;display:inline-block}
+ .grpL{padding:0 6px 4px;background:#fff}`;document.head.appendChild(st);
+ try{if(document.getElementById("modalMala").classList.contains("open"))renderMala()}catch(e){}
+})();
 </script>
 </body>
 
