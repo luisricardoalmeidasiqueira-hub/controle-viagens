@@ -1161,8 +1161,8 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="13.4";
-const APP_DATA_VERSAO="05/11/2026";
+const APP_VERSAO="13.5";
+const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
 const CIDADES=["Tatuí, SP","São Paulo, SP","Aparecida, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
@@ -4757,6 +4757,75 @@ $("cidadeAqui").addEventListener("click",()=>{
  const orig=renderAcompForm;renderAcompForm=function(){orig.apply(this,arguments);status()};
  $("acompLista").addEventListener("input",()=>status());
  const st=document.createElement("style");st.textContent=`#acompCount.ok{background:#2E9E44!important}.acompPagoTag{font-size:13px;font-weight:800;color:#2E9E44;margin:0 0 6px}.acompPagoTag.falta{color:#E65100}`;document.head.appendChild(st);
+})();
+</script>
+<script>
+/* v13.5: previsão no estilo do Google — faixa de hora em hora em cima, dias pequenos embaixo */
+(function(){
+ const cache={};
+ async function horasDia(t,dia){
+  const k=t.id+"|"+t.cidade+"|"+dia;if(cache[k])return cache[k];
+  const l=await resolverLugar(t.cidade,t);if(!l)throw 0;
+  const f=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${l.latitude}&longitude=${l.longitude}&hourly=temperature_2m,precipitation_probability,weather_code&timezone=America%2FSao_Paulo&start_date=${dia}&end_date=${dia}`)).json();
+  if(!f.hourly||!f.hourly.time)throw 0;
+  return cache[k]=f.hourly.time.map((h,i)=>({h:+h.slice(11,13),t:f.hourly.temperature_2m[i],p:f.hourly.precipitation_probability?(f.hourly.precipitation_probability[i]??0):0,c:f.hourly.weather_code?f.hourly.weather_code[i]:0})).filter(x=>x.t!=null);
+ }
+ const ic=(c,h)=>{let [i]=TEMPO_COD(c);if((h>=19||h<6)&&c<=2)i="🌙";return i};
+ function resumo(H){
+  const dia=H.filter(x=>x.h>=6&&x.h<=22),chuva=dia.filter(x=>x.p>=40||(x.c>=51&&x.p>=30));
+  if(!chuva.length){const mx=Math.max(0,...dia.map(x=>x.p));return mx<20?"☀️ Sem chuva prevista nesse dia.":`🌤️ Pouca chance de chuva (até ${mx}%).`}
+  const ini=chuva[0].h,fim=chuva[chuva.length-1].h+1,mx=Math.max(...chuva.map(x=>x.p));
+  return `🌂 <b>Chuva mais provável entre ${ini}h e ${fim}h</b> (até ${mx}%).`;
+ }
+ const hojeISO=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`};
+ async function encher(box){
+  const t=viagens.find(x=>String(x.id)===box.dataset.tv);if(!t)return;const dia=box.dataset.sel;
+  const fx=box.querySelector(".tbHoras"),rs=box.querySelector(".tbResumo");
+  box.querySelectorAll("[data-tb-dia]").forEach(x=>x.classList.toggle("on",x.dataset.tbDia===dia));
+  fx.innerHTML=`<div class="tbCarr">⏳ Buscando hora a hora…</div>`;rs.innerHTML="";
+  try{const H=await horasDia(t,dia);if(box.dataset.sel!==dia)return;
+   const agora=new Date().getHours(),ehHoje=dia===hojeISO();
+   const L=H.filter(x=>ehHoje?x.h>=agora:x.h>=6);
+   if(!L.length){fx.innerHTML=`<div class="tbCarr">A previsão de hora em hora desse dia ainda não saiu.</div>`;return}
+   fx.innerHTML=L.map(x=>`<div class="tbH"><b>${Math.round(x.t)}°</b><small class="tbP">${x.p>=20?x.p+"%":"&nbsp;"}</small><span>${ic(x.c,x.h)}</span><small>${ehHoje&&x.h===agora?"Agora":String(x.h).padStart(2,"0")+":00"}</small></div>`).join("");
+   rs.innerHTML=resumo(H);
+  }catch(e){fx.innerHTML=`<div class="tbCarr">Não consegui buscar a hora a hora agora (sem internet?).</div>`}
+ }
+ const prev=tempoHTML;
+ tempoHTML=function(t,r){
+  if(!r||!r.dias||!r.dias.length||!t)return prev(t,r);
+  const {dicas,acoes}=dicasTempo(r);const hj=hojeISO();
+  const sel=(r.dias.find(x=>x.dia===hj)||r.dias[0]).dia;
+  setTimeout(()=>document.querySelectorAll('.tbG[data-carregar="1"]').forEach(b=>{b.dataset.carregar="";encher(b)}),0);
+  return `<div class="tempoBox tbG" data-tv="${t.id}" data-sel="${sel}" data-carregar="1">
+   <div class="tbTopo">🌤️ <b>Tempo em ${esc(r.lugar)}</b></div>
+   <div class="tbHoras"></div>
+   <div class="tbResumo"></div>
+   <div class="tbDias">${r.dias.map(x=>{const [i]=TEMPO_COD(x.cod);return `<button type="button" class="tbD" data-tb-dia="${x.dia}"><small>${dataSem(x.dia).split(",")[0]} ${dateBR(x.dia).slice(0,5)}</small><span>${i}</span><b>${x.max}°<i>/${x.min}°</i></b>${x.chuva>=30?`<small class="tbP">☔ ${x.chuva}%</small>`:""}</button>`}).join("")}</div>
+   ${dicas.length||acoes.length?`<details class="tbDica"><summary>👕 Dica de roupa para o tempo <span>▾</span></summary>${dicas.length?`<div class="tempoDica">${dicas.join("<br>")}</div>`:""}${acoes.length?`<button type="button" class="btn secondary" style="margin-top:8px;width:100%" data-tempo-mala="${acoes.join(",")}">➕ Colocar as sugestões na mala</button>`:""}</details>`:""}
+   <div class="tbNota">${r.parcial?"Últimos dias ainda sem previsão • ":""}Open-Meteo • pode mudar</div>
+  </div>`;
+ };
+ document.addEventListener("click",e=>{const d=e.target.closest("[data-tb-dia]");if(!d)return;const box=d.closest(".tbG");if(!box||box.dataset.sel===d.dataset.tbDia)return;box.dataset.sel=d.dataset.tbDia;encher(box)});
+ const st=document.createElement("style");st.textContent=`
+ .tbG{padding:10px 10px 8px}
+ .tbTopo{font-size:14px;margin-bottom:6px}
+ .tbHoras{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 0 6px;scrollbar-width:none}
+ .tbHoras::-webkit-scrollbar{display:none}
+ .tbH{flex:0 0 52px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12px}
+ .tbH b{font-size:15px}.tbH span{font-size:22px;line-height:1.2}.tbH small{color:var(--muted);font-size:11px}
+ .tbP{color:#1565C0!important;font-weight:800}
+ .tbCarr{font-size:12px;color:var(--muted);padding:8px 0}
+ .tbResumo{font-size:12.5px;margin:0 0 6px}
+ .tbDias{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
+ .tbDias::-webkit-scrollbar{display:none}
+ .tbD{flex:0 0 auto;min-width:62px;display:flex;flex-direction:column;align-items:center;gap:1px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:5px 6px;color:inherit;font:inherit}
+ .tbD small{font-size:11px;color:var(--muted)}.tbD span{font-size:20px;line-height:1.2}.tbD b{font-size:13px}.tbD i{font-style:normal;font-weight:500;color:var(--muted)}
+ .tbD.on{border:2px solid var(--accent);padding:4px 5px}
+ .tbG .tempoDica{margin-top:6px;font-size:12.5px;line-height:1.4}
+ .tbNota{font-size:11px;color:var(--muted);margin-top:4px}
+ .tbDica{margin-top:6px;border-top:1px solid var(--line);padding-top:6px}.tbDica summary{list-style:none;cursor:pointer;font-size:13px;font-weight:800;display:flex;justify-content:space-between}.tbDica summary::-webkit-details-marker{display:none}.tbDica[open] summary span{transform:rotate(180deg)}
+ .tbH b{font-size:14px}.tbH span{font-size:20px}.tbHoras{padding:0 0 4px}`;document.head.appendChild(st);
 })();
 </script>
 </body>
