@@ -758,6 +758,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 .docNovoTag{background:#FFF3E0!important;color:#E65100!important}
 </style>
 <style>/* v13.4: sem número de contagem — só uma bolinha */ .payCount{font-size:0!important;padding:0!important;min-width:0!important}.payCount:not(:empty){display:inline-block!important;width:10px!important;height:10px!important;border-radius:50%!important;background:#FF9100!important;vertical-align:middle;margin-left:6px}</style>
+<style>/* v13.9: data e horário lado a lado */ .dataHora{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:8px}.dataHora input{min-width:0;width:100%;box-sizing:border-box}.idaVolta>label{font-weight:800}</style>
 </head>
 <body>
 
@@ -974,15 +975,13 @@ input,textarea,select{font-size:14px;padding:9px 10px}
       <div class="field"><label>Cidade</label><input id="fCidade" list="listaCidades"></div>
       <div class="field"><label>Hotel</label><input id="fHotel"></div>
     </div>
-    <div class="grid">
-      <div class="field"><label>Data de ida <span class="required">*</span></label><input id="fData" type="date" required><div class="diaSemTxt" id="fDataSem"></div></div>
-      <div class="field"><label>Data de volta</label><input id="fDataVolta" type="date"><div class="diaSemTxt" id="fDataVoltaSem"></div></div>
-    </div>
-    <div class="grid">
-      <div class="field"><label>Horário de saída</label><input id="fHoraSaida" type="time"></div>
-      <div class="field"><label>Horário de volta</label><input id="fHoraVolta" type="time"></div>
-      <div class="field"><label>Local de saída</label><input id="fLocalSaida" placeholder="Ex.: Tatuí, SP"></div>
-    </div>
+    <div class="field idaVolta"><label>🚌 Ida <span class="required">*</span></label>
+      <div class="dataHora"><input id="fData" type="date" required aria-label="Data de ida"><input id="fHoraSaida" type="time" aria-label="Horário de saída"></div>
+      <div class="diaSemTxt" id="fDataSem"></div></div>
+    <div class="field"><label>Local de saída</label><input id="fLocalSaida" placeholder="Ex.: Tatuí, SP"></div>
+    <div class="field idaVolta"><label>🏠 Volta</label>
+      <div class="dataHora"><input id="fDataVolta" type="date" aria-label="Data de volta"><input id="fHoraVolta" type="time" aria-label="Horário de volta"></div>
+      <div class="diaSemTxt" id="fDataVoltaSem"></div></div>
     <div class="grid">
       <div class="field"><label>Começou a pagar em</label><input id="fInicio" type="date"></div>
       <div class="field"><label>Vencimento</label><input id="fVenc" type="date"></div>
@@ -1161,7 +1160,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="13.8";
+const APP_VERSAO="13.9";
 const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
