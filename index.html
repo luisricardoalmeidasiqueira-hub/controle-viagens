@@ -1160,7 +1160,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="13.9";
+const APP_VERSAO="14.0";
 const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -4894,6 +4894,38 @@ $("cidadeAqui").addEventListener("click",()=>{
  sh.addEventListener("scroll",()=>{clearTimeout(tm);tm=setTimeout(pinta,120)},{passive:true});
  sh.addEventListener("touchend",()=>setTimeout(pinta,350),{passive:true});
  const o=renderMala;renderMala=function(){const r=o.apply(this,arguments);requestAnimationFrame(pinta);return r};
+})();
+</script>
+<script>
+/* v14.0: parcelado no formulário da viagem — "Sem entrada" e cálculo para terminar de pagar antes da viagem */
+(function(){
+ const box=$("parcelamentoConfig");if(!box)return;
+ box.insertAdjacentHTML("afterbegin",`<div class="autoParc"><div class="autoParcL"><button type="button" id="apSemEntrada">🚫 Sem entrada</button><label>Terminar de pagar <select id="apAntes"><option value="1" selected>1 mês antes</option><option value="0">no mês da viagem</option><option value="2">2 meses antes</option></select></label></div><button type="button" class="btn secondary" id="apCalc" style="width:100%;margin-top:6px">🧮 Calcular parcelas sozinho</button><div id="apInfo" class="apInfo"></div></div>`);
+ const p2=n=>String(n).padStart(2,"0");const MES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+ const ymT=(y,m)=>`${MES[m-1]}/${String(y).slice(2)}`;
+ function info(h){$("apInfo").innerHTML=h}
+ function marcaSem(){$("apSemEntrada").classList.toggle("on",!(numBR($("fEntrada").value)>0))}
+ function calc(auto){
+  const d=$("fData").value;if(!d){if(!auto)info("📅 Coloque primeiro a <b>data de ida</b>.");return}
+  const total=numBR($("fTotal").value)||0,ent=numBR($("fEntrada").value)||0,resto=Math.max(total-ent,0);
+  if(!total){if(!auto)info("💰 Coloque primeiro o <b>valor total</b>.");return}
+  const antes=+$("apAntes").value;let [ty,tm]=d.split("-").map(Number);let fy=ty,fm=tm-antes;while(fm<1){fm+=12;fy--}
+  let iy,im,dia=10;const pv=$("fPrimeiroVenc").value;
+  if(pv){[iy,im,dia]=pv.split("-").map(Number)}else{const h=new Date();iy=h.getFullYear();im=h.getMonth()+2;if(im>12){im-=12;iy++}}
+  const n=(fy*12+fm)-(iy*12+im)+1;
+  if(n<2){info(`⚠️ Até ${ymT(fy,fm)} não dá para parcelar (só ${Math.max(n,0)} mês). Melhor pagar à vista.`);return}
+  if(!pv)$("fPrimeiroVenc").value=`${iy}-${p2(im)}-${p2(dia)}`;
+  $("fParcelas").value=n;
+  ["input","change"].forEach(ev=>{$("fParcelas").dispatchEvent(new Event(ev,{bubbles:true}));$("fPrimeiroVenc").dispatchEvent(new Event(ev,{bubbles:true}))});
+  info(`✅ <b>${n}× de ${money(resto/n)}</b>${ent>0?` (depois da entrada de ${money(ent)})`:" sem entrada"}, de ${ymT(iy,im)} a ${ymT(fy,fm)} — termina ${antes?antes===1?"1 mês antes":antes+" meses antes":"no mês"} da viagem.`);
+ }
+ $("apCalc").addEventListener("click",()=>calc(false));
+ $("apAntes").addEventListener("change",()=>calc(false));
+ $("apSemEntrada").addEventListener("click",()=>{$("fEntrada").value="";$("fDataEntrada").value="";$("fEntrada").dispatchEvent(new Event("input",{bubbles:true}));marcaSem();calc(false)});
+ $("fEntrada").addEventListener("input",marcaSem);
+ document.querySelectorAll('input[name="modoPagamentoViagem"]').forEach(r=>r.addEventListener("change",()=>{marcaSem();info("");if(r.checked&&r.value==="parcelado"&&!$("fParcelas").value)calc(true)}));
+ const om=openModal;openModal=function(){const r=om.apply(this,arguments);try{info("");marcaSem()}catch(e){}return r};
+ const st=document.createElement("style");st.textContent=`.autoParc{margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--line)}.autoParcL{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.autoParcL label{font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}.autoParcL select{width:auto;padding:6px 8px;font-size:14px}#apSemEntrada{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;color:inherit}#apSemEntrada.on{background:var(--accent);color:#fff;border-color:var(--accent)}.apInfo{font-size:13px;margin-top:6px}.apInfo:empty{display:none}`;document.head.appendChild(st);
 })();
 </script>
 </body>
