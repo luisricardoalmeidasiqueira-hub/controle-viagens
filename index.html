@@ -1160,7 +1160,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="14.1";
+const APP_VERSAO="14.2";
 const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2384,7 +2384,7 @@ function renderAcompForm(){
  $("acompCount").textContent=acompForm.length?String(acompForm.length):"";
  $("acompLista").innerHTML=acompForm.map((p,i)=>`<div class="acompRow"><input class="acompNome" data-ac-i="${i}" data-ac-k="nome" placeholder="Nome (ex.: Adriana)" value="${esc(p.nome||"")}"><div class="acompVals"><label>Valor da parte<input type="text" inputmode="decimal" placeholder="0,00" data-ac-i="${i}" data-ac-k="valor" value="${p.valor?fmtBR(p.valor):""}"></label><label>Já me pagou<input type="text" inputmode="decimal" placeholder="0,00" data-ac-i="${i}" data-ac-k="pago" value="${p.pago?fmtBR(p.pago):""}"></label><button type="button" class="iconBtn trashBtn" data-ac-del="${i}" aria-label="Tirar pessoa" title="Tirar pessoa">🗑️</button></div></div>`).join("");
 }
-function lerAcompForm(){return acompForm.map(p=>({nome:String(p.nome||"").trim(),valor:Math.max(numBR(p.valor),0),pago:Math.max(numBR(p.pago),0),historico:p.historico||[],tipo:p.tipo||"",idade:p.idade!==undefined&&p.idade!==""?Number(p.idade):""})).filter(p=>p.nome)}
+function lerAcompForm(){return acompForm.map((p,i)=>({nome:String(p.nome||"").trim()||(p.tipo?`Pessoa ${i+2}`:""),valor:Math.max(numBR(p.valor),0),pago:Math.max(numBR(p.pago),0),historico:p.historico||[],tipo:p.tipo||"",idade:p.idade!==undefined&&p.idade!==""?Number(p.idade):""})).filter(p=>p.nome)}
 $("acompLista").addEventListener("input",e=>{const el=e.target.closest("[data-ac-i]");if(!el)return;acompForm[Number(el.dataset.acI)][el.dataset.acK]=el.value;$("acompCount").textContent=acompForm.length?String(acompForm.length):""});
 $("acompLista").addEventListener("click",e=>{const d=e.target.closest("[data-ac-del]");if(!d)return;const p=acompForm[Number(d.dataset.acDel)];if(p&&p.nome&&!confirm(`Tirar ${p.nome} desta viagem?`))return;acompForm.splice(Number(d.dataset.acDel),1);renderAcompForm()});
 $("btnAddAcomp").onclick=()=>{acompForm.push({nome:"",valor:numBR($("fTotal").value)||0,pago:0,historico:[]});renderAcompForm();const ins=$("acompLista").querySelectorAll(".acompNome");ins[ins.length-1]?.focus()};
@@ -5000,10 +5000,10 @@ $("cidadeAqui").addEventListener("click",()=>{
  const opts=sel=>TIPOS.map(([k,r])=>`<option value="${k}"${k===(sel||"normal")?" selected":""}>${r}</option>`).join("");
  function reservaValor(){if(!tab||!tab.reserva)return 0;return tab.reservaPorPessoa?tab.reserva*(1+acompForm.length):tab.reserva}
  function render(){
-  const box=$("precoField");if(!box)return;box.style.display=tab?"":"none";
+  const box=$("precoField");if(!box)return;const precisa=!tab&&(meuTipo!=="normal"||acompForm.some(p=>p.tipo&&p.tipo!=="normal"));box.style.display=tab||precisa?"":"none";$("prFotoBtn").style.display=tab?"none":"";
   const rb=$("apReserva");
   if(rb){const rv=reservaValor();rb.style.display=rv?"":"none";if(rv){rb.textContent=`💵 Entrada de ${R(rv)} (reserva do cartaz${tab.reservaPorPessoa&&acompForm.length?`, ${R(tab.reserva)}/pessoa`:""})`;rb.classList.toggle("on",Math.abs(numBR($("fEntrada").value)-rv)<0.01)}}
-  if(!tab)return;
+  if(!tab){$("prMeuTipo").value=meuTipo;$("prMeuIdade").style.display=meuTipo==="crianca"?"":"none";$("prQuartoL").style.display="none";$("prLista").innerHTML=prMsg||`<div class="prAv">⚠️ Esta viagem foi salva antes do app ler a tabela de preços do cartaz, então ele ainda não sabe o valor com desconto. Mande a foto do cartaz de novo: a IA lê só os preços (não mexe no resto) e recalcula o total e a parte de cada um.</div>`;return}
   $("prMeuTipo").value=meuTipo;$("prMeuIdade").style.display=meuTipo==="crianca"?"":"none";if(document.activeElement!==$("prMeuIdade"))$("prMeuIdade").value=meuIdade;
   const n=1+acompForm.length,ps=tab.precos,soUnico=ps.unico&&!QUARTOS.some(k=>ps[k]);
   $("prQuartoL").style.display=soUnico?"none":"";
@@ -5024,8 +5024,16 @@ $("cidadeAqui").addEventListener("click",()=>{
  window.precoLer=function(){return tab?{tabela:tab,meuTipo,meuIdade:meuTipo==="crianca"&&meuIdade!==""?Number(meuIdade):"",quarto}:{}};
  // caixa no formulário
  const ad=$("acompDet");const fld=ad&&ad.closest(".field");
- if(fld)fld.insertAdjacentHTML("beforebegin",`<div class="field" id="precoField" style="display:none"><div class="precoBox"><b>🏷️ Preço do cartaz por pessoa</b><div class="prRow"><label>Eu vou como <select id="prMeuTipo">${opts("normal")}</select></label><input id="prMeuIdade" type="number" inputmode="numeric" min="0" max="17" placeholder="idade" style="display:none"></div><div class="prRow" id="prQuartoL"><label>Quarto <select id="prQuarto"></select></label></div><div id="prLista"></div><button type="button" class="prLink" id="prAbrirAcomp">👥 Quem vai junto? Escolha o tipo de cada pessoa</button></div></div>`);
+ if(fld)fld.insertAdjacentHTML("beforebegin",`<div class="field" id="precoField" style="display:none"><div class="precoBox"><b>🏷️ Preço do cartaz por pessoa</b><div class="prRow"><label>Eu vou como <select id="prMeuTipo">${opts("normal")}</select></label><input id="prMeuIdade" type="number" inputmode="numeric" min="0" max="17" placeholder="idade" style="display:none"></div><div class="prRow" id="prQuartoL"><label>Quarto <select id="prQuarto"></select></label></div><div id="prLista"></div><label class="btn secondary full" id="prFotoBtn" style="display:none;margin-top:8px;text-align:center">📷 Ler a tabela de preços do cartaz<input type="file" id="prFoto" accept="image/*" hidden></label><button type="button" class="prLink" id="prAbrirAcomp">👥 Quem vai junto? Escolha o tipo de cada pessoa</button></div></div>`);
+ let prMsg="";
  $("prMeuTipo").addEventListener("change",e=>{meuTipo=e.target.value;aplicar()});
+ $("prFoto").addEventListener("change",async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+  if(typeof iaChave!=="function"||!iaChave()){prMsg=`<div class="prAv">🤖 Para ler a tabela de preços precisa ligar a IA (botão 🤖 lá em cima).</div>`;return render()}
+  prMsg=`<div class="prMini">🤖 A IA está lendo a tabela de preços…</div>`;render();
+  try{iaMenuAtualiza("lendo");const c=await lerCartazIA(f);iaMenuAtualiza();const t=normTabela(c&&c.tabela,c&&c.valor);
+   if(!t||!Object.keys(t.precos).length){prMsg=`<div class="prAv">⚠️ A IA não achou a tabela de preços nessa foto. Tente uma foto mais de perto da parte dos valores.</div>`;return render()}
+   prMsg="";tab=t;quarto="";aplicar()}
+  catch(err){iaMenuAtualiza();prMsg=`<div class="prAv">🤖 A IA não respondeu agora (${esc(err.message)}). Tente de novo daqui a pouco.</div>`;render()}});
  $("prMeuIdade").addEventListener("change",e=>{meuIdade=e.target.value;aplicar()});
  $("prQuarto").addEventListener("change",e=>{quarto=e.target.value;aplicar()});
  $("prAbrirAcomp").addEventListener("click",()=>{$("acompDet").open=true;if(!acompForm.length)$("btnAddAcomp").click();else $("acompDet").scrollIntoView({block:"start",behavior:"smooth"})});
@@ -5039,7 +5047,7 @@ $("cidadeAqui").addEventListener("click",()=>{
  $("acompLista").addEventListener("input",e=>{if(tab&&e.target.closest('[data-ac-k="nome"]'))render()});
  $("btnAddAcomp").addEventListener("click",()=>{if(tab)aplicar()});
  // carregar ao abrir/editar
- const oC=carregarAcompForm;carregarAcompForm=function(t){tab=t&&t.tabela?normTabela(t.tabela):null;meuTipo=t&&t.meuTipo||"normal";meuIdade=t&&t.meuIdade!=null?String(t.meuIdade):"";quarto=t&&t.quarto||"";return oC.apply(this,arguments)};
+ const oC=carregarAcompForm;carregarAcompForm=function(t){prMsg="";tab=t&&t.tabela?normTabela(t.tabela):null;meuTipo=t&&t.meuTipo||"normal";meuIdade=t&&t.meuIdade!=null?String(t.meuIdade):"";quarto=t&&t.quarto||"";return oC.apply(this,arguments)};
  window.carregarAcompForm=carregarAcompForm;
  const oI=abrirIdeiaComoViagem;abrirIdeiaComoViagem=function(id){const r=oI.apply(this,arguments);const i=ideias.find(x=>x.id===id);if(i&&i.tabela){tab=normTabela(i.tabela);if(tab)aplicar()}return r};
  window.abrirIdeiaComoViagem=abrirIdeiaComoViagem;
