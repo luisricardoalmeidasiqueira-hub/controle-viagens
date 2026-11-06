@@ -1161,7 +1161,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="13.7";
+const APP_VERSAO="13.8";
 const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -4668,7 +4668,7 @@ $("cidadeAqui").addEventListener("click",()=>{
    /* "cutucão" para o Safari do iPhone voltar a rolar a janela depois de redesenhar a lista */
    s.style.overflowY="hidden";void s.offsetHeight;s.style.overflowY="";requestAnimationFrame(()=>{s.scrollTop=top})}
   return r};
- const st=document.createElement("style");st.textContent=`#modalMala .sheet{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}`;document.head.appendChild(st);
+ const st=document.createElement("style");st.textContent=`#modalMala .sheet{overscroll-behavior:contain;-webkit-overflow-scrolling:auto}`;document.head.appendChild(st);
 })();
 </script>
 <script>
@@ -4862,6 +4862,14 @@ $("cidadeAqui").addEventListener("click",()=>{
    d.addEventListener("toggle",()=>{aberto[k]=d.open});
    depois.after(d);depois=d;
   });
+  const soltos=[...ce.querySelectorAll(":scope>.malaItem")];
+  if(soltos.length>1){
+   const ok=soltos.every(li=>li.classList.contains("ok"));const k="__outros";
+   const d=document.createElement("details");d.className="grpAp";d.dataset.grp=k;if(aberto[k]!==undefined?aberto[k]:!ok)d.open=true;
+   d.innerHTML=`<summary><span>🔌 Outros eletrônicos</span>${ok?'<span class="grpOk">✅</span>':'<span class="grpDot"></span>'}<span class="grpSeta">▾</span></summary><div class="grpL"></div>`;
+   soltos.forEach(li=>{const al=li.querySelector(".dragAlca");if(al)al.style.visibility="hidden";d.querySelector(".grpL").appendChild(li)});
+   d.addEventListener("toggle",()=>{aberto[k]=d.open});depois.after(d);
+  }
  }
  const orig=renderMala;
  renderMala=function(){const sh=document.querySelector("#modalMala .sheet"),top=sh?sh.scrollTop:0;const r=orig.apply(this,arguments);try{pos()}catch(e){}if(sh)sh.scrollTop=top;return r};
@@ -4877,6 +4885,16 @@ $("cidadeAqui").addEventListener("click",()=>{
  .grpDot{width:10px;height:10px;border-radius:50%;background:#FF9100;display:inline-block}
  .grpL{padding:0 6px 4px;background:#fff}`;document.head.appendChild(st);
  try{if(document.getElementById("modalMala").classList.contains("open"))renderMala()}catch(e){}
+})();
+</script>
+<script>
+/* v13.8: iPhone — a lista rolava mas a tela não redesenhava. Quando a rolagem para, obriga o redesenho. */
+(function(){
+ const sh=document.querySelector("#modalMala .sheet");if(!sh)return;let tm=null;
+ const pinta=()=>{const l=document.getElementById("malaLista");if(!l)return;l.style.transform="translateZ(0)";requestAnimationFrame(()=>{requestAnimationFrame(()=>{l.style.transform=""})})};
+ sh.addEventListener("scroll",()=>{clearTimeout(tm);tm=setTimeout(pinta,120)},{passive:true});
+ sh.addEventListener("touchend",()=>setTimeout(pinta,350),{passive:true});
+ const o=renderMala;renderMala=function(){const r=o.apply(this,arguments);requestAnimationFrame(pinta);return r};
 })();
 </script>
 </body>
