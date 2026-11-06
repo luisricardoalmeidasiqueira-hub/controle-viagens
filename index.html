@@ -1160,7 +1160,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="14.3";
+const APP_VERSAO="14.4";
 const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -5087,6 +5087,86 @@ $("cidadeAqui").addEventListener("click",()=>{
  renderIdeias();
 })();
 
+</script>
+<script>
+/* v14.4: 🚶 Ir do hotel até… — rota a pé do hotel até um lugar (ex.: Camelódromo), com mapa e Google Maps */
+(function(){
+ const pn=$("hotelPainel");if(!pn)return;
+ pn.insertAdjacentHTML("beforeend",`<div class="irBox"><b>🚶 Ir do hotel até…</b><div class="irLinha"><input id="irLugar" placeholder="Ex.: Camelódromo" autocomplete="off" enterkeyhint="search"><button type="button" class="btn" id="irBtn" aria-label="Procurar caminho">🗺️</button></div><div class="irSalvos irAtalhos"><button type="button" data-ir-atalho="a praia mais perto do hotel">🏖️ Praia</button><button type="button" data-ir-atalho="camelódromo">🛍️ Camelódromo</button><button type="button" data-ir-atalho="centro da cidade">🏙️ Centro</button><button type="button" data-ir-atalho="rodoviária">🚌 Rodoviária</button></div><div id="irSalvos" class="irSalvos"></div><div id="irRes"></div></div>`);
+ const N=x=>String(x||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();
+ const viagem=()=>{const t=hotelReferencia();return t?viagens.find(x=>x.id===t.id)||t:null};
+ const cidHotel=t=>t.cidadeHotel||(/cambori/.test(N(t.hotel))?"Balneário Camboriú, SC":"")||t.cidade||"";
+ const dist=(a,b)=>{const R=6371,r=Math.PI/180,dLa=(b.lat-a.lat)*r,dLo=(b.lon-a.lon)*r;const h=Math.sin(dLa/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
+ async function geo(q,centro,tipos){
+  try{const u=`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?country=br&language=pt&limit=1${tipos?"&types="+tipos:""}${centro?`&proximity=${centro.lon},${centro.lat}`:""}&access_token=${MAPBOX_TOKEN}`;
+   const g=await (await fetch(u)).json();const f=g&&g.features&&g.features[0];if(!f||!f.center)return null;const p={lat:f.center[1],lon:f.center[0],end:f.place_name||""};
+   if(centro&&dist(centro,p)>15)return null;return p}catch(e){return null}
+ }
+ function salvos(){
+  const t=viagem(),b=$("irSalvos");if(!b)return;const L=(t&&t.irLugares)||[];
+  b.innerHTML=L.map((x,i)=>`<button type="button" data-ir="${i}">📍 ${esc(x)}</button>`).join("");
+ }
+ function guardar(t,nome){const v=viagens.find(x=>x.id===t.id);if(!v)return;const L=(v.irLugares||[]).filter(x=>N(x)!==N(nome));L.unshift(nome);v.irLugares=L.slice(0,8);try{save()}catch(e){}salvos()}
+ let ultimo=null;
+ async function ir(nome,alvo,dest){
+  nome=String(nome||"").trim();const res=alvo||$("irRes");if(!nome){$("irLugar").focus();return}
+  const t=viagem();if(!t||!t.hotel){res.innerHTML=`<div class="irAv">🏨 Cadastre o hotel na viagem primeiro.</div>`;return}
+  const cid=cidHotel(t);
+  res.setAttribute("data-ir-res","");res.innerHTML=`<div class="irInfo">⏳ Procurando o caminho do hotel até ${esc(nome)}…</div>`;
+  const centro=await geo(cid,null,"place");
+  let h=null,l=dest&&isFinite(+dest.lat)&&+dest.lat?{lat:+dest.lat,lon:+dest.lon}:null,lEnd=dest&&dest.end||"",hEnd="",dica="";
+  if(typeof iaChave==="function"&&iaChave()){
+   try{const r=await iaPedir([{text:`Em ${cid} (Brasil): 1) hotel "${t.hotel}"; 2) lugar "${nome}" (pode ser apelido, ex.: camelódromo, feirinha, Cristo Luz). Se "lugar" for genérico (ex.: "a praia mais perto do hotel"), escolha o lugar real mais perto do hotel e ponha o nome dele. Dê o endereço de cada um e as coordenadas aproximadas. Responda SOMENTE com JSON: {"hotel":{"endereco":"","lat":0,"lon":0},"lugar":{"nome":"","endereco":"","lat":0,"lon":0,"horario":"","certeza":"alta|media|baixa"},"dica":""}. dica: uma frase curta útil para quem vai a pé (ou vazio). Se não souber, deixe vazio. Não invente.`}]);
+    if(r&&r.hotel&&r.hotel.endereco){hEnd=String(r.hotel.endereco);h=await geo(hEnd+", "+cid,centro,"address,poi");if(!h&&isFinite(+r.hotel.lat)&&+r.hotel.lat){const p={lat:+r.hotel.lat,lon:+r.hotel.lon};if(!centro||dist(centro,p)<15)h=p}}
+    if(r&&r.lugar&&r.lugar.certeza!=="baixa"&&!dest){if(r.lugar.nome)nome=String(r.lugar.nome).trim()||nome;lEnd=String(r.lugar.endereco||"");if(lEnd)l=await geo(lEnd+", "+cid,centro,"address,poi");if(!l&&isFinite(+r.lugar.lat)&&+r.lugar.lat){const p={lat:+r.lugar.lat,lon:+r.lugar.lon};if(!centro||dist(centro,p)<15)l=p}if(r.lugar.horario)dica="🕗 "+r.lugar.horario}
+    if(r&&r.dica)dica=(dica?dica+" • ":"")+String(r.dica).slice(0,160);
+   }catch(e){}
+  }
+  if(!h)h=await geo(t.hotel+", "+cid,centro,"poi,address");
+  if(!l)l=await geo(nome+", "+cid,centro,"poi,address");
+  if(dest&&dest.end)lEnd=dest.end;
+  const gm=`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent((hEnd||t.hotel)+", "+cid)}&destination=${encodeURIComponent(dest&&dest.lat?dest.lat+","+dest.lon:(lEnd||nome)+", "+cid)}&travelmode=walking`;
+  let km=null,min=null,linha=null;
+  if(h&&l){try{const d=await (await fetch(`https://api.mapbox.com/directions/v5/mapbox/walking/${h.lon},${h.lat};${l.lon},${l.lat}?geometries=geojson&overview=full&language=pt&access_token=${MAPBOX_TOKEN}`)).json();const rt=d&&d.routes&&d.routes[0];if(rt){km=rt.distance/1000;min=Math.max(1,Math.round(rt.duration/60));linha=rt.geometry}}catch(e){}
+   if(km==null){km=dist(h,l)*1.3;min=Math.max(1,Math.round(km/4.5*60))}}
+  if(!dest)guardar(t,nome);
+  ultimo={t,h,l,nome,linha,hEnd,lEnd};res.__rota=ultimo;
+  const tempo=min!=null?(min>=60?`${Math.floor(min/60)}h${String(min%60).padStart(2,"0")}`:`${min} min`):"";
+  const longe=min!=null&&min>40;
+  res.innerHTML=`<div class="irCard"><div><b>🏨 ${esc(t.hotel)}</b> → <b>📍 ${esc(nome)}</b></div>${lEnd?`<small>${esc(lEnd)}</small>`:""}${tempo?`<div class="irTempo">🚶 uns <b>${tempo}</b> a pé${km!=null?` (${km<1?Math.round(km*1000/10)*10+" m":km.toFixed(1).replace(".",",")+" km"})`:""}</div>`:`<div class="irAv">Não achei o ponto exato no mapa daqui — o Google Maps abaixo mostra o caminho.</div>`}${longe?`<div class="irAv">🚕 É longe para ir a pé — melhor ir de Uber/táxi ou ônibus.</div>`:""}${dica?`<small>${esc(dica)}</small>`:""}<div class="irBtns">${h&&l?`<button type="button" class="btn secondary irMapaBtn">🗺️ Ver no mapa</button>`:""}<a class="btn" href="${gm}" target="_blank" rel="noopener">🧭 Caminho no Google Maps</a></div></div>`;
+ }
+ async function verMapa(u){
+  u=u||ultimo;if(!u||!u.h||!u.l)return;
+  await abrirMapa(`🚶 Hotel → ${u.nome}`,[{nome:"🏨 "+u.t.hotel,info:u.hEnd||"",lat:u.h.lat,lon:u.h.lon},{nome:"📍 "+u.nome,info:u.lEnd||"",lat:u.l.lat,lon:u.l.lon,cor:"#f59e0b"}]);
+  if(typeof __mapa==="undefined"||!__mapa)return;
+  const pinta=()=>{try{if(__mapa.getLayer("irRota"))__mapa.removeLayer("irRota");if(__mapa.getSource("irRota"))__mapa.removeSource("irRota");
+   const geom=u.linha||{type:"LineString",coordinates:[[u.h.lon,u.h.lat],[u.l.lon,u.l.lat]]};
+   __mapa.addSource("irRota",{type:"geojson",data:{type:"Feature",geometry:geom}});
+   __mapa.addLayer({id:"irRota",type:"line",source:"irRota",layout:{"line-join":"round","line-cap":"round"},paint:{"line-color":"#2563eb","line-width":5,"line-opacity":.85,...(u.linha?{}:{"line-dasharray":[1,1.5]})}});
+   $("mapaStatus").textContent=u.linha?"🚶 Caminho a pé em azul":"Linha reta (o caminho exato está no Google Maps)"}catch(e){}};
+  if(__mapa.isStyleLoaded&&__mapa.isStyleLoaded())pinta();else __mapa.once("load",pinta);
+ }
+ // limpa a linha quando o mapa for usado para outra coisa
+ const oAM=abrirMapa;abrirMapa=async function(titulo){try{if(__mapa&&!/^🚶 Hotel/.test(titulo||"")){if(__mapa.getLayer&&__mapa.getLayer("irRota"))__mapa.removeLayer("irRota");if(__mapa.getSource&&__mapa.getSource("irRota"))__mapa.removeSource("irRota")}}catch(e){}return oAM.apply(this,arguments)};
+ $("irBtn").addEventListener("click",()=>ir($("irLugar").value));
+ $("irLugar").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("irLugar").blur();ir($("irLugar").value)}});
+ $("irSalvos").addEventListener("click",e=>{const b=e.target.closest("[data-ir]");if(!b)return;const t=viagem();const x=t&&t.irLugares&&t.irLugares[+b.dataset.ir];if(x){$("irLugar").value=x;ir(x)}});
+ document.addEventListener("click",e=>{const b=e.target.closest(".irMapaBtn");if(!b)return;const box=b.closest("[data-ir-res]")||$("irRes");verMapa(box.__rota)});
+ pn.addEventListener("click",e=>{const b=e.target.closest("[data-ir-atalho]");if(!b)return;$("irLugar").value=b.textContent.replace(/^\S+\s/,"");ir(b.dataset.irAtalho)});
+ // 🚶 Como chegar em cada resultado da busca
+ function mesmaCidade(cidBusca,t){const a=N(String(cidBusca).split(",")[0]),b=N(String(cidHotel(t)).split(",")[0]);return a&&b&&(a===b||a.includes(b)||b.includes(a))}
+ function marcarResultados(){
+  document.querySelectorAll("#resultados .place").forEach(pl=>{if(pl.querySelector(".irComo"))return;const sv=pl.querySelector("[data-save-place]");if(!sv)return;let p;try{p=JSON.parse(decodeURIComponent(sv.dataset.savePlace))}catch(e){return}if(!p||!p.lat||!p.lon)return;
+   pl.insertAdjacentHTML("beforeend",`<div class="irComo"><button type="button" class="btn secondary" data-ir-como="1">🧭 Como chegar</button><div data-ir-res></div></div>`);pl.querySelector("[data-ir-como]").__p=p});
+ }
+ new MutationObserver(marcarResultados).observe($("resultados"),{childList:true});
+ $("resultados").addEventListener("click",e=>{const b=e.target.closest("[data-ir-como]");if(!b)return;const p=b.__p;if(!p)return;const box=b.parentNode.querySelector("[data-ir-res]");const t=viagem();
+  if(t&&t.hotel&&mesmaCidade($("cidadeBusca").value,t)){ir(p.name||"o lugar",box,{lat:p.lat,lon:p.lon,end:p.address||""});return}
+  const gm=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.lat+","+p.lon)}&travelmode=walking`;
+  box.innerHTML=`<div class="irCard"><div>🧭 Caminho de onde você está até <b>${esc(p.name||"o lugar")}</b></div><div class="irBtns"><a class="btn" href="${gm}" target="_blank" rel="noopener">🚶 A pé no Google Maps</a><a class="btn secondary" href="${gm.replace("walking","driving")}" target="_blank" rel="noopener">🚗 De carro</a></div></div>`});
+ $("hotelShortcut").addEventListener("click",()=>{if($("hotelPainel").style.display!=="none")salvos()});
+ const st=document.createElement("style");st.textContent=`.irBox{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}.irLinha{display:flex;gap:8px;margin-top:6px}.irLinha input{flex:1;min-width:0}.irLinha .btn{width:auto;padding:0 14px}.irSalvos{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.irSalvos:empty{display:none}.irSalvos button{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:5px 10px;font-size:13px;color:inherit}.irCard{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);display:flex;flex-direction:column;gap:4px;font-size:14px}.irCard small{opacity:.8}.irTempo{font-size:15px}.irBtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.irBtns .btn{flex:1 1 140px;text-align:center;text-decoration:none;min-width:0}.irAv{font-size:13px;color:#b45309}.irInfo{font-size:13px;margin-top:6px}.irComo{width:100%;margin-top:8px}.irComo>.btn{width:100%}.irAtalhos{margin-top:8px}`;document.head.appendChild(st);
+})();
 </script>
 </body>
 
