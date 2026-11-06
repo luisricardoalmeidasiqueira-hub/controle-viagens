@@ -1161,7 +1161,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="13.5";
+const APP_VERSAO="13.6";
 const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2594,7 +2594,7 @@ renderPasseios();
 /* ===== v4.0: 🧳 checklist da mala + contagem regressiva da viagem ===== */
 const MALA_CATS=["Antes de sair de casa","Avião","Documentos","Roupas","Higiene","Remédios","Eletrônicos","Praia","Frio","Ônibus","Criança","Parque / Piscina","Meus itens"];
 const MALA_MODELOS={
- base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Cabides","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Desodorante roll-on","Perfume","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Enxaguante bucal","Cortador de unha","Protetor labial","Lenço umedecido","Bloqueador de odor para o vaso (tipo Mágico)"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Repelente de tomada","Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
+ base:{Documentos:["RG ou CNH","Cartão do SUS / convênio","Cartão do banco e dinheiro","Comprovante da reserva / passagem","Chaves de casa","Óculos de grau (se usar)","Caneta (para anotar ou preencher papel)","Bloquinho de anotação"],Roupas:["Camisetas","Shorts / bermudas","Calças","Pijama","Meias","Chinelo","Tênis / sapato","Blusa de frio","Camisa UV (proteção solar)","Óculos de sol (Ray-Ban)","Boné / chapéu","Cinto","Roupa para sair à noite","Cabides","Sacola para roupa suja"],Higiene:["Escova de dente","Pasta de dente","Desodorante","Desodorante roll-on","Perfume","Shampoo e condicionador","Sabonete","Pente / escova de cabelo","Toalha de banho","Fio dental","Enxaguante bucal","Cortador de unha","Protetor labial","Lenço umedecido","Bloqueador de odor para o vaso (tipo Magicô)"],Remédios:["Remédios de uso contínuo","Remédio para dor / febre","Remédio para enjoo","Remédio para alergia","Pomada (picada de inseto, assadura, machucado)","Remédio em gotas (ex.: dipirona gotas)","Termômetro","Band-aid / curativo"],Eletrônicos:["Repelente de tomada","Carregador do celular","Fone de ouvido","Carregador portátil (power bank)"]},
  casa:{"Antes de sair de casa":["Desligar o registro do gás","Tirar aparelhos da tomada","Fechar janelas e portas","Deixar água e comida para os bichos (ou combinar quem cuida)","Tirar o lixo","Ligar o alarme","Ligar a cerca elétrica","Trancar portão e porta (conferir duas vezes)","Avisar um vizinho ou parente"]},
  m:{Roupas:["Cuecas"],Higiene:["Aparelho de barbear","Espuma / gel de barbear","Pós-barba"]},
  f:{Roupas:["Calcinhas","Sutiãs"],Higiene:["Absorventes","Maquiagem","Secador / prancha","Elástico / presilha de cabelo"]},
@@ -3055,7 +3055,7 @@ const APARELHOS=[
  ["camera","📷 Câmera",["Câmera fotográfica","Carregador ou pilhas da câmera","Cartão de memória"]],
  ["som","🔊 Caixinha de som",["Caixinha de som","Carregador da caixinha"]],
  ["benjamim","🔌 Extensão / benjamim",["Extensão ou benjamim (carregar tudo junto no hotel)"]],
- ["receptor","📺 Receptor de TV (internet)",["Receptor de TV (TV pela internet)","Fonte do receptor","Controle remoto do receptor","Cabo HDMI","Pilhas do controle","Conferir se o hotel tem Wi-Fi e TV com entrada HDMI"]],
+ ["receptor","📺 Receptor de TV + cabo HDMI",["Receptor de TV (TV pela internet)","Fonte do receptor","Controle remoto do receptor","Cabo HDMI","Pilhas do controle","Conferir se o hotel tem Wi-Fi e TV com entrada HDMI"]],
  ["tensao","⚡ Testador de tensão",["Testador de tensão (conferir 127V ou 220V antes de ligar)"]],
  ["aquecedor","♨️ Aquecedor / secador",["Aquecedor ou secador (ver se é bivolt)"]]
 ];
@@ -4827,6 +4827,12 @@ $("cidadeAqui").addEventListener("click",()=>{
  .tbDica{margin-top:6px;border-top:1px solid var(--line);padding-top:6px}.tbDica summary{list-style:none;cursor:pointer;font-size:13px;font-weight:800;display:flex;justify-content:space-between}.tbDica summary::-webkit-details-marker{display:none}.tbDica[open] summary span{transform:rotate(180deg)}
  .tbH b{font-size:14px}.tbH span{font-size:20px}.tbHoras{padding:0 0 4px}`;document.head.appendChild(st);
 })();
+</script>
+<script>
+/* v13.6: nome certo é Magicô — troca nas malas salvas sem perder o marcado */
+(function(){const V="Bloqueador de odor para o vaso (tipo Mágico)",N="Bloqueador de odor para o vaso (tipo Magicô)";
+ try{let mud=false;(viagens||[]).forEach(t=>{if(t.mala){const j=JSON.stringify(t.mala);if(j.indexOf(V)>=0){t.mala=JSON.parse(j.split(V).join(N));mud=true}}});if(mud)save();
+  const o=localStorage.getItem(ORDEM_KEY);if(o&&o.indexOf(V)>=0)localStorage.setItem(ORDEM_KEY,o.split(V).join(N))}catch(e){}})();
 </script>
 </body>
 
