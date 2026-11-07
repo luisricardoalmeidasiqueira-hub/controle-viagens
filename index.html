@@ -1160,7 +1160,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="14.5";
+const APP_VERSAO="14.6";
 const APP_DATA_VERSAO="06/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2599,11 +2599,11 @@ const MALA_MODELOS={
  m:{Roupas:["Cuecas"],Higiene:["Aparelho de barbear","Espuma / gel de barbear","Pós-barba"]},
  f:{Roupas:["Calcinhas","Sutiãs"],Higiene:["Absorventes","Maquiagem","Secador / prancha","Elástico / presilha de cabelo"]},
  c:{Criança:["Fraldas","Lenço umedecido","Mamadeira / copinho","Brinquedo ou livrinho","Roupas extras da criança","Remédios da criança"]},
- praia:{Praia:["Protetor solar","Óculos de sol (Ray-Ban)","Boné / chapéu","Toalha de praia","Roupa de banho","Canga / saída de praia","Repelente","Bolsa para a praia","Copo térmico (tipo Stanley)","Garrafa térmica / cooler","Pós-sol / hidratante","Capinha à prova d'água para o celular","Saco plástico para roupa molhada"]},
+ praia:{Praia:["Protetor solar","Óculos de sol (Ray-Ban)","Boné / chapéu","Toalha de praia","Sunga","Biquíni","Canga / saída de praia","Repelente","Bolsa para a praia","Copo térmico (tipo Stanley)","Garrafa térmica / cooler","Pós-sol / hidratante","Capinha à prova d'água para o celular","Saco plástico para roupa molhada"]},
  frio:{Frio:["Casaco","Gorro","Luvas","Cachecol","Meia grossa","Hidratante / protetor labial"]},
  onibus:{Ônibus:["Travesseiro de pescoço","Cobertor / manta","Garrafinha de água","Lanche para a viagem","Lenço / álcool em gel"]},
  aviao:{"Avião":["Documento original com foto","Cartão de embarque no celular","Saquinho transparente para líquidos","Etiqueta com nome na mala","Cadeado para a mala despachada"]},
- parque:{"Parque / Piscina":["Roupa de banho","Canga / saída de praia","Toalha","Protetor solar","Capa de chuva","Pochete / bolsinha","Sapato confortável","Copo térmico (tipo Stanley)","Garrafinha de água","Capinha à prova d'água para o celular","Óculos de natação","Chinelo para a área molhada","Saco plástico para roupa molhada"]}
+ parque:{"Parque / Piscina":["Sunga","Biquíni","Canga / saída de praia","Toalha","Protetor solar","Capa de chuva","Pochete / bolsinha","Sapato confortável","Copo térmico (tipo Stanley)","Garrafinha de água","Capinha à prova d'água para o celular","Óculos de natação","Chinelo para a área molhada","Saco plástico para roupa molhada"]}
 };
 const MALA_QUEM=[["m","👨 Masculino"],["f","👩 Feminino"],["c","🧒 Criança"]];
 const MALA_TIPOS=[["aviao","✈️ Avião"],["praia","🏖️ Praia"],["frio","❄️ Frio"],["onibus","🚌 Ônibus / excursão"],["parque","🎢 Parque / piscina"]];
@@ -2620,7 +2620,7 @@ function qtdSugerida(n,d){
  if(/calca/.test(k))return Math.max(1,Math.ceil(d/3));
  if(/sutia/.test(k))return Math.max(1,meia);
  if(/pijama/.test(k))return d>4?2:1;
- if(/roupa de banho/.test(k))return d>2?2:1;
+ if(/roupa de banho|^sunga|^biquini|^maio/.test(k))return d>2?2:1;
  if(/fralda/.test(k))return d*6;
  if(/roupas extras da crianca/.test(k))return d+1;
  if(/blusa de frio|casaco/.test(k))return d>5?2:1;
@@ -5204,6 +5204,13 @@ $("cidadeAqui").addEventListener("click",()=>{
  $("hotelShortcut").addEventListener("click",()=>{if($("hotelPainel").style.display!=="none")salvos()});
  const st=document.createElement("style");st.textContent=`.irBox{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}.irLinha{display:flex;gap:8px;margin-top:6px}.irLinha input{flex:1;min-width:0}.irLinha .btn{width:auto;padding:0 14px}.irSalvos{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.irSalvos:empty{display:none}.irSalvos button{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:5px 10px;font-size:13px;color:inherit}.irCard{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);display:flex;flex-direction:column;gap:4px;font-size:14px}.irCard small{opacity:.8}.irTempo{font-size:15px}.irBtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.irBtns .btn{flex:1 1 140px;text-align:center;text-decoration:none;min-width:0}.irAv{font-size:13px;color:#b45309}.irInfo{font-size:13px;margin-top:6px}.irComo{width:100%;margin-top:8px}.irComo>.btn{width:100%}.irAtalhos{margin-top:8px}.irAtalhos button.irTem{border-color:var(--accent)}.irEditBtn{opacity:.8}.irEdit{width:100%;display:flex;flex-direction:column;gap:6px}.irEditL{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}.irEditL span{flex:1;min-width:0;font-size:14px}.irEditL small{display:block;opacity:.7;font-size:12px}.irEditL button{border:0!important;background:none!important;font-size:18px;padding:4px 6px!important}.irSalvos .irPronto{align-self:flex-start;font-weight:700}.irOutros{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}.irOutros small{width:100%}.irOutros button,.irDeNovo{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 10px;font-size:13px;color:inherit}.irDeNovo{margin-top:6px;align-self:flex-start;background:none;border:0;color:var(--accent);font-weight:700;padding:4px 0}`;document.head.appendChild(st);
 })();
+</script>
+<script>
+/* v14.6: "Roupa de banho" vira duas linhas: Sunga e Biquíni (mantém marcado, quantidade e mão/mala) */
+(function(){const V="Roupa de banho",N=["Sunga","Biquíni"];
+ const troca=x=>{if(Array.isArray(x)){const i=x.indexOf(V);if(i>=0){x.splice(i,1,...N.filter(n=>!x.includes(n)))}x.forEach(troca)}else if(x&&typeof x==="object"){if(Object.prototype.hasOwnProperty.call(x,V)){const val=x[V];delete x[V];N.forEach(n=>{if(!(n in x))x[n]=val})}Object.values(x).forEach(troca)}};
+ try{let mud=false;(viagens||[]).forEach(t=>{if(t.mala&&JSON.stringify(t.mala).indexOf(V)>=0){troca(t.mala);mud=true}});if(mud)save();
+  const o=localStorage.getItem(ORDEM_KEY);if(o&&o.indexOf(V)>=0){const j=JSON.parse(o);troca(j);localStorage.setItem(ORDEM_KEY,JSON.stringify(j))}}catch(e){}})();
 </script>
 </body>
 
