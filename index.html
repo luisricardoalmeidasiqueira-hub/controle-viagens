@@ -1160,7 +1160,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="14.7";
+const APP_VERSAO="15.0";
 const APP_DATA_VERSAO="08/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1441,7 +1441,7 @@ function render(){
  renderProximaViagem(future);
  const hojeL=localDate(),fim=t=>t.dataVolta||t.data||"";
  const prox=arr.filter(t=>fim(t)>=hojeL),feitas=arr.filter(t=>fim(t)<hojeL).reverse();
- $("viagensQtd").textContent=arr.length;
+ $("viagensQtd").textContent=prox.length;{const hj=localDate(),est=t=>{const f=faltanteViagem(t);if(t.status==="paga"||f<=0.009)return "ok";const pc=t.modoPagamento==="parcelado"&&t.parcelas?.length;return (pc?t.parcelas.some(p=>!p.pago&&p.vencimento<hj):!!(t.venc&&t.venc<hj))?"late":"due"};const L=prox.filter(t=>Number(t.valorTotal)>0||(t.parcelas&&t.parcelas.length)).map(est);if(L.length){const e=L.includes("late")?"late":L.includes("due")?"due":"ok";const d=document.createElement("span");d.className="viagDot "+e;d.title=e==="late"?"Tem pagamento atrasado":e==="due"?"Falta pagar, mas está em dia":"Tudo pago";$("viagensQtd").appendChild(d)}}
  $("listaViagens").innerHTML=(prox.length?prox.map(card).join(""):`<div class="empty">${arr.length?"Nenhuma viagem marcada no momento.":"Nenhuma viagem cadastrada."} Toque em ＋ para adicionar.</div>`)+(window.arquivoFeitas?arquivoFeitas(feitas):(feitas.length?`<div class="tripsDivider">Já realizadas</div>`+feitas.map(card).join(""):""));
  if(typeof aplicarFinanceiro==="function")aplicarFinanceiro();
 }
@@ -1567,7 +1567,7 @@ function card(t){
   <button type="button" class="tripHead" data-trip-toggle="${t.id}" aria-expanded="${aberta}">
    <span class="tripIc">${iconeViagem(t)}</span>
    <span class="tripMain"><strong>${esc(t.nome)}</strong><small>📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta)+(t.horaVolta?" às "+esc(t.horaVolta):""):""}${t.cidade?" • "+esc(t.cidade):""}${passou?" • já realizada":""}</small></span>
-   <span class="tripSide"><span class="tripSideTop">${!passou&&window.malaPendente?`<span class="malaRapida" role="button" tabindex="0" data-mala-rapida="${t.id}" aria-label="Abrir a mala" title="Mala">🎒${window.bolinhaMala?bolinhaMala(t,true):""}</span>`:""}<span class="badge ${bcls}">${badge}</span></span>${falta>0?`<span class="tripFalta financeValues">${atrasada&&parc?`Venceu ${dateBR(vencidas[0].vencimento).slice(0,5)}`:proxParc?`Próx. ${dateBR(proxParc.vencimento).slice(0,5)}`:`Falta ${money(falta)}`}</span>`:""}</span>
+   <span class="tripSide"><span class="tripSideTop">${!passou&&window.malaPendente?`<span class="malaRapida" role="button" tabindex="0" data-mala-rapida="${t.id}" aria-label="Abrir a mala" title="Mala">🎒${window.bolinhaMala?bolinhaMala(t,true):""}</span>`:""}<span class="badge ${bcls}">${semValor?"":`<i class="payDot ${bcls}" aria-hidden="true"></i>`}${badge}</span></span>${falta>0?`<span class="tripFalta financeValues">${atrasada&&parc?`Venceu ${dateBR(vencidas[0].vencimento).slice(0,5)}`:proxParc?`Próx. ${dateBR(proxParc.vencimento).slice(0,5)}`:`Falta ${money(falta)}`}</span>`:""}</span>
    <span class="tripSeta" aria-hidden="true">▾</span>
   </button>
   <div class="tripBody">
@@ -4133,9 +4133,9 @@ arquivoFeitas=function(feitas){
   const L=porAno[a].sort((x,y)=>String(y.data||"").localeCompare(String(x.data||"")));
   const tot=L.reduce((s,t)=>s+(Number(t.valorTotal)||0),0);
   const aberta=q||anosAbertos.has(a)||(!anosAbertos.size&&a===maisNovo&&!window.__anosMexeu);
-  return `<details class="anoPasta" data-ano="${a}"${aberta?" open":""}><summary><span>📁 ${a}</span>${tot?`<small>Total: <span class="financeValues">${money(tot)}</span></small>`:""}<span class="secSeta">▾</span></summary><div class="anoCorpo">${L.map(item).join("")}</div></details>`;
+  return `<details class="anoPasta" data-ano="${a}"${aberta?" open":""}><summary><span>📁 ${a}<small class="anoQtd">· ${L.length} ${L.length>1?"viagens":"viagem"}</small></span>${tot?`<small>Total: <span class="financeValues">${money(tot)}</span></small>`:""}<span class="secSeta">▾</span></summary><div class="anoCorpo">${L.map(item).join("")}</div></details>`;
  }).join("");
- return `<details class="arqFeitas" id="arqFeitas" ${arqAberto?"open":""}><summary><span>📚 Viagens feitas</span><span class="arqSeta">▾</span></summary>
+ return `<details class="arqFeitas" id="arqFeitas" ${arqAberto?"open":""}><summary><span>📚 Viagens feitas<span class="ideasCount arqQtd">${feitas.length}</span></span><span class="arqSeta">▾</span></summary>
  <input class="arqBusca" id="arqBusca" placeholder="🔎 Procurar viagem feita (ex.: Aparecida)" value="${esc(arqBuscaTxt)}" autocomplete="off">
  ${pastas||`<div class="empty" style="margin:0 0 10px">Nenhuma viagem feita com esse nome.</div>`}
  <div class="notice" style="margin:0 0 10px">As viagens ficam guardadas por ano. Abra a pastinha do ano e toque em <b>Pagamentos</b> para ver como pagou. Toque nas estrelas para dizer se gostou.</div></details>`;
@@ -5213,10 +5213,59 @@ $("cidadeAqui").addEventListener("click",()=>{
   const o=localStorage.getItem(ORDEM_KEY);if(o&&o.indexOf(V)>=0){const j=JSON.parse(o);troca(j);localStorage.setItem(ORDEM_KEY,JSON.stringify(j))}}catch(e){}})();
 </script>
 <script>
-/* v14.7: contador de "Suas viagens" vira bolinha (sem número) */
-(function(){const q=$("viagensQtd");if(!q)return;const f=()=>{const n=parseInt(q.textContent,10);if(q.textContent!==""){q.dataset.n=isNaN(n)?0:n;q.textContent=""}q.classList.toggle("ideiaDotOn",+q.dataset.n>0);q.title=+q.dataset.n>0?"Tem viagem cadastrada":""};
- new MutationObserver(f).observe(q,{childList:true,characterData:true,subtree:true});f();
- const st=document.createElement("style");st.textContent=`#viagensQtd.ideiaDotOn{display:inline-block;width:12px;height:12px;min-width:0;padding:0;border-radius:50%;background:#f59e0b;border:0}#viagensQtd:empty:not(.ideiaDotOn){display:none}`;document.head.appendChild(st)})();
+/* v14.8/14.9: número de viagens + bolinha (🟢 tudo pago, 🟠 falta pagar, 🔴 atrasado); bolinha em cada viagem (🟢 paga, 🟡 em dia, 🔴 atrasada) */
+(function(){const st=document.createElement("style");st.textContent=`#viagensQtd{display:inline-flex;align-items:center}.viagDot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-left:6px}.viagDot.ok{background:#22c55e}.viagDot.late{background:#ef4444}.payDot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;position:relative;top:-1px}.payDot.ok{background:#22c55e}.payDot.due{background:#facc15;box-shadow:0 0 0 1px rgba(0,0,0,.12)}.payDot.late{background:#ef4444}.arqQtd{margin-left:8px}.anoQtd{opacity:.75;font-weight:600;margin-left:6px}`;document.head.appendChild(st)})();
+</script>
+<script>
+/* v15.0: bolinhas também nas pessoas que vão comigo — 🟢 pagou tudo, 🟡 falta mas está em dia, 🔴 atrasada (já devia ter pago a parte dela do que já venceu) */
+(function(){
+ const N=v=>typeof v==="number"?v:numBR(v);
+ // quanto da viagem já venceu (0 a 1)
+ function fracVencida(t){
+  if(!t)return 0;const hoje=localDate(),fim=t.dataVolta||t.data||"";if(fim&&fim<hoje)return 1;
+  const tot=Number(t.valorTotal)||0;
+  if(t.modoPagamento==="parcelado"&&Array.isArray(t.parcelas)&&t.parcelas.length){
+   const soma=t.parcelas.reduce((s,p)=>s+(Number(p.valor)||0),0)+entradaDe(t);if(!(soma>0))return 0;
+   const venc=t.parcelas.filter(p=>p.vencimento&&p.vencimento<hoje).reduce((s,p)=>s+(Number(p.valor)||0),0)+entradaDe(t);
+   return Math.min(1,venc/soma);
+  }
+  return t.venc&&t.venc<hoje?1:0;
+ }
+ window.estadoPessoa=function(t,p){
+  const val=N(p.valor)||0,pg=N(p.pago)||0;if(!(val>0))return null;
+  if(pg>=val-0.005)return{e:"ok",falta:0};
+  const devia=val*fracVencida(t);
+  return{e:pg<devia-0.5?"late":"due",falta:val-pg,devia:Math.max(0,devia-pg)};
+ };
+ const dot=e=>`<i class="payDot ${e}" aria-hidden="true"></i>`;
+ // na viagem (card)
+ const oC=acompCard;acompCard=function(t){
+  let h=oC.apply(this,arguments);if(!h)return h;
+  const L=(t.acompanhantes||[]).filter(p=>p.nome);const div=document.createElement("div");div.innerHTML=h;
+  div.querySelectorAll(".acompItem").forEach((it,i)=>{const p=L[i];if(!p)return;const s=estadoPessoa(t,p);if(!s)return;
+   const nm=it.querySelector(".acompNomeTxt");if(nm)nm.insertAdjacentHTML("afterbegin",dot(s.e));
+   const b=it.querySelector(".acompLado .badge");if(b&&s.e==="late"){b.textContent=`Atrasado • falta ${money(s.falta)}`}else if(b&&s.e==="due"){b.classList.remove("late");b.classList.add("due")}
+   if(s.e==="late"&&s.devia>0.5){const sm=it.querySelector(".acompInfo small");if(sm)sm.insertAdjacentHTML("afterend",`<small class="acompAtraso financeValues">🔴 Já devia ter pago ${money(s.devia)} (parte dela do que já venceu)</small>`)}
+  });
+  return div.innerHTML;
+ };
+ // no formulário
+ function formStatus(){
+  const t=editId?viagens.find(x=>x.id===editId):null;let algumAtraso=false;
+  document.querySelectorAll("#acompLista .acompRow").forEach((r,i)=>{const p=acompForm[i];if(!p)return;const tag=r.querySelector(".acompPagoTag");const s=estadoPessoa(t,p);if(s&&s.e==="late"&&String(p.nome||"").trim())algumAtraso=true;
+   if(!s){if(tag&&!(N(p.pago)>0))tag.remove();return}
+   let g=tag;if(!g){g=document.createElement("div");g.className="acompPagoTag";r.insertBefore(g,r.firstChild)}
+   g.classList.toggle("falta",s.e!=="ok");g.classList.toggle("atraso",s.e==="late");
+   g.innerHTML=s.e==="ok"?`${dot("ok")}Pago`:s.e==="late"?`${dot("late")}Atrasado • falta ${money(s.falta)}`:`${dot("due")}Falta ${money(s.falta)} • em dia`;
+  });
+  const c=$("acompCount");if(c){c.classList.toggle("late",algumAtraso);if(algumAtraso)c.title="Tem gente atrasada"}
+ }
+ const oR=renderAcompForm;renderAcompForm=function(){const r=oR.apply(this,arguments);formStatus();return r};
+ $("acompLista").addEventListener("input",()=>setTimeout(formStatus,0));
+ const st=document.createElement("style");st.textContent=`.acompPagoTag.atraso{color:#c62828}#acompCount.late{background:#ef4444!important}.acompAtraso{display:block;color:#c62828;font-size:12px;margin-top:2px}.acompNomeTxt .payDot{margin-right:6px}`;document.head.appendChild(st);
+ try{render()}catch(e){}
+})();
+
 </script>
 </body>
 
