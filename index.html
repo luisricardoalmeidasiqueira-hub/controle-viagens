@@ -1160,8 +1160,8 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="14.6";
-const APP_DATA_VERSAO="06/11/2026";
+const APP_VERSAO="14.7";
+const APP_DATA_VERSAO="08/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
 const CIDADES=["Tatuí, SP","São Paulo, SP","Aparecida, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
@@ -4479,7 +4479,7 @@ document.addEventListener("click",e=>{if(e.target.id!=="ideiaTentarIA")return;co
  const aplicar=f=>{lista.style.display=f?"none":"";seta.textContent=f?"︾":"︽";try{f?localStorage.setItem(K,"1"):localStorage.removeItem(K)}catch(e){}};
  let fechado=true;aplicar(true);
  head.addEventListener("click",()=>{fechado=!fechado;aplicar(fechado)});
- document.addEventListener("click",e=>{const m=e.target.closest('[data-menu="secViagens"]');if(m&&fechado){fechado=false;aplicar(false)}},true);
+ document.addEventListener("click",e=>{const m=e.target.closest('[data-menu="secViagens"],[data-next-trip]');if(m&&fechado){fechado=false;aplicar(false)}},true);
 })();
 /* v12.0 (3): 📍 Onde estou? Recalcular chegada (durante a viagem, pela localização do celular) */
 (function(){
@@ -5211,6 +5211,12 @@ $("cidadeAqui").addEventListener("click",()=>{
  const troca=x=>{if(Array.isArray(x)){const i=x.indexOf(V);if(i>=0){x.splice(i,1,...N.filter(n=>!x.includes(n)))}x.forEach(troca)}else if(x&&typeof x==="object"){if(Object.prototype.hasOwnProperty.call(x,V)){const val=x[V];delete x[V];N.forEach(n=>{if(!(n in x))x[n]=val})}Object.values(x).forEach(troca)}};
  try{let mud=false;(viagens||[]).forEach(t=>{if(t.mala&&JSON.stringify(t.mala).indexOf(V)>=0){troca(t.mala);mud=true}});if(mud)save();
   const o=localStorage.getItem(ORDEM_KEY);if(o&&o.indexOf(V)>=0){const j=JSON.parse(o);troca(j);localStorage.setItem(ORDEM_KEY,JSON.stringify(j))}}catch(e){}})();
+</script>
+<script>
+/* v14.7: contador de "Suas viagens" vira bolinha (sem número) */
+(function(){const q=$("viagensQtd");if(!q)return;const f=()=>{const n=parseInt(q.textContent,10);if(q.textContent!==""){q.dataset.n=isNaN(n)?0:n;q.textContent=""}q.classList.toggle("ideiaDotOn",+q.dataset.n>0);q.title=+q.dataset.n>0?"Tem viagem cadastrada":""};
+ new MutationObserver(f).observe(q,{childList:true,characterData:true,subtree:true});f();
+ const st=document.createElement("style");st.textContent=`#viagensQtd.ideiaDotOn{display:inline-block;width:12px;height:12px;min-width:0;padding:0;border-radius:50%;background:#f59e0b;border:0}#viagensQtd:empty:not(.ideiaDotOn){display:none}`;document.head.appendChild(st)})();
 </script>
 </body>
 
