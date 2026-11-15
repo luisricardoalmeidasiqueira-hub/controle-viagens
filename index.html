@@ -1160,8 +1160,8 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="15.0";
-const APP_DATA_VERSAO="08/11/2026";
+const APP_VERSAO="15.1";
+const APP_DATA_VERSAO="15/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
 const CIDADES=["Tatuí, SP","São Paulo, SP","Aparecida, SP","Campinas, SP","Sorocaba, SP","Santos, SP","Balneário Camboriú, SC","Florianópolis, SC","Joinville, SC","Curitiba, PR","Foz do Iguaçu, PR","Rio de Janeiro, RJ","Belo Horizonte, MG","Gramado, RS","Canela, RS","Porto Seguro, BA","Fortaleza, CE","Recife, PE","Salvador, BA","Natal, RN","Maceió, AL"];
@@ -5266,6 +5266,18 @@ $("cidadeAqui").addEventListener("click",()=>{
  try{render()}catch(e){}
 })();
 
+</script>
+<script>
+/* v15.1: com uma tela aberta por cima (mala, viagem...), a tela de trás fica parada; faixas da previsão rolam para o lado só elas */
+(function(){
+ let travado=false,posY=0;
+ function trava(){if(travado)return;travado=true;posY=window.scrollY||document.documentElement.scrollTop||0;const b=document.body.style;b.position="fixed";b.top=(-posY)+"px";b.left="0";b.right="0";b.width="100%";b.overflow="hidden"}
+ function solta(){if(!travado)return;travado=false;const b=document.body.style;b.position="";b.top="";b.left="";b.right="";b.width="";b.overflow="";window.scrollTo(0,posY)}
+ function confere(){document.querySelector(".modal.open")?trava():solta()}
+ const ob=new MutationObserver(confere);document.querySelectorAll(".modal").forEach(m=>ob.observe(m,{attributes:true,attributeFilter:["class"]}));confere();
+ // se o app rolar a página de trás enquanto travado (ex.: abrir a viagem pelo olhinho), aplica depois de soltar
+ const st=document.createElement("style");st.textContent=`.tbHoras,.tbDias,.tempoDias,.transportGrid{touch-action:pan-x;overscroll-behavior-x:contain;-webkit-overflow-scrolling:auto}.modal{overscroll-behavior:contain}.modal .sheet{overscroll-behavior:contain}`;document.head.appendChild(st);
+})();
 </script>
 </body>
 
