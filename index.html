@@ -533,6 +533,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 /* v5.1: mala pronta, atraso e mochila de mão */
 .bolinhaPend.vermelha{background:#D32F2F}
 .malaChamada.atrasada{border-color:#D32F2F;background:#FFEDEC;color:#9B1C1C}
+.malaDesfaz{margin-left:6px;width:22px;height:22px;padding:0;border-radius:50%;border:1.5px solid #8fd3b2;background:#fff;color:#176642;font-weight:900;font-size:12px;line-height:1;cursor:pointer;vertical-align:middle}
 .malaPill{display:inline-block;margin:6px 0 4px;border-radius:999px;padding:5px 11px;font-weight:900;font-size:12px;background:#E9F7F0;color:#176642;border:1.5px solid #8fd3b2}
 .malaRapida .okMala{position:absolute;bottom:-4px;right:-5px;font-size:11px}
 .malaFiltro{margin-top:10px}
@@ -1160,7 +1161,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="15.5";
+const APP_VERSAO="15.9";
 const APP_DATA_VERSAO="15/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2857,7 +2858,7 @@ function bolinhaMala(t,rapida){const e=estadoMala(t);if(e==="pronta")return rapi
 function avisoMalaHTML(t){const tp=window.tempoResumoHTML?tempoResumoHTML(t):"";return tp+avisoMalaHTML0(t)}
 function avisoMalaHTML0(t){
  const e=estadoMala(t);if(!e)return "";
- if(e==="pronta")return `<span class="malaPill">🎒 ✅ Mala pronta!</span><br>`;
+ if(e==="pronta")return `<span class="malaPill">🎒 ✅ Mala pronta! <button type="button" class="malaDesfaz" data-mala="${t.id}" aria-label="Editar a mala" title="Editar a mala">✏️</button><button type="button" class="malaDesfaz" data-mala-excluir="${t.id}" aria-label="Excluir a mala toda" title="Excluir a mala toda">✕</button></span><br>`;
  const txt=e==="atrasada"?"🔴 A viagem está chegando e a mala não está pronta! Abrir lista":e==="comecar"?"🎒 Falta uma semana ou menos: hora de arrumar a mala! Abrir lista":"🎒 Mala em andamento… Abrir lista";
  return `<button type="button" class="malaChamada ${e==="atrasada"?"atrasada":""}" data-mala="${t.id}">${txt}</button><button type="button" class="jaArrumei" data-ja-arrumei="${t.id}">✅ Já arrumei a mala</button>`;
 }
@@ -3293,6 +3294,7 @@ $("modalMala").addEventListener("click",e=>{if(e.target.id!=="chaveLimpar")retur
 /* ===== v6.9: "Mala pronta" no topo da mala e na Próxima viagem ===== */
 function marcarMalaPronta(t){
  const m=malaDe(t);m.extras=m.extras||[];m.tirados=m.tirados||[];
+ const antes={marcados:[...m.marcados],tirados:[...m.tirados],extras:[...m.extras]};
  const todos=[...new Set(Object.values(malaItens(m)).flat())];
  const ja=todos.filter(n=>m.marcados.includes(n)),faltam=todos.filter(n=>!m.marcados.includes(n));
  if(!todos.length)return;
@@ -3304,15 +3306,30 @@ function marcarMalaPronta(t){
   if(!confirm("Mala pronta com os "+ja.length+" itens que você marcou.\n\nOs "+faltam.length+" sem marcar saem da lista (não vão na mala):\n"+lista+"\n\nConfirmar?"))return;
   faltam.forEach(n=>{if(m.extras.includes(n))m.extras=m.extras.filter(x=>x!==n);else if(!m.tirados.includes(n))m.tirados.push(n)});
  }
+ if(!ja.length||faltam.length)m.desfazer=antes; /* guarda como estava, para o ✕ desfazer */
  m.usada=1;save();render();if(malaId===t.id&&$("modalMala").classList.contains("open"))renderMala();avisar("🎒 ✅ Mala pronta! Boa viagem!")}
 const __renderMala69=renderMala;
 renderMala=function(){
  __renderMala69();const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
  const todos=Object.values(malaItens(m)).flat(),ok=todos.filter(n=>m.marcados.includes(n)).length,pct=todos.length?Math.round(ok/todos.length*100):0;
- $("malaTopo").innerHTML=`<span class="barraMini"><i style="width:${pct}%"></i></span>${ok===todos.length&&todos.length?'<span class="prontaOk">✅ Mala pronta!</span>':'<button type="button" id="malaProntaTopo">✅ Mala pronta</button>'}`;
+ $("malaTopo").innerHTML=`<span class="barraMini"><i style="width:${pct}%"></i></span>${ok===todos.length&&todos.length?'<span class="prontaOk">✅ Mala pronta! <button type="button" class="malaDesfaz" data-mala-desfazer="'+malaId+'" aria-label="Desfazer mala pronta" title="Desfazer mala pronta">↩</button></span>':'<button type="button" id="malaProntaTopo">✅ Mala pronta</button>'}`;
 };
 $("modalMala").addEventListener("click",e=>{if(e.target.id!=="malaProntaTopo")return;e.preventDefault();const t=viagens.find(x=>x.id===malaId);if(t)marcarMalaPronta(t)});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-ja-arrumei]");if(!b)return;e.preventDefault();e.stopPropagation();const t=viagens.find(x=>x.id===Number(b.dataset.jaArrumei));if(t)marcarMalaPronta(t)},true);
+/* v15.9: ✕ no cartão = excluir a mala toda desta viagem (a viagem continua) */
+document.addEventListener("click",e=>{const b=e.target.closest("[data-mala-excluir]");if(!b)return;e.preventDefault();e.stopPropagation();
+ const t=viagens.find(x=>x.id===Number(b.dataset.malaExcluir));if(!t)return;
+ if(!confirm("Deseja excluir a mala toda desta viagem?\n\nApaga os itens marcados, as quantidades, os itens tirados e os que você adicionou. A viagem continua. Não dá para desfazer."))return;
+ delete t.mala;save();render();if(malaId===t.id&&$("modalMala").classList.contains("open"))renderMala();avisar("🗑️ Mala excluída. Ela volta do zero quando você abrir a lista.")},true);
+/* v15.6: ↩ dentro da lista da mala de "Mala pronta!" cancela e desmarca tudo, para marcar de novo com a lista atualizada */
+document.addEventListener("click",e=>{const b=e.target.closest("[data-mala-desfazer]");if(!b)return;e.preventDefault();e.stopPropagation();
+ const t=viagens.find(x=>x.id===Number(b.dataset.malaDesfazer));if(!t)return;
+ const m=malaDe(t),d=m.desfazer;
+ if(d){if(!confirm("Desfazer a Mala pronta?\n\nA lista volta como estava antes: o que você tinha marcado e o que tinha tirado."))return;
+  m.marcados=[...d.marcados];m.tirados=[...d.tirados];m.extras=[...d.extras];delete m.desfazer;
+  save();render();if(malaId===t.id&&$("modalMala").classList.contains("open"))renderMala();avisar("↩️ Mala pronta desfeita. Sua lista voltou como estava.");return}
+ if(!confirm("Cancelar a Mala pronta desta viagem?\n\nOs itens ficam desmarcados e você toca em Mala pronta de novo para marcar tudo com a lista atualizada."))return;
+ m.marcados=[];save();render();if(malaId===t.id&&$("modalMala").classList.contains("open"))renderMala();avisar("↩️ Mala pronta cancelada. Toque em Mala pronta para marcar de novo.")},true);
 render();
 </script>
 <script>
