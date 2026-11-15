@@ -533,6 +533,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 /* v5.1: mala pronta, atraso e mochila de mão */
 .bolinhaPend.vermelha{background:#D32F2F}
 .malaChamada.atrasada{border-color:#D32F2F;background:#FFEDEC;color:#9B1C1C}
+.malaAcoes{display:inline-flex;gap:2px;margin-left:6px;vertical-align:middle}
 .malaDesfaz{margin-left:6px;width:22px;height:22px;padding:0;border-radius:50%;border:1.5px solid #8fd3b2;background:#fff;color:#176642;font-weight:900;font-size:12px;line-height:1;cursor:pointer;vertical-align:middle}
 .malaPill{display:inline-block;margin:6px 0 4px;border-radius:999px;padding:5px 11px;font-weight:900;font-size:12px;background:#E9F7F0;color:#176642;border:1.5px solid #8fd3b2}
 .malaRapida .okMala{position:absolute;bottom:-4px;right:-5px;font-size:11px}
@@ -1094,7 +1095,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 <div class="malaBarra"><i id="malaProg"></i></div><div id="malaStatus" class="malaStatus"></div>
 <div id="malaLista"></div>
 <div class="malaAdd"><input id="malaNovoItem" placeholder="Adicionar item (ex.: Carregador do relógio)"><button type="button" class="btn searchSmall" id="malaAddBtn" aria-label="Adicionar item">＋</button></div>
-<div class="actions" style="margin-top:10px"><button type="button" class="btn secondary" id="malaEnviar">📤 Enviar lista</button><button type="button" class="btn" id="malaPronta">✅ Mala pronta</button><button type="button" class="btn secondary" id="malaDesmarcar">↩️ Desmarcar tudo</button></div>
+<div class="actions" style="margin-top:10px"><button type="button" class="btn secondary" id="malaEnviar">📤 Enviar lista</button><button type="button" class="btn" id="malaPronta">✅ Mala pronta</button><button type="button" class="btn secondary" id="malaDesmarcar">↩️ Desmarcar tudo</button><button type="button" class="btn secondary" id="malaDeBackup">📥 Recuperar marcações de um backup</button><input type="file" id="malaArqBackup" accept=".json,application/json" hidden></div>
 <div class="notice">Use o "Desmarcar tudo" na volta, para conferir se não esqueceu nada no hotel.</div>
 </div></div>
 <div class="modal" id="modalBula"><div class="sheet"><button class="close" id="fecharBula" aria-label="Fechar">×</button><h2>📄 Bula do remédio</h2><div id="bulaItem" class="notice"></div>
@@ -1161,7 +1162,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="15.9";
+const APP_VERSAO="15.13";
 const APP_DATA_VERSAO="15/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1587,7 +1588,7 @@ function card(t){
     <button class="btn secondary" type="button" data-action="pagamentos" data-id="${t.id}">💳 Pagamentos</button>
     <button class="btn secondary" type="button" data-action="calendar" data-id="${t.id}">📅 Agenda</button>
     <button class="btn secondary" type="button" data-action="mapa" data-id="${t.id}">🗺️ Mapa</button>
-    <button class="btn secondary" type="button" data-mala="${t.id}">🎒 Mala${window.bolinhaMala?bolinhaMala(t):""}</button>
+    <button class="btn secondary" type="button" data-mala="${t.id}">${window.estadoMala&&estadoMala(t)==="pronta"?"✅ ":""}🎒 Mala${window.bolinhaMala?bolinhaMala(t):""}</button>
     <button class="btn secondary" type="button" data-gastos="${t.id}">💸 Gastos</button>
     <button class="btn secondary" type="button" data-action="toggle" data-id="${t.id}">${t.status==="paga"?"↩️ Reabrir":"✅ Marcar paga"}</button>
     <button class="btn tripDel" type="button" data-action="delete" data-id="${t.id}">🗑️ Excluir viagem</button>
@@ -2643,7 +2644,7 @@ function malaDe(t){
  return t.mala;
 }
 function malaItens(m){
- const grupos=["base","casa",...m.quem,...m.tipos],porCat={},vistos=new Set();
+ const grupos=["base",...(m.genteEmCasa?[]:["casa"]),...m.quem,...m.tipos],porCat={},vistos=new Set();
  const pos=(cat,n)=>{const k=semAcento(n).toLowerCase();if(vistos.has(k)||m.tirados.includes(n))return;vistos.add(k);(porCat[cat]=porCat[cat]||[]).push(n)};
  const gen=n=>{const g=GENERO_ITEM[semAcento(n).toLowerCase()];return !g||g.some(x=>(m.quem||[]).includes(x))};
  grupos.forEach(g=>{const mod=MALA_MODELOS[g]||{};Object.keys(mod).forEach(cat=>mod[cat].forEach(n=>{if(gen(n))pos(cat,n)}))});
@@ -2663,7 +2664,7 @@ function abrirMala(id){
 }
 function renderMala(){
  const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
- $("malaQuem").innerHTML=MALA_QUEM.map(([k,r])=>`<button type="button" class="${m.quem.includes(k)?"on":""}" data-mala-quem="${k}">${r}</button>`).join("");
+ $("malaQuem").innerHTML=MALA_QUEM.map(([k,r])=>`<button type="button" class="${m.quem.includes(k)?"on":""}" data-mala-quem="${k}">${r}</button>`).join("")+`<button type="button" class="${m.genteEmCasa?"on":""}" data-mala-casa="1">🏠 Tem gente em casa</button>`;
  $("malaTipo").innerHTML=MALA_TIPOS.map(([k,r])=>`<button type="button" class="${m.tipos.includes(k)?"on":""}" data-mala-tipo="${k}">${r}</button>`).join("");
  $("malaAviao").innerHTML=m.tipos.includes("aviao")?regrasAviao(m):"";
  if(window.quadroCopiarMala)$("malaCopiar").innerHTML=quadroCopiarMala(t,m);
@@ -2695,6 +2696,7 @@ function salvarMala(){{const tt=viagens.find(x=>x.id===malaId);if(tt&&tt.mala)tt
 $("fecharMala").onclick=()=>$("modalMala").classList.remove("open");
 $("modalMala").addEventListener("click",e=>{
  const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
+ const gc=e.target.closest("[data-mala-casa]");if(gc){m.genteEmCasa=!m.genteEmCasa;salvarMala();return}
  const q=e.target.closest("[data-mala-quem]");if(q){const k=q.dataset.malaQuem;m.quem=m.quem.includes(k)?m.quem.filter(x=>x!==k):[...m.quem,k];salvarMala();return}
  const tp=e.target.closest("[data-mala-tipo]");if(tp){const k=tp.dataset.malaTipo;m.tipos=m.tipos.includes(k)?m.tipos.filter(x=>x!==k):[...m.tipos,k];salvarMala();return}
  const qb=e.target.closest("[data-mala-qtd]");if(qb){e.preventDefault();const n=qb.dataset.malaQtd,atual=qtdItem(m,n,diasViagem(t));const ult=m.base&&m.base.qtd&&m.base.qtd[n]!=null?`\nNa viagem ${m.base.nome} (${m.base.dias} dia${m.base.dias>1?"s":""}) você levou ${m.base.qtd[n]}.`:"";const v=prompt(`Quantas unidades de "${n}"?${ult}\n(deixe vazio para voltar ao cálculo automático)`,atual||"");if(v===null)return;m.qtd=m.qtd||{};if(v.trim()==="")delete m.qtd[n];else{const x=parseInt(v);if(x>=0)m.qtd[n]=x}salvarMala();return}
@@ -2709,7 +2711,7 @@ function addItemMala(){const v=$("malaNovoItem").value.trim();if(!v)return;const
 $("malaAddBtn").onclick=addItemMala;
 $("modalMala").addEventListener("toggle",e=>{if(e.target.id!=="regrasAvDet")return;const t=viagens.find(x=>x.id===malaId);if(t)malaDe(t).regrasAbertas=e.target.open?1:0},true);
 $("malaNovoItem").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addItemMala()}});
-$("malaDesmarcar").onclick=()=>{const t=viagens.find(x=>x.id===malaId);if(!t)return;if(confirm("Desmarcar todos os itens para conferir de novo?")){malaDe(t).marcados=[];salvarMala()}};
+$("malaDesmarcar").onclick=async()=>{const t=viagens.find(x=>x.id===malaId);if(!t)return;if(await pergunta("Desmarcar todos os itens para conferir de novo?","Desmarcar tudo")){malaDe(t).marcados=[];salvarMala()}};
 $("malaEnviar").onclick=async()=>{
  const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t),porCat=malaItens(m);
  const texto=`🎒 Mala - ${t.nome}${t.data?" ("+dateBR(t.data)+")":""}\n`+MALA_CATS.filter(c=>porCat[c]).map(c=>`\n${c}:\n`+porCat[c].map(n=>{const q=qtdItem(m,n,diasViagem(t));return (m.marcados.includes(n)?"✅ ":"⬜ ")+n+(q>1?` (${q})`:"")}).join("\n")).join("\n");
@@ -2834,7 +2836,7 @@ $("modalMala").addEventListener("click",e=>{
  const c=e.target.closest("[data-copiar-mala]");if(c){e.preventDefault();copiarMala(malaId,Number(c.dataset.copiarMala));return}
  if(e.target.closest("[data-nao-copiar]")){e.preventDefault();const t=viagens.find(x=>x.id===malaId);if(t){malaDe(t).semCopia=1;salvarMala()}}
 });
-$("modalMala").addEventListener("change",e=>{if(e.target.id!=="malaOrigemSel"||!e.target.value)return;const o=viagens.find(x=>x.id===Number(e.target.value));if(o&&confirm(`Copiar a mala da viagem ${o.nome}? Os itens marcados desta mala serão desmarcados.`))copiarMala(malaId,o.id);else e.target.value=""});
+$("modalMala").addEventListener("change",async e=>{if(e.target.id!=="malaOrigemSel"||!e.target.value)return;const o=viagens.find(x=>x.id===Number(e.target.value));if(o&&await pergunta(`Copiar a mala da viagem ${o.nome}? Os itens marcados desta mala serão desmarcados.`,"Copiar"))copiarMala(malaId,o.id);else e.target.value=""});
 </script>
 <script>
 /* v5.0: 🎒 da lista abre a mala sem abrir a viagem */
@@ -2858,7 +2860,7 @@ function bolinhaMala(t,rapida){const e=estadoMala(t);if(e==="pronta")return rapi
 function avisoMalaHTML(t){const tp=window.tempoResumoHTML?tempoResumoHTML(t):"";return tp+avisoMalaHTML0(t)}
 function avisoMalaHTML0(t){
  const e=estadoMala(t);if(!e)return "";
- if(e==="pronta")return `<span class="malaPill">🎒 ✅ Mala pronta! <button type="button" class="malaDesfaz" data-mala="${t.id}" aria-label="Editar a mala" title="Editar a mala">✏️</button><button type="button" class="malaDesfaz" data-mala-excluir="${t.id}" aria-label="Excluir a mala toda" title="Excluir a mala toda">✕</button></span><br>`;
+ if(e==="pronta")return `<span class="malaAcoes"><button type="button" class="malaDesfaz" data-mala="${t.id}" aria-label="Editar a mala" title="Editar a mala">✏️</button><button type="button" class="malaDesfaz" data-mala-excluir="${t.id}" aria-label="Excluir a mala toda" title="Excluir a mala toda">✕</button></span>`;
  const txt=e==="atrasada"?"🔴 A viagem está chegando e a mala não está pronta! Abrir lista":e==="comecar"?"🎒 Falta uma semana ou menos: hora de arrumar a mala! Abrir lista":"🎒 Mala em andamento… Abrir lista";
  return `<button type="button" class="malaChamada ${e==="atrasada"?"atrasada":""}" data-mala="${t.id}">${txt}</button><button type="button" class="jaArrumei" data-ja-arrumei="${t.id}">✅ Já arrumei a mala</button>`;
 }
@@ -3292,18 +3294,29 @@ $("modalMala").addEventListener("click",e=>{if(e.target.id!=="chaveLimpar")retur
 </script>
 <script>
 /* ===== v6.9: "Mala pronta" no topo da mala e na Próxima viagem ===== */
-function marcarMalaPronta(t){
+/* v15.13: pergunta própria do app (aparece na tela; o celular não consegue esconder como faz com o confirm do navegador) */
+function pergunta(msg,ok){return new Promise(res=>{
+ const cs=getComputedStyle(document.body);let bg=cs.backgroundColor;if(!bg||/rgba\(0, 0, 0, 0\)|transparent/.test(bg))bg="#fff";
+ const o=document.createElement("div");o.style.cssText="position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px";
+ const c=document.createElement("div");c.style.cssText="max-width:420px;width:100%;border-radius:16px;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.4);font-size:15px;line-height:1.45;background:"+bg+";color:"+cs.color;
+ const t=document.createElement("div");t.style.cssText="white-space:pre-wrap;margin-bottom:16px";t.textContent=msg;
+ const r=document.createElement("div");r.style.cssText="display:flex;gap:10px;justify-content:flex-end";
+ const f=v=>{o.remove();res(v)};
+ const b1=document.createElement("button");b1.type="button";b1.className="btn secondary";b1.textContent="Cancelar";b1.onclick=()=>f(false);
+ const b2=document.createElement("button");b2.type="button";b2.className="btn";b2.textContent=ok||"Confirmar";b2.onclick=()=>f(true);
+ r.append(b1,b2);c.append(t,r);o.append(c);o.addEventListener("click",e=>{if(e.target===o)f(false)});document.body.appendChild(o)})}
+async function marcarMalaPronta(t){
  const m=malaDe(t);m.extras=m.extras||[];m.tirados=m.tirados||[];
  const antes={marcados:[...m.marcados],tirados:[...m.tirados],extras:[...m.extras]};
  const todos=[...new Set(Object.values(malaItens(m)).flat())];
  const ja=todos.filter(n=>m.marcados.includes(n)),faltam=todos.filter(n=>!m.marcados.includes(n));
  if(!todos.length)return;
  if(!ja.length){
-  if(!confirm("Você ainda não marcou nenhum item. Quer marcar todos como já colocados na mala?"))return;
+  if(!(await pergunta("Você ainda não marcou nenhum item.\n\nQuer marcar TODOS como já colocados na mala?","Marcar todos")))return;
   m.marcados=todos.slice();
  }else if(faltam.length){
   const lista=faltam.slice(0,8).join(", ")+(faltam.length>8?" e mais "+(faltam.length-8):"");
-  if(!confirm("Mala pronta com os "+ja.length+" itens que você marcou.\n\nOs "+faltam.length+" sem marcar saem da lista (não vão na mala):\n"+lista+"\n\nConfirmar?"))return;
+  if(!(await pergunta("Mala pronta com os "+ja.length+" itens que você marcou.\n\nOs "+faltam.length+" sem marcar saem da lista (não vão na mala):\n"+lista,"Confirmar")))return;
   faltam.forEach(n=>{if(m.extras.includes(n))m.extras=m.extras.filter(x=>x!==n);else if(!m.tirados.includes(n))m.tirados.push(n)});
  }
  if(!ja.length||faltam.length)m.desfazer=antes; /* guarda como estava, para o ✕ desfazer */
@@ -3316,19 +3329,31 @@ renderMala=function(){
 };
 $("modalMala").addEventListener("click",e=>{if(e.target.id!=="malaProntaTopo")return;e.preventDefault();const t=viagens.find(x=>x.id===malaId);if(t)marcarMalaPronta(t)});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-ja-arrumei]");if(!b)return;e.preventDefault();e.stopPropagation();const t=viagens.find(x=>x.id===Number(b.dataset.jaArrumei));if(t)marcarMalaPronta(t)},true);
+/* v15.12: recupera o que estava marcado nesta mala a partir de um backup (menu ⋮ → Fazer backup) feito ANTES do "Mala pronta" */
+$("malaDeBackup").onclick=()=>{$("malaArqBackup").value="";$("malaArqBackup").click()};
+$("malaArqBackup").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{
+ let d;try{d=JSON.parse(String(r.result||""))}catch{alert("Este arquivo não é um backup válido.");return}
+ if(!d||d.app!=="Controle de Viagens"||!d.chaves){alert("Este arquivo não é um backup do Controle de Viagens.");return}
+ let bV=[];try{bV=JSON.parse(d.chaves.controle_viagens_dados||"[]")}catch{}
+ const t=viagens.find(x=>x.id===malaId);if(!t)return;const o=bV.find(x=>x.id===t.id);
+ if(!o||!o.mala||!(o.mala.marcados||[]).length){alert("Esse backup não tem itens marcados desta viagem.\n\nO backup precisa ter sido feito antes de você tocar em Mala pronta.");return}
+ const m=malaDe(t);
+ if(!confirm("Recuperar do backup de "+dateBR(String(d.criadoEm).slice(0,10))+"?\n\nA lista passa a ficar marcada como estava nele ("+o.mala.marcados.length+" itens). O resto fica sem marcar. Depois é só tocar em Mala pronta para tirar da lista o que você não leva."))return;
+ m.marcados=[...o.mala.marcados];m.extras=[...new Set([...(m.extras||[]),...(o.mala.extras||[])])];delete m.desfazer;
+ salvarMala();avisar("📥 Marcações recuperadas do backup.")};r.readAsText(f)};
 /* v15.9: ✕ no cartão = excluir a mala toda desta viagem (a viagem continua) */
-document.addEventListener("click",e=>{const b=e.target.closest("[data-mala-excluir]");if(!b)return;e.preventDefault();e.stopPropagation();
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-mala-excluir]");if(!b)return;e.preventDefault();e.stopPropagation();
  const t=viagens.find(x=>x.id===Number(b.dataset.malaExcluir));if(!t)return;
- if(!confirm("Deseja excluir a mala toda desta viagem?\n\nApaga os itens marcados, as quantidades, os itens tirados e os que você adicionou. A viagem continua. Não dá para desfazer."))return;
+ if(!(await pergunta("Deseja excluir a mala toda desta viagem?\n\nApaga os itens marcados, as quantidades, os itens tirados e os que você adicionou. A viagem continua. Não dá para desfazer.","Excluir")))return;
  delete t.mala;save();render();if(malaId===t.id&&$("modalMala").classList.contains("open"))renderMala();avisar("🗑️ Mala excluída. Ela volta do zero quando você abrir a lista.")},true);
 /* v15.6: ↩ dentro da lista da mala de "Mala pronta!" cancela e desmarca tudo, para marcar de novo com a lista atualizada */
-document.addEventListener("click",e=>{const b=e.target.closest("[data-mala-desfazer]");if(!b)return;e.preventDefault();e.stopPropagation();
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-mala-desfazer]");if(!b)return;e.preventDefault();e.stopPropagation();
  const t=viagens.find(x=>x.id===Number(b.dataset.malaDesfazer));if(!t)return;
  const m=malaDe(t),d=m.desfazer;
- if(d){if(!confirm("Desfazer a Mala pronta?\n\nA lista volta como estava antes: o que você tinha marcado e o que tinha tirado."))return;
+ if(d){if(!(await pergunta("Desfazer a Mala pronta?\n\nA lista volta como estava antes: o que você tinha marcado e o que tinha tirado.","Desfazer")))return;
   m.marcados=[...d.marcados];m.tirados=[...d.tirados];m.extras=[...d.extras];delete m.desfazer;
   save();render();if(malaId===t.id&&$("modalMala").classList.contains("open"))renderMala();avisar("↩️ Mala pronta desfeita. Sua lista voltou como estava.");return}
- if(!confirm("Cancelar a Mala pronta desta viagem?\n\nOs itens ficam desmarcados e você toca em Mala pronta de novo para marcar tudo com a lista atualizada."))return;
+ if(!(await pergunta("Cancelar a Mala pronta desta viagem?\n\nOs itens ficam desmarcados. Depois você toca em Mala pronta de novo.","Cancelar mala pronta")))return;
  m.marcados=[];save();render();if(malaId===t.id&&$("modalMala").classList.contains("open"))renderMala();avisar("↩️ Mala pronta cancelada. Toque em Mala pronta para marcar de novo.")},true);
 render();
 </script>
