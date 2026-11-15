@@ -1160,7 +1160,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="15.1";
+const APP_VERSAO="15.3";
 const APP_DATA_VERSAO="15/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2813,9 +2813,11 @@ function copiarMala(destId,origemId){
  const t=viagens.find(x=>x.id===destId),o=viagens.find(x=>x.id===origemId);if(!t||!o)return;
  const mo=malaDe(o),md=malaDe(t),dO=diasViagem(o)||1,dD=diasViagem(t)||1;
  md.quem=[...mo.quem];md.aparelhos=[...(mo.aparelhos||[])];/* praia/frio/avião continuam pelo destino desta viagem */
- md.extras=[...new Set([...(md.extras||[]),...(mo.extras||[])])];md.tirados=[...new Set([...(mo.tirados||[])])];
+ /* v15.3: só leva o que foi marcado na mala de origem; os itens que não foram voltam para a lista normal */
+ const levou=new Set(mo.marcados||[]);
+ md.extras=[...new Set([...(md.extras||[]),...(mo.extras||[]).filter(n=>!levou.size||levou.has(n))])];md.tirados=[];
  const usadas={},novas={};
- Object.values(malaItens(mo)).flat().forEach(n=>{const q=qtdItem(mo,n,dO);if(q>0){usadas[n]=q;novas[n]=Math.max(1,Math.round(q*dD/dO))}});
+ Object.values(malaItens(mo)).flat().forEach(n=>{const q=qtdItem(mo,n,dO);if(q>0&&(!levou.size||levou.has(n))){usadas[n]=q;novas[n]=Math.max(1,Math.round(q*dD/dO))}});
  md.qtd=Object.assign({},novas);
  Object.keys(md.qtd).forEach(n=>{if(md.qtd[n]===qtdSugerida(n,dD))delete md.qtd[n]});
  md.base={id:o.id,nome:o.nome,dias:dO,qtd:usadas};md.marcados=[];
@@ -2868,8 +2870,7 @@ $("modalMala").addEventListener("click",e=>{
  const f=e.target.closest("[data-filtro]");if(f){e.preventDefault();m.filtro=f.dataset.filtro;salvarMala();return}
  const o=e.target.closest("[data-mala-onde]");if(o){e.preventDefault();const n=o.dataset.malaOnde;m.onde=m.onde||{};m.onde[n]=ondeItem(m,null,n)==="mochila"?"mala":"mochila";salvarMala();return}
 });
-$("malaPronta").onclick=()=>{const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
- if(!confirm("Marcar todos os itens como já colocados na mala?"))return;m.marcados=[...new Set(Object.values(malaItens(m)).flat())];salvarMala();avisar("🎒 ✅ Mala pronta! Boa viagem!")};
+$("malaPronta").onclick=()=>{const t=viagens.find(x=>x.id===malaId);if(!t)return;marcarMalaPronta(t)};
 /* lista enviada separada por bolsa */
 const __malaEnviarOrig=$("malaEnviar").onclick;
 $("malaEnviar").onclick=async()=>{
@@ -3284,15 +3285,28 @@ $("modalMala").addEventListener("click",e=>{if(e.target.id!=="chaveLimpar")retur
 </script>
 <script>
 /* ===== v6.9: "Mala pronta" no topo da mala e na Próxima viagem ===== */
-function marcarMalaPronta(t){const m=malaDe(t);m.marcados=[...new Set(Object.values(malaItens(m)).flat())];m.usada=1;save();render();if(malaId===t.id&&$("modalMala").classList.contains("open"))renderMala();avisar("🎒 ✅ Mala pronta! Boa viagem!")}
+function marcarMalaPronta(t){
+ const m=malaDe(t);m.extras=m.extras||[];m.tirados=m.tirados||[];
+ const todos=[...new Set(Object.values(malaItens(m)).flat())];
+ const ja=todos.filter(n=>m.marcados.includes(n)),faltam=todos.filter(n=>!m.marcados.includes(n));
+ if(!todos.length)return;
+ if(!ja.length){
+  if(!confirm("Você ainda não marcou nenhum item. Quer marcar todos como já colocados na mala?"))return;
+  m.marcados=todos.slice();
+ }else if(faltam.length){
+  const lista=faltam.slice(0,8).join(", ")+(faltam.length>8?" e mais "+(faltam.length-8):"");
+  if(!confirm("Mala pronta com os "+ja.length+" itens que você marcou.\n\nOs "+faltam.length+" sem marcar saem da lista (não vão na mala):\n"+lista+"\n\nConfirmar?"))return;
+  faltam.forEach(n=>{if(m.extras.includes(n))m.extras=m.extras.filter(x=>x!==n);else if(!m.tirados.includes(n))m.tirados.push(n)});
+ }
+ m.usada=1;save();render();if(malaId===t.id&&$("modalMala").classList.contains("open"))renderMala();avisar("🎒 ✅ Mala pronta! Boa viagem!")}
 const __renderMala69=renderMala;
 renderMala=function(){
  __renderMala69();const t=viagens.find(x=>x.id===malaId);if(!t)return;const m=malaDe(t);
  const todos=Object.values(malaItens(m)).flat(),ok=todos.filter(n=>m.marcados.includes(n)).length,pct=todos.length?Math.round(ok/todos.length*100):0;
  $("malaTopo").innerHTML=`<span class="barraMini"><i style="width:${pct}%"></i></span>${ok===todos.length&&todos.length?'<span class="prontaOk">✅ Mala pronta!</span>':'<button type="button" id="malaProntaTopo">✅ Mala pronta</button>'}`;
 };
-$("modalMala").addEventListener("click",e=>{if(e.target.id!=="malaProntaTopo")return;e.preventDefault();const t=viagens.find(x=>x.id===malaId);if(t&&confirm("Já arrumou tudo? Marcar todos os itens como na mala?"))marcarMalaPronta(t)});
-document.addEventListener("click",e=>{const b=e.target.closest("[data-ja-arrumei]");if(!b)return;e.preventDefault();e.stopPropagation();const t=viagens.find(x=>x.id===Number(b.dataset.jaArrumei));if(t&&confirm(`Mala da viagem ${t.nome} pronta? Vou marcar todos os itens.`))marcarMalaPronta(t)},true);
+$("modalMala").addEventListener("click",e=>{if(e.target.id!=="malaProntaTopo")return;e.preventDefault();const t=viagens.find(x=>x.id===malaId);if(t)marcarMalaPronta(t)});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-ja-arrumei]");if(!b)return;e.preventDefault();e.stopPropagation();const t=viagens.find(x=>x.id===Number(b.dataset.jaArrumei));if(t)marcarMalaPronta(t)},true);
 render();
 </script>
 <script>
