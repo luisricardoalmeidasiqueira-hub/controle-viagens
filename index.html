@@ -1165,7 +1165,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="15.15";
+const APP_VERSAO="15.16";
 const APP_DATA_VERSAO="15/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -1460,7 +1460,7 @@ function renderProximaViagem(t){
  const tipo={viagem:"Viagem",excursao:"Excursão",carro:"Carro",moto:"Moto",aviao:"Avião",onibus:"Ônibus",outro:"Outro"}[t.tipoViagem]||"Viagem";
  const ic=iconeViagem(t);
  const fixada=!!t.proximaFixada;
- box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">${window.faltamTexto?faltamTexto(t):""}📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta)+(t.horaVolta?" às "+esc(t.horaVolta):""):""} • 📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div></div><div class="nextTripActions"><button class="nextTripAction" type="button" data-mala="${t.id}" title="Mala" aria-label="Abrir a mala">🎒</button><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>`;
+ box.innerHTML=`<div class="nextTripInner"><div><div class="nextTripName">${ic} ${esc(t.nome)}</div><div class="nextTripMeta">${window.faltamTexto?faltamTexto(t):""}📅 ${dataSem(t.data)}${t.horaSaida?" às "+esc(t.horaSaida):""}${t.dataVolta?" → "+dataSem(t.dataVolta)+(t.horaVolta?" às "+esc(t.horaVolta):""):""} • 📍 ${esc(t.cidade||"Destino não informado")} • ${tipo}</div></div><div class="nextTripActions"><button class="nextTripAction" type="button" data-mala="${t.id}" title="Mala" aria-label="Abrir a mala">🎒</button><button class="nextTripView" type="button" data-next-trip="${t.id}" title="Abrir viagem" aria-label="Abrir viagem">👁️</button><button class="nextTripAction danger" type="button" data-next-delete="${t.id}" title="Excluir esta viagem" aria-label="Excluir esta viagem">🗑️</button><button class="nextTripAction ${fixada?"saved":""}" type="button" data-next-save="${t.id}" title="${fixada?"Viagem fixada":"Fixar próxima viagem"}" aria-label="${fixada?"Viagem fixada":"Fixar próxima viagem"}">${fixada?"📌":"💾"}</button></div></div>${t.info?`<details class="obs infoViagem" style="margin-top:8px"><summary style="font-weight:800;cursor:pointer">📋 Informações da viagem</summary><div style="margin-top:6px;line-height:1.5">${esc(t.info).replace(/\n/g,"<br>")}</div></details>`:""}`;
 }
 /* Festas conhecidas: o mês costuma se repetir todo ano, mas as datas exatas mudam — sempre confirmar */
 const FESTAS=[
@@ -3298,8 +3298,27 @@ $("modalMala").addEventListener("click",e=>{if(e.target.id!=="chaveLimpar")retur
 <script>
 /* ===== v6.9: "Mala pronta" no topo da mala e na Próxima viagem ===== */
 /* v15.14: informações da viagem (parada, o que levar, pode / não pode) + ler de foto */
+async function lerInfoIA(f){
+ const b64=await fotoParaIA(f,1800);
+ const t=await iaPedir([{text:`Esta é a foto/print de informações de uma viagem ou excursão no Brasil (avisos da empresa para os passageiros). Transcreva TUDO que for útil em português, em linhas curtas, sem emojis, com estes rótulos quando existirem:
+PARADA: (onde e para quê)
+HORÁRIOS: (saída, retorno, pausas)
+LEVAR: (o que levar, por grupo: necessaire, mochila do parque, documentos...)
+PODE: (o que é permitido)
+NÃO PODE: (o que é proibido)
+OBSERVAÇÕES: (outros avisos e contatos)
+Responda SOMENTE com o texto, sem comentários. Não invente nada que não esteja na imagem.`},{inline_data:{mime_type:"image/jpeg",data:b64}}],false);
+ return String(t||"").replace(/\*\*/g,"").trim()}
 $("fInfoFoto").addEventListener("change",async e=>{
- const f=e.target.files[0];if(!f)return;const st=$("fInfoStatus");st.style.display="block";st.textContent="📷 Preparando a leitura…";
+ const f=e.target.files[0];if(!f)return;const st=$("fInfoStatus");st.style.display="block";
+ const por=txt=>{const el=$("fInfo");el.value=(el.value?el.value+"\n":"")+txt};
+ if(typeof iaChave==="function"&&iaChave()){
+  st.textContent="🤖 A IA está lendo a foto…";
+  try{iaMenuAtualiza("lendo");const txt=await lerInfoIA(f);iaMenuAtualiza();
+   if(txt&&txt.length>10){por(txt);st.textContent="🤖 ✅ A IA leu a foto. Confira o texto e salve a viagem.";e.target.value="";return}
+   st.textContent="🤖 A IA não achou texto. Usando o leitor normal…"}
+  catch(err){iaMenuAtualiza();st.textContent="🤖 A IA não respondeu. Usando o leitor normal…"}
+ }else st.textContent="📷 Preparando a leitura…";
  try{await carregarTesseract()}catch(err){st.textContent="Não consegui carregar o leitor de imagem. Ele precisa de internet.";e.target.value="";return}
  try{
   const orig=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.readAsDataURL(f)});
@@ -3307,8 +3326,7 @@ $("fInfoFoto").addEventListener("change",async e=>{
   await w.setParameters({tessedit_pageseg_mode:"11"});const r=await w.recognize(orig);await w.terminate();
   const linhas=String(r.data.text||"").split("\n").map(l=>l.replace(/\s+/g," ").trim()).filter(l=>l.length>=3&&/[A-Za-zÀ-ú]{3}/.test(l));
   if(!linhas.length){st.textContent="Não consegui ler texto nessa foto.";e.target.value="";return}
-  const el=$("fInfo");el.value=(el.value?el.value+"\n":"")+linhas.join("\n");
-  st.textContent="✅ Li a foto. Confira o texto, corrija o que precisar e salve a viagem."
+  por(linhas.join("\n"));st.textContent="✅ Li a foto pelo leitor normal. Confira o texto, corrija o que precisar e salve a viagem."
  }catch(err){st.textContent="Não consegui ler essa foto. Tente de novo com mais luz."}
  e.target.value=""});
 /* v15.15: coloca UMA vez as informações da excursão (JC Excursões) na viagem do Beto Carrero, se ela ainda estiver sem informações */
