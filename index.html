@@ -1160,7 +1160,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="15.3";
+const APP_VERSAO="15.5";
 const APP_DATA_VERSAO="15/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -2606,6 +2606,11 @@ const MALA_MODELOS={
  parque:{"Parque / Piscina":["Sunga","Biquíni","Canga / saída de praia","Toalha","Protetor solar","Capa de chuva","Pochete / bolsinha","Sapato confortável","Copo térmico (tipo Stanley)","Garrafinha de água","Capinha à prova d'água para o celular","Óculos de natação","Chinelo para a área molhada","Saco plástico para roupa molhada"]}
 };
 const MALA_QUEM=[["m","👨 Masculino"],["f","👩 Feminino"],["c","🧒 Criança"]];
+/* v15.4: itens que só aparecem para quem foi marcado (m = masculino, f = feminino, c = criança) */
+const GENERO_ITEM=(()=>{const g={"sunga":["m","c"],"biquini":["f","c"],"canga / saida de praia":["f","c"]};
+ /* v15.5: itens de adulto (não aparecem quando só "Criança" está marcado) */
+ ["chaves de casa","caneta (para anotar ou preencher papel)","bloquinho de anotacao","cartao do banco e dinheiro","perfume","cinto","roupa para sair a noite","bloqueador de odor para o vaso (tipo magico)","desodorante","desodorante roll-on","carregador portatil (power bank)","enxaguante bucal","pomada (picada de inseto, assadura, machucado)"].forEach(k=>g[k]=["m","f"]);
+ return g})();
 const MALA_TIPOS=[["aviao","✈️ Avião"],["praia","🏖️ Praia"],["frio","❄️ Frio"],["onibus","🚌 Ônibus / excursão"],["parque","🎢 Parque / piscina"]];
 const PRAIAS=/camboriu|penha|florianopolis|bombinhas|itapema|peruibe|santos|ubatuba|caraguatatuba|ilhabela|guaruja|bertioga|itanhaem|praia grande|sao sebastiao|paraty|angra|arraial|buzios|cabo frio|porto seguro|maceio|maragogi|natal|fortaleza|salvador|porto de galinhas|recife|ilha comprida|mongagua/;
 const FRIOS=/campos do jordao|monte verde|gramado|canela|urubici|sao joaquim|bento goncalves|petropolis/;
@@ -2639,7 +2644,8 @@ function malaDe(t){
 function malaItens(m){
  const grupos=["base","casa",...m.quem,...m.tipos],porCat={},vistos=new Set();
  const pos=(cat,n)=>{const k=semAcento(n).toLowerCase();if(vistos.has(k)||m.tirados.includes(n))return;vistos.add(k);(porCat[cat]=porCat[cat]||[]).push(n)};
- grupos.forEach(g=>{const mod=MALA_MODELOS[g]||{};Object.keys(mod).forEach(cat=>mod[cat].forEach(n=>pos(cat,n)))});
+ const gen=n=>{const g=GENERO_ITEM[semAcento(n).toLowerCase()];return !g||g.some(x=>(m.quem||[]).includes(x))};
+ grupos.forEach(g=>{const mod=MALA_MODELOS[g]||{};Object.keys(mod).forEach(cat=>mod[cat].forEach(n=>{if(gen(n))pos(cat,n)}))});
  (m.extras||[]).forEach(n=>pos("Meus itens",n));
  return porCat;
 }
