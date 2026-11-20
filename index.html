@@ -1165,7 +1165,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="15.16";
+const APP_VERSAO="15.17";
 const APP_DATA_VERSAO="15/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -3453,8 +3453,8 @@ $("modalMala").addEventListener("click",e=>{
 </script>
 <script>
 /* ===== v7.6: 💸 gastos durante a viagem (foto da notinha soma sozinho) ===== */
-const GASTO_CATS=[["comida","🍔","Comida"],["combustivel","⛽","Combustível"],["passeio","🎟️","Passeio / ingresso"],["compras","🛍️","Compras / lembrancinha"],["transporte","🚕","Transporte (Uber, táxi…)"],["pedagio","🛣️","Pedágio / estacionamento"],["farmacia","💊","Farmácia"],["hotel","🏨","Hospedagem"],["outros","💸","Outros"]];
-const GASTO_PALAVRAS=[[/ped[aá]gio|estacionamento|sem parar|conectcar|veloe|autoban|arteris|ecovias|ccr\b/i,"pedagio"],[/posto|combust|gasolina|etanol|diesel|shell|ipiranga|petrobras|\bbr\b|ale combust|litros?/i,"combustivel"],[/drogaria|farm[aá]cia|droga ?raia|pacheco|pague menos|drogasil/i,"farmacia"],[/restaurante|lanchonete|padaria|pizzaria|churrascaria|bar\b|caf[eé]|lanche|refei|sorvete|a[cç]ougue|mc ?donald|burger|habib|spoleto|subway|pastel/i,"comida"],[/ped[aá]gio|uber|99|taxi|t[aá]xi|estacionamento|[oô]nibus|metr[oô]|passagem/i,"transporte"],[/ingresso|parque|beto carrero|museu|passeio|teleférico|unipraias|cinema/i,"passeio"],[/hotel|pousada|hosped/i,"hotel"],[/loja|mercado|supermercado|atacad|magazine|lembran|souvenir|presente/i,"compras"]];
+const GASTO_CATS=[["comida","🍔","Comida"],["sobremesa","🍦","Sorvete / sobremesa"],["combustivel","⛽","Combustível"],["passeio","🎟️","Passeio / ingresso"],["compras","🛍️","Compras / lembrancinha"],["transporte","🚕","Transporte (Uber, táxi…)"],["pedagio","🛣️","Pedágio / estacionamento"],["farmacia","💊","Farmácia"],["hotel","🏨","Hospedagem"],["outros","💸","Outros"]];
+const GASTO_PALAVRAS=[[/ped[aá]gio|estacionamento|sem parar|conectcar|veloe|autoban|arteris|ecovias|ccr\b/i,"pedagio"],[/posto|combust|gasolina|etanol|diesel|shell|ipiranga|petrobras|\bbr\b|ale combust|litros?/i,"combustivel"],[/drogaria|farm[aá]cia|droga ?raia|pacheco|pague menos|drogasil/i,"farmacia"],[/sorvete|sobremesa|a[cç]a[ií]|picol[eé]|gelato|milk ?shake|doceria|confeitaria|cacau show|kopenhagen|casquinha|sundae/i,"sobremesa"],[/restaurante|lanchonete|padaria|pizzaria|churrascaria|bar\b|caf[eé]|lanche|refei|a[cç]ougue|mc ?donald|burger|habib|spoleto|subway|pastel/i,"comida"],[/ped[aá]gio|uber|99|taxi|t[aá]xi|estacionamento|[oô]nibus|metr[oô]|passagem/i,"transporte"],[/ingresso|parque|beto carrero|museu|passeio|teleférico|unipraias|cinema/i,"passeio"],[/hotel|pousada|hosped/i,"hotel"],[/loja|mercado|supermercado|atacad|magazine|lembran|souvenir|presente/i,"compras"]];
 let gastosId=null;
 function gastosDe(t){return t.despesas||(t.despesas=[])}
 function catsDaViagem(t){const sem=t&&["excursao","onibus","aviao"].includes(t.tipoViagem);return sem?GASTO_CATS.filter(c=>c[0]!=="combustivel"&&c[0]!=="pedagio"):GASTO_CATS}
