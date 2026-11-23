@@ -1165,7 +1165,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="15.17";
+const APP_VERSAO="15.18";
 const APP_DATA_VERSAO="15/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -3453,11 +3453,16 @@ $("modalMala").addEventListener("click",e=>{
 </script>
 <script>
 /* ===== v7.6: 💸 gastos durante a viagem (foto da notinha soma sozinho) ===== */
-const GASTO_CATS=[["comida","🍔","Comida"],["sobremesa","🍦","Sorvete / sobremesa"],["combustivel","⛽","Combustível"],["passeio","🎟️","Passeio / ingresso"],["compras","🛍️","Compras / lembrancinha"],["transporte","🚕","Transporte (Uber, táxi…)"],["pedagio","🛣️","Pedágio / estacionamento"],["farmacia","💊","Farmácia"],["hotel","🏨","Hospedagem"],["outros","💸","Outros"]];
-const GASTO_PALAVRAS=[[/ped[aá]gio|estacionamento|sem parar|conectcar|veloe|autoban|arteris|ecovias|ccr\b/i,"pedagio"],[/posto|combust|gasolina|etanol|diesel|shell|ipiranga|petrobras|\bbr\b|ale combust|litros?/i,"combustivel"],[/drogaria|farm[aá]cia|droga ?raia|pacheco|pague menos|drogasil/i,"farmacia"],[/sorvete|sobremesa|a[cç]a[ií]|picol[eé]|gelato|milk ?shake|doceria|confeitaria|cacau show|kopenhagen|casquinha|sundae/i,"sobremesa"],[/restaurante|lanchonete|padaria|pizzaria|churrascaria|bar\b|caf[eé]|lanche|refei|a[cç]ougue|mc ?donald|burger|habib|spoleto|subway|pastel/i,"comida"],[/ped[aá]gio|uber|99|taxi|t[aá]xi|estacionamento|[oô]nibus|metr[oô]|passagem/i,"transporte"],[/ingresso|parque|beto carrero|museu|passeio|teleférico|unipraias|cinema/i,"passeio"],[/hotel|pousada|hosped/i,"hotel"],[/loja|mercado|supermercado|atacad|magazine|lembran|souvenir|presente/i,"compras"]];
+const GASTO_CATS=[["comida","🍽️","Comida"],["sobremesa","🍦","Sorvete / sobremesa"],["mercado","🛒","Supermercado / mercado"],["combustivel","⛽","Combustível"],["passeio","🎟️","Passeio / ingresso"],["compras","🛍️","Compras / lembrancinha"],["transporte","🚕","Transporte (Uber, táxi…)"],["pedagio","🛣️","Pedágio / estacionamento"],["farmacia","💊","Farmácia"],["hotel","🏨","Hospedagem"],["outros","💸","Outros"]];
+const GASTO_PALAVRAS=[[/ped[aá]gio|estacionamento|sem parar|conectcar|veloe|autoban|arteris|ecovias|ccr\b/i,"pedagio"],[/posto|combust|gasolina|etanol|diesel|shell|ipiranga|petrobras|\bbr\b|ale combust|litros?/i,"combustivel"],[/drogaria|farm[aá]cia|droga ?raia|pacheco|pague menos|drogasil/i,"farmacia"],[/supermercado|mercado|atacad|hortifruti|sacol[aã]o|feira livre|a[cç]ougue/i,"mercado"],[/sorvete|sobremesa|a[cç]a[ií]|picol[eé]|gelato|milk ?shake|doceria|confeitaria|cacau show|kopenhagen|casquinha|sundae/i,"sobremesa"],[/restaurante|lanchonete|padaria|pizzaria|churrascaria|bar\b|caf[eé]|lanche|refei|mc ?donald|burger|habib|spoleto|subway|pastel/i,"comida"],[/ped[aá]gio|uber|99|taxi|t[aá]xi|estacionamento|[oô]nibus|metr[oô]|passagem/i,"transporte"],[/ingresso|parque|beto carrero|museu|passeio|teleférico|unipraias|cinema/i,"passeio"],[/hotel|pousada|hosped/i,"hotel"],[/loja|magazine|lembran|souvenir|presente/i,"compras"]];
 let gastosId=null;
 function gastosDe(t){return t.despesas||(t.despesas=[])}
 function catsDaViagem(t){const sem=t&&["excursao","onibus","aviao"].includes(t.tipoViagem);return sem?GASTO_CATS.filter(c=>c[0]!=="combustivel"&&c[0]!=="pedagio"):GASTO_CATS}
+/* v15.18: ícone do gasto pelo nome (milho 🌽, supermercado 🛒, yakisoba 🍜...); se não reconhecer, usa o ícone da categoria */
+function gastoEmoji(g){
+ const d=semAcento(String(g&&g.desc||"")).toLowerCase();
+ const R=[[/milho|pamonha|curau/,"🌽"],[/supermercado|mercad|atacad|hortifruti|sacola|feira/,"🛒"],[/yakisoba|woksoba|\bwok\b|lamen|macarr|espaguete|massa/,"🍜"],[/pizza/,"🍕"],[/hamburg|burger|\blanche|x-?burg|cachorro|hot ?dog/,"🍔"],[/pastel|coxinha|salgad|esfiha|empada/,"🥟"],[/pipoca/,"🍿"],[/sorvete|acai|picole|gelato|casquinha/,"🍦"],[/cafe|padaria|\bpao\b|croissant/,"☕"],[/cerveja|chopp|chope/,"🍺"],[/\bagua\b|refri|suco|bebida|coca/,"🥤"],[/churrasc|espeto|carne|costela/,"🍖"],[/peixe|camarao|frutos do mar|sushi/,"🐟"],[/salada/,"🥗"],[/almoco|jantar|restaurante|prato|refeicao|self|buffet|rodosnack/,"🍽️"]];
+ const h=R.find(([r])=>r.test(d));return h?h[1]:catInfo(g&&g.cat)[1]}
 function catInfo(k){return GASTO_CATS.find(c=>c[0]===k)||GASTO_CATS[GASTO_CATS.length-1]}
 function totalGastos(t){return gastosDe(t).reduce((s,g)=>s+(Number(g.valor)||0),0)}
 function gastosLinha(t){const L=t.despesas||[];if(!L.length)return "";return `<button type="button" class="gastosLinha" data-gastos="${t.id}">💸 Gastos na viagem: <span class="financeValues">${money(totalGastos(t))}</span> (${L.length===1?"1 gasto":L.length+" gastos"})</button>`}
@@ -3466,7 +3471,7 @@ function renderGastos(){
  const t=viagens.find(x=>x.id===gastosId);if(!t)return;const L=gastosDe(t);const tot=totalGastos(t);
  const porCat={};L.forEach(g=>{porCat[g.cat]=(porCat[g.cat]||0)+(Number(g.valor)||0)});
  $("gastoTotal").innerHTML=`<small>Total gasto na viagem</small><b>${money(tot)}</b>${Object.keys(porCat).length?`<div class="gastoCats">${Object.entries(porCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>${catInfo(k)[1]} ${money(v)}</span>`).join("")}</div>`:""}`;
- $("gastoLista").innerHTML=L.length?[...L].map((g,i)=>({g,i})).sort((a,b)=>(b.g.data||"").localeCompare(a.g.data||"")||b.i-a.i).map(({g,i})=>`<div class="gastoItem">${g.foto?`<img src="${g.foto}" alt="Notinha" data-gasto-foto="${i}">`:`<span class="gastoIc">${catInfo(g.cat)[1]}</span>`}<div class="gastoInfo"><b>${esc(g.desc||catInfo(g.cat)[2])}</b><small>${catInfo(g.cat)[1]} ${catInfo(g.cat)[2]}${g.data?" • "+dataSem(g.data):""}${g.pag&&window.pagTxt?" • "+pagTxt(g.pag):""}</small></div><span class="gastoValor">${money(g.valor)}</span><div class="gastoBtns"><button type="button" data-gasto-edit="${i}" aria-label="Editar">✏️</button><button type="button" data-gasto-del="${i}" aria-label="Apagar">🗑️</button></div></div>`).join(""):`<div class="empty">Nenhum gasto ainda. Tire foto da notinha (posto, restaurante, pedágio...) e o app vai somando.</div>`;
+ $("gastoLista").innerHTML=L.length?[...L].map((g,i)=>({g,i})).sort((a,b)=>(b.g.data||"").localeCompare(a.g.data||"")||b.i-a.i).map(({g,i})=>`<div class="gastoItem"><span class="gastoIc">${gastoEmoji(g)}</span><div class="gastoInfo"><b>${esc(g.desc||catInfo(g.cat)[2])}</b><small>${catInfo(g.cat)[1]} ${catInfo(g.cat)[2]}${g.data?" • "+dataSem(g.data):""}${g.pag&&window.pagTxt?" • "+pagTxt(g.pag):""}</small></div><span class="gastoValor">${money(g.valor)}</span><div class="gastoBtns">${g.foto?`<button type="button" data-gasto-foto="${i}" aria-label="Ver a notinha" title="Ver a notinha">🧾</button>`:""}<button type="button" data-gasto-edit="${i}" aria-label="Editar">✏️</button><button type="button" data-gasto-del="${i}" aria-label="Apagar">🗑️</button></div></div>`).join(""):`<div class="empty">Nenhum gasto ainda. Tire foto da notinha (posto, restaurante, pedágio...) e o app vai somando.</div>`;
 }
 function salvarGastos(){try{save()}catch(e){alert("A memória do celular está cheia. Apague fotos de notinhas antigas.")}renderGastos();render()}
 function lerNotinha(txt){
@@ -3620,7 +3625,7 @@ async function lerNotinhaFoto(f){
 - valor: o TOTAL pago (número com ponto decimal, ex.: 154.75). Não use troco nem valor recebido.
 - data: data da compra.
 - desc: nome do lugar (ex.: "Posto Graal", "Restaurante X"), curto.
-- cat: uma destas: comida, combustivel, pedagio, passeio, compras, transporte, farmacia, hotel, outros.
+- cat: uma destas: comida (restaurante, lanche, refeição), sobremesa (sorvete, açaí, doces), mercado (supermercado, mercadinho, feira), combustivel, pedagio, passeio, compras, transporte, farmacia, hotel, outros.
 - pag: como foi pago, se a notinha disser: "ticket" (vale/ticket refeição ou alimentação: VR, Ticket, Alelo, Sodexo, Pluxee, Ben, Flash, Caju, VA), "debito", "credito", "dinheiro" ou "pix". Vazio se não disser.
 Se não conseguir ler algum campo, deixe vazio. Não invente.`},{inline_data:{mime_type:"image/jpeg",data:b64}}]);
    iaMenuAtualiza();const valor=Number(String(r.valor||"").replace(",","."));
