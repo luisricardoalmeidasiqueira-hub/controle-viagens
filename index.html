@@ -1165,7 +1165,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="15.18";
+const APP_VERSAO="15.19";
 const APP_DATA_VERSAO="15/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -3337,6 +3337,11 @@ function colarInfoBetoCarrero(){try{
  t.info="PARADA: Restaurante Sinuelo, região de Araguari, perto de Penha (SC). Pausa para o café da manhã; quem quiser pode se trocar para curtir o parque.\nNECESSAIRE (viagem da madrugada): escova de dente, pasta de dente, produtos de higiene pessoal (se necessário), toalha pequena e o que mais achar necessário (kit básico de higiene).\nMOCHILA DO PARQUE (deixar já pronta): protetor solar, boné ou chapéu, capa de chuva (pode ser descartável), roupas extras (se precisar), dinheiro ou cartão (para alimentação e compras).\nNÃO PODE: entrar com lanche e água no parque.\nExcursão: JC Excursões.";
  save();localStorage.setItem("cv_info_bc_2026","1");if(typeof render==="function")render()}catch(e){}}
 colarInfoBetoCarrero();setTimeout(colarInfoBetoCarrero,1500);setTimeout(colarInfoBetoCarrero,4000);
+/* v15.19: 💾 na ideia de viagem = salva como viagem (a ideia sai da lista) */
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-idea-salvar]");if(!b)return;e.preventDefault();e.stopPropagation();
+ const id=Number(b.dataset.ideaSalvar),i=ideias.find(x=>x.id===id);if(!i)return;
+ if(!(await pergunta("Salvar \""+i.destino+"\" como viagem?\n\nA ideia sai da lista de ideias e vira uma viagem, com as datas, o hotel e o valor que já estão nela. O plano de pagamento (💰) continua junto.","Salvar viagem")))return;
+ abrirIdeiaComoViagem(id);setTimeout(()=>{try{$("formViagem").requestSubmit()}catch(err){}},120)},true);
 /* v15.13: pergunta própria do app (aparece na tela; o celular não consegue esconder como faz com o confirm do navegador) */
 function pergunta(msg,ok){return new Promise(res=>{
  const cs=getComputedStyle(document.body);let bg=cs.backgroundColor;if(!bg||/rgba\(0, 0, 0, 0\)|transparent/.test(bg))bg="#fff";
@@ -4190,7 +4195,7 @@ renderIdeias=function(){
  document.querySelectorAll("#listaIdeias .ideaItem").forEach(it=>{
   const b=it.querySelector("[data-idea-edit]");if(!b)return;const id=Number(b.dataset.ideaEdit),i=ideias.find(x=>x.id===id);if(!i)return;
   const info=it.querySelector(".ideaInfo");if(info&&i.plano)info.insertAdjacentHTML("beforeend",planoResumoEnt(i.plano)+planoResumo(i.plano));
-  b.insertAdjacentHTML("beforebegin",`<button class="nextTripAction" type="button" data-plano-abrir="${id}" title="Planejar o pagamento" aria-label="Planejar o pagamento">💰</button>`);
+  b.insertAdjacentHTML("beforebegin",`<button class="nextTripAction" type="button" data-plano-abrir="${id}" title="Planejar o pagamento" aria-label="Planejar o pagamento">💰</button><button class="nextTripAction" type="button" data-idea-salvar="${id}" title="Salvar como viagem" aria-label="Salvar como viagem">💾</button>`);
   if(planoAberto===id)it.insertAdjacentHTML("afterend",planoForm(i));
  });
  if(typeof aplicarFinanceiro==="function")try{aplicarFinanceiro()}catch(e){}
