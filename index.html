@@ -1165,7 +1165,7 @@ input,textarea,select{font-size:14px;padding:9px 10px}
 
 <script>
 /* ===== VERSÃO DO APP — aumente a cada atualização publicada ===== */
-const APP_VERSAO="15.19";
+const APP_VERSAO="15.20";
 const APP_DATA_VERSAO="15/11/2026";
 const STORAGE_KEY="controle_viagens_dados";
 const PLACES_KEY="controle_viagens_lugares";
@@ -3342,6 +3342,31 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-idea
  const id=Number(b.dataset.ideaSalvar),i=ideias.find(x=>x.id===id);if(!i)return;
  if(!(await pergunta("Salvar \""+i.destino+"\" como viagem?\n\nA ideia sai da lista de ideias e vira uma viagem, com as datas, o hotel e o valor que já estão nela. O plano de pagamento (💰) continua junto.","Salvar viagem")))return;
  abrirIdeiaComoViagem(id);setTimeout(()=>{try{$("formViagem").requestSubmit()}catch(err){}},120)},true);
+/* v15.20: sugestão de cidade enquanto digita (cidades já usadas + busca na internet, com o estado) */
+function ligarSugestaoCidade(inp){
+ if(!inp||inp.dataset.sugLigada)return;inp.dataset.sugLigada="1";inp.removeAttribute("list");inp.setAttribute("autocomplete","off");
+ const wrap=inp.parentElement;if(getComputedStyle(wrap).position==="static")wrap.style.position="relative";
+ const box=document.createElement("div");box.className="cidSug";box.style.cssText="position:absolute;left:0;right:0;z-index:9999;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-height:240px;overflow:auto;display:none";
+ wrap.appendChild(box);let tm=0,seq=0,pula=false;
+ const cs=()=>getComputedStyle(document.body);
+ const fecha=()=>{box.style.display="none";box.innerHTML=""};
+ const mostra=lista=>{if(!lista.length){fecha();return}
+  let bg=cs().backgroundColor;if(!bg||/rgba\(0, 0, 0, 0\)|transparent/.test(bg))bg="#fff";
+  box.style.background=bg;box.style.color=cs().color;box.style.border="1px solid rgba(120,130,150,.5)";box.style.top=(inp.offsetTop+inp.offsetHeight+4)+"px";
+  box.innerHTML=lista.map(t=>`<div class="cidSugItem" data-v="${esc(t)}" style="padding:11px 14px;cursor:pointer;font-size:15px;border-bottom:1px solid rgba(120,130,150,.25)">📍 ${esc(t)}</div>`).join("");box.style.display="block"};
+ box.addEventListener("pointerdown",e=>{const it=e.target.closest(".cidSugItem");if(!it)return;e.preventDefault();
+  pula=true;inp.value=it.dataset.v;fecha();inp.dispatchEvent(new Event("input",{bubbles:true}));inp.dispatchEvent(new Event("change",{bubbles:true}));pula=false});
+ inp.addEventListener("input",()=>{if(pula)return;clearTimeout(tm);const q=inp.value.trim();if(q.length<2){fecha();return}
+  const nq=semAcento(q).toLowerCase();let locais=[];try{locais=cidades().filter(c=>semAcento(c).toLowerCase().includes(nq)).slice(0,3)}catch(e){}
+  if(locais.length)mostra(locais);
+  if(q.length<3)return;const meu=++seq;
+  tm=setTimeout(async()=>{try{
+   const j=await (await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?access_token=${MAPBOX_TOKEN}&language=pt&country=br&types=place&autocomplete=true&limit=6`)).json();
+   if(meu!==seq)return;
+   const rede=(j.features||[]).map(f=>{const r=(f.context||[]).find(c=>/^region/.test(c.id));const uf=r&&r.short_code?String(r.short_code).replace(/^BR-/i,"").toUpperCase():"";return uf?f.text+", "+uf:f.text});
+   const todos=[...new Set([...locais,...rede])].slice(0,7);mostra(todos)}catch(e){}},300)});
+ inp.addEventListener("blur",()=>setTimeout(fecha,180));inp.addEventListener("keydown",e=>{if(e.key==="Escape")fecha()})}
+["fCidade","cidadeBusca","cCidade"].forEach(id=>ligarSugestaoCidade($(id)));
 /* v15.13: pergunta própria do app (aparece na tela; o celular não consegue esconder como faz com o confirm do navegador) */
 function pergunta(msg,ok){return new Promise(res=>{
  const cs=getComputedStyle(document.body);let bg=cs.backgroundColor;if(!bg||/rgba\(0, 0, 0, 0\)|transparent/.test(bg))bg="#fff";
